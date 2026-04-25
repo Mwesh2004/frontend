@@ -9,7 +9,7 @@ body {
 .pos { min-height: 100vh; }
 
 .header {
-  background: linear-gradient(135deg, #1D9E75, #0F6E56);
+  background: linear-gradient(135deg, #04768a, #053647);
   padding: 16px 24px;
   color: white;
   display: flex;
