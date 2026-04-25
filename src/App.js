@@ -153,7 +153,7 @@ function App() {
       <div className="header">
         <div className="brand">
   <img src="/logo.png" alt="B.Bytes Logo" className="logo" />
-  <h1>BBytes System</h1>
+  <h1>B.Bytes System</h1>
 </div>
         <div className="cats">
           {Object.entries(categories).map(([key, val]) => (
