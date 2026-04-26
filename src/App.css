@@ -12,7 +12,7 @@ input { font-family: inherit; }
   --text: #f0f4ff;
   --text2: #7a8aaa;
   --text3: #3a4560;
-  --accent: #00e5a0;
+  --accent: #14b8a6;
   --accent2: #00a872;
   --blue: #4d9fff;
   --purple: #a78bfa;
@@ -163,8 +163,21 @@ body { background: var(--bg); color: var(--text); overflow-x: hidden; }
 .ps {
   padding: 24px;
   overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
+}
+
+.ps::-webkit-scrollbar {
+  width: 8px;
+}
+
+.ps::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ps::-webkit-scrollbar-thumb {
+  background-color: rgba(255,255,255,0.08);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
 }
 
 .ph-warn {
@@ -269,7 +282,22 @@ body { background: var(--bg); color: var(--text); overflow-x: hidden; }
 }
 .clr:hover { opacity: 1; }
 
-.ci-list { flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+.ci-list { flex: 1; overflow-y: auto; }
+
+.ci-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.ci-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ci-list::-webkit-scrollbar-thumb {
+  background-color: rgba(255,255,255,0.08);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
 
 .ci-empty {
   display: flex; flex-direction: column;

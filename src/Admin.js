@@ -51,6 +51,9 @@ export default function Admin() {
   const [newExp, setNewExp] = useState({ desc: '', amount: '', category: '' })
   const [showEF, setShowEF] = useState(false)
   const [ready, setReady] = useState(false)
+  const [users, setUsers] = useState(mockUsers)
+  const [showAddUser, setShowAddUser] = useState(false)
+  const [newUser, setNewUser] = useState({ name: '', role: 'Cashier', email: '' })
 
   useEffect(() => { setTimeout(() => setReady(true), 100) }, [])
 
@@ -69,6 +72,18 @@ export default function Admin() {
     setExpenses([...expenses, { id: expenses.length + 1, ...newExp, amount: parseInt(newExp.amount), date: 'Today' }])
     setNewExp({ desc: '', amount: '', category: '' })
     setShowEF(false)
+  }
+
+  const addUser = () => {
+    if (!newUser.name || !newUser.email) return
+    const newId = Math.max(...users.map(u => u.id)) + 1
+    setUsers([...users, { id: newId, ...newUser, status: 'active', lastLogin: 'Never' }])
+    setNewUser({ name: '', role: 'Cashier', email: '' })
+    setShowAddUser(false)
+  }
+
+  const removeUser = (id) => {
+    setUsers(users.filter(u => u.id !== id))
   }
 
   const nav = [
@@ -138,7 +153,7 @@ export default function Admin() {
           </nav>
           <div className="sb-foot">
             <div className="sb-user">
-              <div className="av">{user?.name?.[0]}</div>
+              <div className="av">{user?.name?.[0]}</div> 
               <div className="av-info">
                 <div className="av-name">{user.name}</div>
                 <div className="av-role">{user.role}</div>
@@ -275,21 +290,101 @@ export default function Admin() {
             {/* USERS */}
             {tab === 'users' && user.role === 'Super Admin' && (
               <div className="fade-in">
-                <div className="ph"><div><h2>User Management</h2><p>Manage access and roles.</p></div><button className="primary-btn">+ Add User</button></div>
+                <div className="ph"><div><h2>User Management</h2><p>Manage access and roles.</p></div><button className="primary-btn" onClick={() => setShowAddUser(!showAddUser)}>+ Add User</button></div>
+                {showAddUser && (
+                  <div className="ef-form fade-in">
+                    <input placeholder="Full Name" value={newUser.name} onChange={e => setNewUser({ ...newUser, name: e.target.value })} />
+                    <input placeholder="Email" value={newUser.email} onChange={e => setNewUser({ ...newUser, email: e.target.value })} />
+                    <select value={newUser.role} onChange={e => setNewUser({ ...newUser, role: e.target.value })}>
+                      <option value="Cashier">Cashier</option>
+                      <option value="Employee">Employee</option>
+                      <option value="Manager">Manager</option>
+                      <option value="Super Admin">Super Admin</option>
+                    </select>
+                    <button className="primary-btn" onClick={addUser}>Add User</button>
+                    <button className="ghost-btn" onClick={() => setShowAddUser(false)}>Cancel</button>
+                  </div>
+                )}
                 <div className="card">
                   <table className="tbl">
-                    <thead><tr><th>Name</th><th>Role</th><th>Status</th><th>Last Login</th><th>Action</th></tr></thead>
-                    <tbody>{mockUsers.map(u => (<tr key={u.id}><td><div className="urow"><div className="av sm">{u.name[0]}</div>{u.name}</div></td><td><span className={`role-pill ${u.role === 'Super Admin' ? 'admin' : 'cashier'}`}>{u.role}</span></td><td><span className={`pill ${u.status}`}>{u.status}</span></td><td>{u.lastLogin}</td><td><button className="ghost-btn sm">Edit</button></td></tr>))}</tbody>
+                    <thead><tr><th>Name</th><th>Role</th><th>Status</th><th>Last Login</th><th>Actions</th></tr></thead>
+                    <tbody>{users.map(u => (<tr key={u.id}><td><div className="urow"><div className="av sm">{u.name[0]}</div>{u.name}</div></td><td><span className={`role-pill ${u.role === 'Super Admin' ? 'admin' : 'cashier'}`}>{u.role}</span></td><td><span className={`pill ${u.status}`}>{u.status}</span></td><td>{u.lastLogin}</td><td><button className="ghost-btn sm" onClick={() => removeUser(u.id)}>Remove</button></td></tr>))}</tbody>
                   </table>
                 </div>
               </div>
             )}
 
             {/* SETTINGS */}
-           {tab === 'users' && user?.role === 'Super Admin' && (
+            {tab === 'settings' && (
               <div className="fade-in">
                 <div className="ph"><div><h2>Settings</h2><p>Configure your system.</p></div></div>
                 <div className="settings-grid">
+                  <div className="card">
+                    <h3>Appearance</h3>
+                    <p>Display Theme</p>
+                    <div className="theme-options">
+                      <button className={`theme-btn ${!dark ? 'active' : ''}`} onClick={() => setDark(false)}>☀ Light</button>
+                      <button className={`theme-btn ${dark ? 'active' : ''}`} onClick={() => setDark(true)}>☽ Dark</button>
+                    </div>
+                  </div>
+                  <div className="card">
+                    <h3>Profile & Account</h3>
+                    <div className="profile-info">
+                      <div className="av large">{user?.name?.[0]}</div>
+                      <div>
+                        <div className="profile-name">{user?.name}</div>
+                        <div className="profile-email">{user?.username}@bbytes.com</div>
+                        <div className="profile-role">Role: {user?.role}</div>
+                        <div className="profile-org">Org: beryl_bytes_global</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="card">
+                    <h3>Access Role Control</h3>
+                    <p>Simulate different user perspectives to verify permission gates and UI visibility.</p>
+                    <div className="role-switches">
+                      {[
+                        { label: 'Frontend User', icon: 'F' },
+                        { label: 'Cashier', icon: 'C' },
+                        { label: 'Employee', icon: 'E' },
+                        { label: 'Manager', icon: 'M' },
+                        { label: 'Super Admin', icon: 'S' },
+                      ].map(r => (
+                        <div key={r.label} className="role-switch">
+                          <span className="role-icon">{r.icon}</span>
+                          <span>{r.label}</span>
+                          <button className="switch-btn">Switch view</button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="card">
+                    <h3>System & Security</h3>
+                    <div className="sf"><label>Language</label><select defaultValue="en-US"><option value="en-US">English (United States)</option></select></div>
+                    <div className="sf"><label>Sync Mode</label><span className="sync-status">Cloud Realtime Sync Enabled</span></div>
+                    <div className="sf"><label>Biometric Enforcement</label><input type="checkbox" defaultChecked /> <span>Enable hardware-level verification for all high-value transactions (POS &gt; 5k KES).</span></div>
+                    <button className="primary-btn">Setup WebAuthn</button>
+                  </div>
+                  <div className="card">
+                    <h3>Notifications</h3>
+                    <div className="notif-setting">
+                      <input type="checkbox" defaultChecked id="inv-alerts" />
+                      <label htmlFor="inv-alerts">Inventory Alerts - Receive pings when stock levels drop below 10% threshold.</label>
+                    </div>
+                    <div className="notif-setting">
+                      <input type="checkbox" defaultChecked id="sales-reports" />
+                      <label htmlFor="sales-reports">Sales Reports - Daily EOD summaries sent to connected mobile devices.</label>
+                    </div>
+                    <div className="notif-setting">
+                      <input type="checkbox" defaultChecked id="security-logs" />
+                      <label htmlFor="security-logs">Security Logs - Alerts for unauthorized terminal login attempts.</label>
+                    </div>
+                  </div>
+                  <div className="card">
+                    <h3>Beryl Bytes Systems OS</h3>
+                    <p>You are currently running version <strong>4.2.0 (Enterprise LTS)</strong>. All operations are logged and encrypted.</p>
+                    <button className="ghost-btn">Check for Updates</button>
+                  </div>
                   <div className="card">
                     <h3>Business Settings</h3>
                     {[['Business Name', 'BBytes System'], ['VAT Rate', '16%'], ['M-Pesa Shortcode', '174379'], ['Currency', 'KES']].map(([l, v]) => (
@@ -298,9 +393,7 @@ export default function Admin() {
                     <button className="primary-btn" style={{ marginTop: '8px' }}>Save Changes</button>
                   </div>
                   <div className="card">
-                    <h3>Appearance</h3>
-                    <button className="ghost-btn wide" onClick={() => setDark(!dark)}>{dark ? '☀ Switch to Light Mode' : '☽ Switch to Dark Mode'}</button>
-                    <h3 style={{ marginTop: '24px' }}>Security</h3>
+                    <h3>Security</h3>
                     <div className="sf"><label>New Password</label><input type="password" placeholder="Enter new password" /></div>
                     <button className="primary-btn" style={{ marginTop: '8px' }}>Update Password</button>
                   </div>
