@@ -138,7 +138,7 @@ export default function Admin() {
           </nav>
           <div className="sb-foot">
             <div className="sb-user">
-              <div className="av">{user.name[0]}</div>
+              <div className="av">{user?.name?.[0]}</div>
               <div className="av-info">
                 <div className="av-name">{user.name}</div>
                 <div className="av-role">{user.role}</div>
@@ -286,7 +286,7 @@ export default function Admin() {
             )}
 
             {/* SETTINGS */}
-            {tab === 'settings' && (
+           {tab === 'users' && user?.role === 'Super Admin' && (
               <div className="fade-in">
                 <div className="ph"><div><h2>Settings</h2><p>Configure your system.</p></div></div>
                 <div className="settings-grid">
