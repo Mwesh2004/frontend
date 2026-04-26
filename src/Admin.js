@@ -54,6 +54,18 @@ export default function Admin() {
   const [users, setUsers] = useState(mockUsers)
   const [showAddUser, setShowAddUser] = useState(false)
   const [newUser, setNewUser] = useState({ name: '', role: 'Cashier', email: '' })
+  const [companies, setCompanies] = useState([{ id: 1, name: 'BerylBytes Retail', type: 'Retail', users: 5, revenue: 0 }])
+  const [globalSettings, setGlobalSettings] = useState({
+    currency: 'KES',
+    notifications: true,
+    maintenance: false,
+    apis: { stripe: 'Pending', whatsapp: 'Pending', maps: 'Pending' }
+  })
+  const [inventory, setInventory] = useState([])
+  const [customers, setCustomers] = useState([])
+  const [showAddItem, setShowAddItem] = useState(false)
+  const [newItem, setNewItem] = useState({ name: '', sku: '', category: 'General', retailPrice: '', buyingPrice: '', stock: '', minAlert: '', expiry: '', batch: '' })
+  const [qrScan, setQrScan] = useState(false)
 
   useEffect(() => { setTimeout(() => setReady(true), 100) }, [])
 
@@ -90,7 +102,17 @@ export default function Admin() {
     { id: 'dashboard', icon: '⊞', label: 'Dashboard' },
     { id: 'sales', icon: '◈', label: 'Sales' },
     { id: 'expenses', icon: '◉', label: 'Expenses' },
-    ...(user?.role === 'Super Admin' ? [{ id: 'users', icon: '◎', label: 'Users' }] : []),
+    ...(user?.role === 'Super Admin' ? [
+      { id: 'users', icon: '◎', label: 'Users' },
+      { id: 'companies', icon: '🏢', label: 'Companies' },
+      { id: 'user-access', icon: '🔑', label: 'User Access' },
+      { id: 'system-settings', icon: '⚙️', label: 'System Settings' },
+      { id: 'global-health', icon: '📊', label: 'Global System Health' },
+      { id: 'inventory-pharma', icon: '📦', label: 'Inventory & Pharma' },
+      { id: 'business-overview', icon: '📈', label: 'Business Overview' },
+      { id: 'customer-relationships', icon: '👥', label: 'Customer Relationships' },
+      { id: 'ledger', icon: '📋', label: 'Standard Ledger' },
+    ] : []),
     { id: 'settings', icon: '◌', label: 'Settings' },
   ]
 
@@ -309,6 +331,201 @@ export default function Admin() {
                   <table className="tbl">
                     <thead><tr><th>Name</th><th>Role</th><th>Status</th><th>Last Login</th><th>Actions</th></tr></thead>
                     <tbody>{users.map(u => (<tr key={u.id}><td><div className="urow"><div className="av sm">{u.name[0]}</div>{u.name}</div></td><td><span className={`role-pill ${u.role === 'Super Admin' ? 'admin' : 'cashier'}`}>{u.role}</span></td><td><span className={`pill ${u.status}`}>{u.status}</span></td><td>{u.lastLogin}</td><td><button className="ghost-btn sm" onClick={() => removeUser(u.id)}>Remove</button></td></tr>))}</tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* COMPANIES */}
+            {tab === 'companies' && user.role === 'Super Admin' && (
+              <div className="fade-in">
+                <div className="ph"><div><h2>Companies</h2><p>Manage different businesses.</p></div><button className="primary-btn">+ Add Company</button></div>
+                <div className="card">
+                  <table className="tbl">
+                    <thead><tr><th>Name</th><th>Type</th><th>Users</th><th>Revenue</th></tr></thead>
+                    <tbody>{companies.map(c => (<tr key={c.id}><td>{c.name}</td><td>{c.type}</td><td>{c.users}</td><td>KES {c.revenue}</td></tr>))}</tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* USER ACCESS */}
+            {tab === 'user-access' && user.role === 'Super Admin' && (
+              <div className="fade-in">
+                <div className="ph"><div><h2>User Access</h2><p>Different user access for different companies.</p></div></div>
+                <div className="card">
+                  <div className="search-bar"><input placeholder="Search global users..." /></div>
+                  <table className="tbl">
+                    <thead><tr><th>Name</th><th>Company</th><th>Role</th><th>Status</th></tr></thead>
+                    <tbody>{users.map(u => (<tr key={u.id}><td>{u.name}</td><td>BerylBytes</td><td>{u.role}</td><td>{u.status}</td></tr>))}</tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* SYSTEM SETTINGS */}
+            {tab === 'system-settings' && user.role === 'Super Admin' && (
+              <div className="fade-in">
+                <div className="ph"><div><h2>System Settings</h2><p>Global System Configuration.</p></div></div>
+                <div className="settings-grid">
+                  <div className="card">
+                    <h3>Global System Configuration</h3>
+                    <div className="setting-item">
+                      <label>Default Platform Currency</label>
+                      <select value={globalSettings.currency} onChange={e => setGlobalSettings({ ...globalSettings, currency: e.target.value })}>
+                        <option value="KES">Kenyan Shilling (KES)</option>
+                        <option value="USD">US Dollar (USD)</option>
+                      </select>
+                    </div>
+                    <div className="setting-item">
+                      <label>System Notifications</label>
+                      <input type="checkbox" checked={globalSettings.notifications} onChange={e => setGlobalSettings({ ...globalSettings, notifications: e.target.checked })} />
+                    </div>
+                    <div className="setting-item">
+                      <label>Global Broadcast Access</label>
+                      <input type="checkbox" checked={true} />
+                    </div>
+                    <div className="setting-item">
+                      <label>System Maintenance Mode</label>
+                      <input type="checkbox" checked={globalSettings.maintenance} onChange={e => setGlobalSettings({ ...globalSettings, maintenance: e.target.checked })} />
+                      <p>Restrict all user access</p>
+                    </div>
+                  </div>
+                  <div className="card">
+                    <h3>External API Bridge</h3>
+                    <p>Connect to Stripe/PayPal</p>
+                    <div className="api-status">
+                      <div>Stripe: {globalSettings.apis.stripe}</div>
+                      <div>PayPal: Pending</div>
+                    </div>
+                  </div>
+                  <div className="card">
+                    <h3>Enterprise API Integration</h3>
+                    <div>Stripe Payment Provider: {globalSettings.apis.stripe}</div>
+                    <div>WhatsApp Business API: {globalSettings.apis.whatsapp}</div>
+                    <div>Google Maps Grounding: {globalSettings.apis.maps}</div>
+                    <p>Security Notice: Changes affect all companies.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* GLOBAL SYSTEM HEALTH */}
+            {tab === 'global-health' && user.role === 'Super Admin' && (
+              <div className="fade-in">
+                <div className="ph"><div><h2>Global System Health</h2><p>Monitoring performance metrics.</p></div></div>
+                <div className="metrics-row">
+                  <div className="mc g">
+                    <div className="mc-icon">💰</div>
+                    <div className="mc-label">Total Revenue (Global)</div>
+                    <div className="mc-val">KES {rev.toLocaleString()}</div>
+                    <div className="mc-sub">Changes when used</div>
+                  </div>
+                </div>
+                <div className="card">
+                  <h3>Niche Distribution</h3>
+                  <div className="niche-dist">
+                    <div>Retail: {Math.round((mockSales.filter(s => s.item.includes('Flour') || s.item.includes('Oil')).length / mockSales.length) * 100)}%</div>
+                    <div>Pharma: {Math.round((mockSales.filter(s => s.item.includes('Panadol') || s.item.includes('Amoxicillin')).length / mockSales.length) * 100)}%</div>
+                    <div>Hospitality: {Math.round((mockSales.filter(s => s.item.includes('Room')).length / mockSales.length) * 100)}%</div>
+                    <div>Medical Counter Sales: 0</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* INVENTORY & PHARMA */}
+            {tab === 'inventory-pharma' && user.role === 'Super Admin' && (
+              <div className="fade-in">
+                <div className="ph"><div><h2>Inventory & Pharma</h2><p>Stock & pharmaceutical management.</p></div><button className="primary-btn" onClick={() => setShowAddItem(true)}>+ Add Item</button></div>
+                {showAddItem && (
+                  <div className="ef-form fade-in">
+                    <input placeholder="Product name" value={newItem.name} onChange={e => setNewItem({ ...newItem, name: e.target.value })} />
+                    <input placeholder="SKU / Code" value={newItem.sku} onChange={e => setNewItem({ ...newItem, sku: e.target.value })} />
+                    <select value={newItem.category} onChange={e => setNewItem({ ...newItem, category: e.target.value })}>
+                      <option value="General">General</option>
+                      <option value="Pharmaceutical">Pharmaceutical Grade</option>
+                    </select>
+                    <input placeholder="Retail Price (KES)" value={newItem.retailPrice} onChange={e => setNewItem({ ...newItem, retailPrice: e.target.value })} />
+                    <input placeholder="Buying Price (Cost)" value={newItem.buyingPrice} onChange={e => setNewItem({ ...newItem, buyingPrice: e.target.value })} />
+                    <input placeholder="Stock Level" value={newItem.stock} onChange={e => setNewItem({ ...newItem, stock: e.target.value })} />
+                    <input placeholder="Min. Alert Level" value={newItem.minAlert} onChange={e => setNewItem({ ...newItem, minAlert: e.target.value })} />
+                    {newItem.category === 'Pharmaceutical' && (
+                      <>
+                        <input placeholder="Expiry Date (dd-mm-yyyy)" value={newItem.expiry} onChange={e => setNewItem({ ...newItem, expiry: e.target.value })} />
+                        <input placeholder="Batch Number" value={newItem.batch} onChange={e => setNewItem({ ...newItem, batch: e.target.value })} />
+                      </>
+                    )}
+                    <div className="qr-scan">
+                      <button className="ghost-btn" onClick={() => setQrScan(!qrScan)}>Scan QR</button>
+                      {qrScan && <div>QR Scanner Placeholder - Simulate scan</div>}
+                    </div>
+                    <button className="primary-btn" onClick={() => { setInventory([...inventory, { ...newItem, id: inventory.length + 1 }]); setNewItem({ name: '', sku: '', category: 'General', retailPrice: '', buyingPrice: '', stock: '', minAlert: '', expiry: '', batch: '' }); setShowAddItem(false); }}>Add to Inventory</button>
+                  </div>
+                )}
+                <div className="card">
+                  <table className="tbl">
+                    <thead><tr><th>Name</th><th>SKU</th><th>Category</th><th>Stock</th><th>Price</th></tr></thead>
+                    <tbody>{inventory.map(i => (<tr key={i.id}><td>{i.name}</td><td>{i.sku}</td><td>{i.category}</td><td>{i.stock}</td><td>KES {i.retailPrice}</td></tr>))}</tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* BUSINESS OVERVIEW */}
+            {tab === 'business-overview' && user.role === 'Super Admin' && (
+              <div className="fade-in">
+                <div className="ph"><div><h2>Business Overview</h2><p>Real-time performance metrics.</p></div><button className="ghost-btn">Export Daily Report</button></div>
+                <div className="metrics-row">
+                  <div className="mc g"><div className="mc-icon">💰</div><div className="mc-label">Total Revenue</div><div className="mc-val">Ksh {rev.toLocaleString()}</div><div className="mc-sub">Month over Month</div></div>
+                  <div className="mc b"><div className="mc-icon">📈</div><div className="mc-label">Growth Index</div><div className="mc-val">0.0%</div><div className="mc-sub">Standby</div></div>
+                  <div className="mc p"><div className="mc-icon">👥</div><div className="mc-label">Active Customers</div><div className="mc-val">{customers.length}</div><div className="mc-sub">Healthy</div></div>
+                  <div className="mc t"><div className="mc-icon">⚠️</div><div className="mc-label">Inventory Alerts</div><div className="mc-val">0</div><div className="mc-sub">All good</div></div>
+                </div>
+                <div className="card">
+                  <h3>Sales Performance</h3>
+                  <div>Sales chart placeholder - 7D, 30D</div>
+                </div>
+                <div className="card">
+                  <h3>Recent Sales</h3>
+                  {mockSales.slice(0, 5).map(s => <div key={s.id}>{s.item} - KES {s.amount}</div>)}
+                </div>
+              </div>
+            )}
+
+            {/* CUSTOMER RELATIONSHIPS */}
+            {tab === 'customer-relationships' && user.role === 'Super Admin' && (
+              <div className="fade-in">
+                <div className="ph"><div><h2>Customer Relationships</h2><p>Manage loyalty and track lifetime value.</p></div><button className="primary-btn">+ Add Customer</button></div>
+                <div className="metrics-row">
+                  <div className="mc"><div className="mc-icon">🎫</div><div className="mc-label">Loyalty Program Engine</div><div className="mc-val">0.0k</div><div className="mc-sub">Total Points Issuance</div></div>
+                  <div className="mc"><div className="mc-icon">📊</div><div className="mc-label">Conversion</div><div className="mc-val">0%</div><div className="mc-sub">0 Paying</div></div>
+                </div>
+                <div className="card">
+                  <h3>Segmentation</h3>
+                  <div>VIP: 0</div>
+                  <div>New Member: 0</div>
+                  <div>Inactive: 0</div>
+                  <div>General: 0</div>
+                </div>
+              </div>
+            )}
+
+            {/* STANDARD LEDGER */}
+            {tab === 'ledger' && user.role === 'Super Admin' && (
+              <div className="fade-in">
+                <div className="ph"><div><h2>Standard Ledger</h2><p>Financial Reconciliation & Audit Trail.</p></div><button className="ghost-btn">Export CSV</button></div>
+                <div className="metrics-row">
+                  <div className="mc g"><div className="mc-icon">💰</div><div className="mc-label">Net Sales Inflow</div><div className="mc-val">Ksh {rev.toLocaleString()}</div></div>
+                  <div className="mc"><div className="mc-icon">📊</div><div className="mc-label">Transaction Count</div><div className="mc-val">{mockSales.length}</div></div>
+                  <div className="mc"><div className="mc-icon">📈</div><div className="mc-label">Avg Order Value</div><div className="mc-val">Ksh {(rev / mockSales.length || 0).toFixed(0)}</div></div>
+                  <div className="mc"><div className="mc-icon">💳</div><div className="mc-label">E-Payment Ratio</div><div className="mc-val">0%</div></div>
+                </div>
+                <div className="card">
+                  <h3>Transaction Records</h3>
+                  <table className="tbl">
+                    <thead><tr><th>Date/Time</th><th>Transaction ID</th><th>Payment</th><th>Amount</th><th>Actions</th></tr></thead>
+                    <tbody>{mockSales.map(s => (<tr key={s.id}><td>{new Date().toLocaleString()}</td><td>{s.id}</td><td>{s.method}</td><td>KES {s.amount}</td><td>View</td></tr>))}</tbody>
                   </table>
                 </div>
               </div>
