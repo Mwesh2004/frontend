@@ -1,8 +1,9 @@
-import { useState } from 'react'
-import Admin from './Admin'
+import { useState, useEffect } from 'react'
+import './App.css'
+
 const categories = {
   shop: {
-    label: '🛒 General Shop',
+    label: 'General Shop', icon: '🛒',
     products: [
       { id: 1, name: 'Maize Flour 2kg', price: 220, icon: '🌽' },
       { id: 2, name: 'Cooking Oil 1L', price: 350, icon: '🫙' },
@@ -19,63 +20,24 @@ const categories = {
     ]
   },
   pharmacy: {
-    label: '💊 Pharmacy',
+    label: 'Pharmacy', icon: '💊',
     products: [
-      // OTC Pain & Fever
       { id: 101, name: 'Panadol 500mg x8', price: 50, icon: '💊', tag: 'OTC' },
       { id: 102, name: 'Ibuprofen 400mg x8', price: 80, icon: '💊', tag: 'OTC' },
       { id: 103, name: 'Aspirin 300mg x8', price: 40, icon: '💊', tag: 'OTC' },
-      { id: 104, name: 'Hedex Extra x8', price: 90, icon: '💊', tag: 'OTC' },
-      // Antibiotics (require prescription in Kenya)
-      { id: 105, name: 'Amoxicillin 250mg x21', price: 320, icon: '💉', tag: 'POM' },
-      { id: 106, name: 'Amoxicillin 500mg x21', price: 480, icon: '💉', tag: 'POM' },
-      { id: 107, name: 'Azithromycin 500mg x3', price: 450, icon: '💉', tag: 'POM' },
-      { id: 108, name: 'Ciprofloxacin 500mg x10', price: 380, icon: '💉', tag: 'POM' },
-      { id: 109, name: 'Metronidazole 400mg x21', price: 280, icon: '💉', tag: 'POM' },
-      { id: 110, name: 'Doxycycline 100mg x10', price: 350, icon: '💉', tag: 'POM' },
-      // Cough & Cold
-      { id: 111, name: 'Actifed Syrup 100ml', price: 280, icon: '🍶', tag: 'OTC' },
-      { id: 112, name: 'Benylin Chesty Cough', price: 320, icon: '🍶', tag: 'OTC' },
-      { id: 113, name: 'Piriton Tabs x10', price: 120, icon: '💊', tag: 'OTC' },
-      { id: 114, name: 'Loratadine 10mg x10', price: 150, icon: '💊', tag: 'OTC' },
-      { id: 115, name: 'Vicks VapoRub 50g', price: 280, icon: '🫙', tag: 'OTC' },
-      // Stomach & Digestion
-      { id: 116, name: 'Flagyl 200mg x21', price: 250, icon: '💊', tag: 'POM' },
-      { id: 117, name: 'Buscopan x10', price: 180, icon: '💊', tag: 'OTC' },
-      { id: 118, name: 'ORS Sachet x5', price: 100, icon: '💧', tag: 'OTC' },
-      { id: 119, name: 'Antacid Tabs x10', price: 90, icon: '💊', tag: 'OTC' },
-      { id: 120, name: 'Omeprazole 20mg x14', price: 320, icon: '💊', tag: 'POM' },
-      // Antimalarials
-      { id: 121, name: 'Coartem 80/480mg x24', price: 850, icon: '💊', tag: 'POM' },
-      { id: 122, name: 'Quinine Tabs x21', price: 420, icon: '💊', tag: 'POM' },
-      { id: 123, name: 'Doxycycline Malaria x28', price: 680, icon: '💊', tag: 'POM' },
-      // Vitamins & Supplements
-      { id: 124, name: 'Vitamin C 1000mg x30', price: 480, icon: '🍊', tag: 'OTC' },
-      { id: 125, name: 'Multivitamins x30', price: 550, icon: '💊', tag: 'OTC' },
-      { id: 126, name: 'Folic Acid 5mg x28', price: 120, icon: '💊', tag: 'OTC' },
-      { id: 127, name: 'Iron Tabs x28', price: 180, icon: '💊', tag: 'OTC' },
-      { id: 128, name: 'Calcium + D3 x30', price: 650, icon: '💊', tag: 'OTC' },
-      // Skin & Topical
-      { id: 129, name: 'Betamethasone Cream', price: 220, icon: '🧴', tag: 'POM' },
-      { id: 130, name: 'Clotrimazole Cream', price: 280, icon: '🧴', tag: 'OTC' },
-      { id: 131, name: 'Dettol Antiseptic 250ml', price: 320, icon: '🧴', tag: 'OTC' },
-      { id: 132, name: 'Savlon Cream 50g', price: 180, icon: '🧴', tag: 'OTC' },
-      // Medical Supplies
-      { id: 133, name: 'Surgical Gloves x10', price: 250, icon: '🧤', tag: 'OTC' },
-      { id: 134, name: 'Face Masks x10', price: 200, icon: '😷', tag: 'OTC' },
-      { id: 135, name: 'Bandage Roll 5cm', price: 120, icon: '🩹', tag: 'OTC' },
-      { id: 136, name: 'Cotton Wool 100g', price: 150, icon: '🧻', tag: 'OTC' },
-      { id: 137, name: 'Thermometer Digital', price: 850, icon: '🌡️', tag: 'OTC' },
-      { id: 138, name: 'Blood Pressure Monitor', price: 3800, icon: '🩺', tag: 'OTC' },
-      { id: 139, name: 'Glucometer Kit', price: 3200, icon: '🩸', tag: 'OTC' },
-      { id: 140, name: 'Glucometer Strips x50', price: 1800, icon: '🩸', tag: 'OTC' },
-      // Eye & Ear
-      { id: 141, name: 'Chloramphenicol Eye Drops', price: 280, icon: '👁️', tag: 'POM' },
-      { id: 142, name: 'Otrivin Nasal Drops', price: 350, icon: '👃', tag: 'OTC' },
+      { id: 104, name: 'Amoxicillin 250mg x21', price: 320, icon: '💉', tag: 'POM' },
+      { id: 105, name: 'Azithromycin 500mg x3', price: 450, icon: '💉', tag: 'POM' },
+      { id: 106, name: 'Ciprofloxacin 500mg', price: 380, icon: '💉', tag: 'POM' },
+      { id: 107, name: 'Actifed Syrup 100ml', price: 280, icon: '🍶', tag: 'OTC' },
+      { id: 108, name: 'ORS Sachet x5', price: 100, icon: '💧', tag: 'OTC' },
+      { id: 109, name: 'Coartem x24', price: 850, icon: '💊', tag: 'POM' },
+      { id: 110, name: 'Vitamin C 1000mg x30', price: 480, icon: '🍊', tag: 'OTC' },
+      { id: 111, name: 'Dettol 250ml', price: 320, icon: '🧴', tag: 'OTC' },
+      { id: 112, name: 'Thermometer Digital', price: 850, icon: '🌡️', tag: 'OTC' },
     ]
   },
   airbnb: {
-    label: '🏠 Airbnb',
+    label: 'Airbnb', icon: '🏠',
     products: [
       { id: 201, name: 'Single Room 1 Night', price: 2500, icon: '🛏️' },
       { id: 202, name: 'Double Room 1 Night', price: 4500, icon: '🛏️' },
@@ -86,61 +48,64 @@ const categories = {
       { id: 207, name: 'Late Checkout Fee', price: 1000, icon: '⏰' },
       { id: 208, name: 'Laundry Service', price: 500, icon: '👕' },
       { id: 209, name: 'City Tour 4hrs', price: 3500, icon: '🗺️' },
-      { id: 210, name: 'Extra Bed', price: 1200, icon: '🛏️' },
-      { id: 211, name: 'Parking Fee/Day', price: 300, icon: '🚗' },
-      { id: 212, name: 'Swimming Pool Access', price: 500, icon: '🏊' },
+      { id: 210, name: 'Pool Access', price: 500, icon: '🏊' },
     ]
   }
 }
 
-function App() {
+export default function App() {
   const [cart, setCart] = useState([])
   const [phone, setPhone] = useState('')
   const [message, setMessage] = useState('')
+  const [msgType, setMsgType] = useState('info')
   const [activeCategory, setActiveCategory] = useState('shop')
   const [search, setSearch] = useState('')
+  const [loaded, setLoaded] = useState(false)
+  const [payMethod, setPayMethod] = useState('mpesa')
+  const [showPayPanel, setShowPayPanel] = useState(false)
+  const [cashIn, setCashIn] = useState('')
+
+  useEffect(() => { setTimeout(() => setLoaded(true), 80) }, [])
 
   const addToCart = (product) => {
-    const existing = cart.find(item => item.id === product.id)
-    if (existing) {
-      setCart(cart.map(item =>
-        item.id === product.id
-          ? { ...item, qty: item.qty + 1 }
-          : item
-      ))
-    } else {
-      setCart([...cart, { ...product, qty: 1 }])
-    }
+    setCart(prev => {
+      const ex = prev.find(i => i.id === product.id)
+      return ex ? prev.map(i => i.id === product.id ? { ...i, qty: i.qty + 1 } : i)
+        : [...prev, { ...product, qty: 1 }]
+    })
   }
 
-  const removeFromCart = (id) => {
-    setCart(cart.filter(item => item.id !== id))
-  }
+  const removeFromCart = (id) => setCart(c => c.filter(i => i.id !== id))
+  const updateQty = (id, d) => setCart(c => c.map(i => i.id === id ? { ...i, qty: Math.max(1, i.qty + d) } : i))
 
-  const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0)
-  const tax = Math.round(total * 0.16)
-  const grand = total + tax
+  const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0)
+  const tax = Math.round(subtotal * 0.16)
+  const grand = subtotal + tax
+  const change = cashIn ? parseInt(cashIn) - grand : 0
 
   const handleMpesa = async () => {
-    if (!phone) return setMessage('Please enter phone number')
-    if (cart.length === 0) return setMessage('Please add items to cart')
-    setMessage('Sending STK Push...')
+    if (!phone) { setMessage('Enter customer phone number'); setMsgType('error'); return }
+    setMessage('Sending prompt to customer phone...'); setMsgType('loading')
     try {
-      const res = await fetch('http://localhost:3001/api/mpesa/stkpush', {
+      const res = await fetch('http://localhost:3000/api/mpesa/stkpush', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone, amount: grand })
       })
       const data = await res.json()
       if (data.ResponseCode === '0') {
-        setMessage('✅ STK Push sent! Check your phone.')
-        setCart([])
+        setMessage('✓ Prompt sent! Awaiting PIN entry.'); setMsgType('success')
+        setTimeout(() => { setCart([]); setMessage(''); setShowPayPanel(false); setPhone('') }, 4000)
       } else {
-        setMessage('❌ Payment failed. Try again.')
+        setMessage('Payment request failed. Try again.'); setMsgType('error')
       }
-    } catch (err) {
-      setMessage('❌ Could not connect to server.')
-    }
+    } catch { setMessage('Cannot reach server. Check connection.'); setMsgType('error') }
+  }
+
+  const handleCash = () => {
+    if (!cashIn || change < 0) { setMessage('Insufficient cash amount'); setMsgType('error'); return }
+    setMessage(`✓ Change: KES ${change.toLocaleString()}`); setMsgType('success')
+    setTimeout(() => { setCart([]); setMessage(''); setShowPayPanel(false); setCashIn('') }, 3000)
   }
 
   const products = categories[activeCategory].products.filter(p =>
@@ -148,100 +113,159 @@ function App() {
   )
 
   return (
-    <div className="pos">
-      <div className="header">
-        <div className="brand">
-  <img src="/logo.png" alt="B.Bytes Logo" className="logo" />
-  <h1>B.Bytes System</h1>
-</div>
-        <div className="cats">
-          {Object.entries(categories).map(([key, val]) => (
-            <button
-              key={key}
-              className={`cat-btn ${activeCategory === key ? 'active' : ''}`}
-              onClick={() => { setActiveCategory(key); setSearch('') }}
-            >
-              {val.label}
-            </button>
-          ))}
-        </div>
+    <div className={`pr ${loaded ? 'in' : ''}`}>
+      {/* Ambient Background */}
+      <div className="amb">
+        {[...Array(8)].map((_, i) => <div key={i} className={`ab ab${i + 1}`}></div>)}
+        <div className="grid-tex"></div>
       </div>
 
-      <div className="main">
-        <div className="products">
-          <div className="products-header">
-            <h2>{categories[activeCategory].label}</h2>
-            <input
-              className="search"
-              type="text"
-              placeholder="🔍 Search products..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
+      {/* Header */}
+      <header className="hd">
+        <div className="hd-brand">
+          <img src="/logo.png" alt="BBytes" className="hd-logo" />
+          <div className="hd-txt">
+            <span className="hd-name">Beryl<em>Bytes</em></span>
+            <span className="hd-sub">Point of Sale Terminal</span>
           </div>
+        </div>
+
+        <nav className="cat-nav">
+          {Object.entries(categories).map(([key, val]) => (
+            <button key={key} className={`cn ${activeCategory === key ? 'act' : ''}`}
+              onClick={() => { setActiveCategory(key); setSearch('') }}>
+              <span>{val.icon}</span>
+              <span>{val.label}</span>
+            </button>
+          ))}
+        </nav>
+
+        <div className="hd-right">
+          <div className="srch">
+            <span>⌕</span>
+            <input placeholder="Search..." value={search} onChange={e => setSearch(e.target.value)} />
+          </div>
+          <a href="/admin" className="adm-link">Admin Portal ↗</a>
+        </div>
+      </header>
+
+      {/* Body */}
+      <div className="bd">
+        {/* Products */}
+        <section className="ps">
           {activeCategory === 'pharmacy' && (
-            <div className="notice">
-              ⚠️ POM = Prescription Only Medicine. Confirm valid prescription before dispensing.
-            </div>
+            <div className="ph-warn">⚠ POM items require a valid prescription before dispensing.</div>
           )}
-          <div className="grid">
-            {products.map(p => (
-              <div key={p.id} className="product-card" onClick={() => addToCart(p)}>
-                <div className="icon">{p.icon}</div>
-                <div className="name">{p.name}</div>
-                <div className="price">KES {p.price.toLocaleString()}</div>
-                {p.tag && (
-                  <span className={`tag ${p.tag === 'POM' ? 'tag-pom' : 'tag-otc'}`}>
-                    {p.tag}
-                  </span>
-                )}
+          <div className="pg">
+            {products.map((p, i) => (
+              <div key={p.id} className="pc" style={{ animationDelay: `${i * 0.035}s` }} onClick={() => addToCart(p)}>
+                <div className="pc-shine"></div>
+                <div className="pc-ic">{p.icon}</div>
+                <div className="pc-nm">{p.name}</div>
+                <div className="pc-pr">KES {p.price.toLocaleString()}</div>
+                {p.tag && <span className={`pc-tag ${p.tag === 'POM' ? 'pom' : 'otc'}`}>{p.tag}</span>}
+                <div className="pc-plus">＋</div>
               </div>
             ))}
           </div>
-        </div>
+        </section>
 
-        <div className="cart">
-          <h2>Order</h2>
-          {cart.length === 0 && <p className="empty">Add items to begin</p>}
-          {cart.map(item => (
-            <div key={item.id} className="cart-item">
-              <div>
-                <div className="cart-name">{item.name}</div>
-                <div className="cart-qty">x{item.qty}</div>
+        {/* Cart */}
+        <aside className="cp">
+          <div className="cp-hd">
+            <h2>Order</h2>
+            {cart.length > 0 && <button className="clr" onClick={() => setCart([])}>Clear all</button>}
+          </div>
+
+          <div className="ci-list">
+            {cart.length === 0 ? (
+              <div className="ci-empty">
+                <div className="ce-ic">🛍</div>
+                <p>Cart is empty</p>
+                <span>Tap products to add them</span>
               </div>
-              <div className="cart-right">
-                <span>KES {(item.price * item.qty).toLocaleString()}</span>
-                <button onClick={() => removeFromCart(item.id)}>×</button>
+            ) : cart.map(item => (
+              <div key={item.id} className="ci">
+                <span className="ci-ico">{item.icon}</span>
+                <div className="ci-inf">
+                  <div className="ci-nm">{item.name}</div>
+                  <div className="ci-pr">KES {(item.price * item.qty).toLocaleString()}</div>
+                </div>
+                <div className="ci-ctl">
+                  <button className="qb" onClick={() => updateQty(item.id, -1)}>−</button>
+                  <span>{item.qty}</span>
+                  <button className="qb" onClick={() => updateQty(item.id, 1)}>+</button>
+                  <button className="rb" onClick={() => removeFromCart(item.id)}>×</button>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+
           {cart.length > 0 && (
-            <div className="totals">
-              <div className="total-row"><span>Subtotal</span><span>KES {total.toLocaleString()}</span></div>
-              <div className="total-row"><span>VAT 16%</span><span>KES {tax.toLocaleString()}</span></div>
-              <div className="total-row grand"><span>Total</span><span>KES {grand.toLocaleString()}</span></div>
-            </div>
+            <>
+              <div className="tots">
+                <div className="tr"><span>Subtotal</span><span>KES {subtotal.toLocaleString()}</span></div>
+                <div className="tr"><span>VAT 16%</span><span>KES {tax.toLocaleString()}</span></div>
+                <div className="tr gd"><span>Total</span><span>KES {grand.toLocaleString()}</span></div>
+              </div>
+              <button className="chg-btn" onClick={() => setShowPayPanel(true)}>
+                Charge KES {grand.toLocaleString()} <span>→</span>
+              </button>
+            </>
           )}
-          <div className="payment">
-            <h3>M-Pesa Payment</h3>
-            <input
-              type="text"
-              placeholder="e.g. 254712345678"
-              value={phone}
-              onChange={e => setPhone(e.target.value)}
-            />
-            <button className="pay-btn" onClick={handleMpesa}>
-              📱 Pay KES {grand.toLocaleString()} via M-Pesa
-            </button>
-            {message && <div className="message">{message}</div>}
-            <div className="admin-access">
-  <a href="/admin" style={{fontSize:'12px',color:'#999'}}>Admin Portal</a>
-</div>
+        </aside>
+      </div>
+
+      {/* Payment Modal */}
+      {showPayPanel && (
+        <div className="ov" onClick={e => e.target === e.currentTarget && setShowPayPanel(false)}>
+          <div className="pm">
+            <div className="pm-hd">
+              <div>
+                <h3>Payment</h3>
+                <div className="pm-amt">KES {grand.toLocaleString()}</div>
+              </div>
+              <button className="pm-cls" onClick={() => setShowPayPanel(false)}>×</button>
+            </div>
+
+            <div className="pm-methods">
+              {[{ id: 'mpesa', icon: '📱', label: 'M-Pesa' }, { id: 'card', icon: '💳', label: 'Card' }, { id: 'cash', icon: '💵', label: 'Cash' }].map(m => (
+                <button key={m.id} className={`pmm ${payMethod === m.id ? 'act' : ''}`} onClick={() => setPayMethod(m.id)}>
+                  <span>{m.icon}</span><span>{m.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {payMethod === 'mpesa' && (
+              <div className="pm-form">
+                <label>Customer Phone</label>
+                <input type="tel" placeholder="254712345678" value={phone} onChange={e => setPhone(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleMpesa()} />
+                <button className="pm-go" onClick={handleMpesa}>📱 Send M-Pesa Prompt</button>
+              </div>
+            )}
+
+            {payMethod === 'card' && (
+              <div className="pm-form">
+                <div className="pm-info">Present card to terminal. Powered by Flutterwave.</div>
+                <button className="pm-go">💳 Process Card Payment</button>
+              </div>
+            )}
+
+            {payMethod === 'cash' && (
+              <div className="pm-form">
+                <label>Cash Received (KES)</label>
+                <input type="number" placeholder="Enter amount" value={cashIn} onChange={e => setCashIn(e.target.value)} />
+                {cashIn && <div className={`pm-change ${change >= 0 ? 'pos' : 'neg'}`}>
+                  {change >= 0 ? `Change: KES ${change.toLocaleString()}` : `Short: KES ${Math.abs(change).toLocaleString()}`}
+                </div>}
+                <button className="pm-go" onClick={handleCash}>💵 Confirm Cash Payment</button>
+              </div>
+            )}
+
+            {message && <div className={`pm-msg ${msgType}`}>{message}</div>}
           </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }
-
-export default App
