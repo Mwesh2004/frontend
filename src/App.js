@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import './App.css'
-
+import Admin from './Admin'
 const categories = {
   shop: {
     label: '🛒 General Shop',
@@ -235,6 +234,9 @@ function App() {
               📱 Pay KES {grand.toLocaleString()} via M-Pesa
             </button>
             {message && <div className="message">{message}</div>}
+            <div className="admin-access">
+  <a href="/admin" style={{fontSize:'12px',color:'#999'}}>Admin Portal</a>
+</div>
           </div>
         </div>
       </div>
