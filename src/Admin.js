@@ -6,20 +6,8 @@ const USERS = {
   cashier: { username: 'cashier', password: 'cashier123', role: 'Cashier', name: 'Jane Wanjiku' },
 }
 
-const mockSales = [
-  { id: 'INV-001', item: 'Panadol 500mg x8', amount: 50, method: 'M-Pesa', cashier: 'Jane', time: '08:12 AM', status: 'paid' },
-  { id: 'INV-002', item: 'Maize Flour 2kg', amount: 220, method: 'Cash', cashier: 'John', time: '09:45 AM', status: 'paid' },
-  { id: 'INV-003', item: 'Single Room 1 Night', amount: 2500, method: 'M-Pesa', cashier: 'Jane', time: '10:30 AM', status: 'paid' },
-  { id: 'INV-004', item: 'Amoxicillin 250mg', amount: 320, method: 'Card', cashier: 'John', time: '11:00 AM', status: 'pending' },
-  { id: 'INV-005', item: 'Cooking Oil 1L', amount: 350, method: 'M-Pesa', cashier: 'Jane', time: '12:15 PM', status: 'paid' },
-  { id: 'INV-006', item: 'Double Room 1 Night', amount: 4500, method: 'Card', cashier: 'John', time: '01:30 PM', status: 'paid' },
-]
-
-const mockExpenses = [
-  { id: 1, desc: 'Stock restock', category: 'Inventory', amount: 5000, date: '26 Apr 2026' },
-  { id: 2, desc: 'Monthly rent', category: 'Rent', amount: 3500, date: '25 Apr 2026' },
-  { id: 3, desc: 'Staff salary', category: 'Staff', amount: 8000, date: '24 Apr 2026' },
-]
+const mockSales = []
+const mockExpenses = []
 
 const mockUsers = [
   { id: 1, name: 'Beryl Munyao', role: 'Super Admin', status: 'active', lastLogin: 'Today 8:00 AM' },
@@ -47,14 +35,14 @@ export default function Admin() {
   const [err, setErr] = useState('')
   const [tab, setTab] = useState('dashboard')
   const [user, setUser] = useState(null)
-  const [expenses, setExpenses] = useState(mockExpenses)
+  const [expenses, setExpenses] = useState([])
   const [newExp, setNewExp] = useState({ desc: '', amount: '', category: '' })
   const [showEF, setShowEF] = useState(false)
   const [ready, setReady] = useState(false)
   const [users, setUsers] = useState(mockUsers)
   const [showAddUser, setShowAddUser] = useState(false)
   const [newUser, setNewUser] = useState({ name: '', role: 'Cashier', email: '' })
-  const [companies, setCompanies] = useState([{ id: 1, name: 'BerylBytes Retail', type: 'Retail', users: 5, revenue: 0 }])
+  const [companies] = useState([{ id: 1, name: 'BerylBytes Retail', type: 'Retail', users: 5, revenue: 0 }])
   const [globalSettings, setGlobalSettings] = useState({
     currency: 'KES',
     notifications: true,
@@ -62,12 +50,25 @@ export default function Admin() {
     apis: { stripe: 'Pending', whatsapp: 'Pending', maps: 'Pending' }
   })
   const [inventory, setInventory] = useState([])
-  const [customers, setCustomers] = useState([])
+  const [customers] = useState([])
   const [showAddItem, setShowAddItem] = useState(false)
   const [newItem, setNewItem] = useState({ name: '', sku: '', category: 'General', retailPrice: '', buyingPrice: '', stock: '', minAlert: '', expiry: '', batch: '' })
   const [qrScan, setQrScan] = useState(false)
+  const [autoRefresh, setAutoRefresh] = useState(true)
+  const [lastUpdate, setLastUpdate] = useState(new Date().toLocaleTimeString())
 
-  useEffect(() => { setTimeout(() => setReady(true), 100) }, [])
+  useEffect(() => {
+    setTimeout(() => setReady(true), 100)
+    
+    // Auto-refresh interval (updates every 3 seconds when logged in)
+    let interval
+    if (loggedIn && autoRefresh) {
+      interval = setInterval(() => {
+        setLastUpdate(new Date().toLocaleTimeString())
+      }, 3000)
+    }
+    return () => clearInterval(interval)
+  }, [loggedIn, autoRefresh])
 
   const login = () => {
     const found = Object.values(USERS).find(x => x.username === u && x.password === p)
