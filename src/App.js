@@ -1,4 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
+const USERS = [
+  { id: 1, name: 'Beryl Munyao',   role: 'Super Admin', color: '#00f0a0', initial: 'B' },
+  { id: 2, name: 'Admin User',     role: 'Manager',     color: '#38beff', initial: 'A' },
+  { id: 3, name: 'Cashier One',    role: 'Cashier',     color: '#b57bff', initial: 'C' },
+  { id: 4, name: 'Cashier Two',    role: 'Cashier',     color: '#ff9248', initial: 'D' },
+]
+
+const [activeUser, setActiveUser] = useState(USERS[0])
+const [showUserMenu, setShowUserMenu] = useState(false)
 import './App.css'
 import jsPDF from 'jspdf'
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js'
