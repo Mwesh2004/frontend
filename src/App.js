@@ -1,16 +1,129 @@
 import { useState, useEffect, useCallback } from 'react'
-const USERS = [
-  { id: 1, name: 'Beryl Munyao',   role: 'Super Admin', color: '#00f0a0', initial: 'B' },
-  { id: 2, name: 'Admin User',     role: 'Manager',     color: '#38beff', initial: 'A' },
-  { id: 3, name: 'Cashier One',    role: 'Cashier',     color: '#b57bff', initial: 'C' },
-  { id: 4, name: 'Cashier Two',    role: 'Cashier',     color: '#ff9248', initial: 'D' },
-]
-
-const [activeUser, setActiveUser] = useState(USERS[0])
-const [showUserMenu, setShowUserMenu] = useState(false)
 import './App.css'
 import jsPDF from 'jspdf'
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js'
+
+/* ================= USERS & AUTH ================= */
+const USERS = [
+  { id: 1, name: 'Admin', role: 'Super Admin', password: '1234' },
+  { id: 2, name: 'Cashier', role: 'Cashier', password: '1111' },
+  { id: 3, name: 'Manager', role: 'Manager', password: '2222' }
+]
+
+/* ================= CATEGORIES (UNCHANGED) ================= */
+const categories = { /* ⛔ keep your existing categories here unchanged */ }
+
+const TODAY = new Date().toISOString().slice(0,10)
+const defaultSales = () => { const d=[]; for(let i=6;i>=0;i--){const x=new Date();x.setDate(x.getDate()-i);d.push({date:x.toISOString().slice(0,10),revenue:0})} return d }
+const TIERS = [{name:'Bronze',min:0,disc:0,color:'#cd7f32'},{name:'Silver',min:500,disc:5,color:'#c0c0c0'},{name:'Gold',min:1500,disc:10,color:'#ffd700'},{name:'Platinum',min:5000,disc:15,color:'#e5e4e2'}]
+const getTier = p => [...TIERS].reverse().find(t=>p>=t.min)
+const NICHES = {all:Object.keys(categories),retail:['shop','laundry','hardware'],food:['cafe'],health:['pharmacy'],services:['airbnb','salon'],tech:['electronics']}
+
+export default function App() {
+
+  /* ================= AUTH SYSTEM ================= */
+  const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('pos_user')) || null)
+  const [loginData, setLoginData] = useState({ name:'', password:'' })
+  const [auditLogs, setAuditLogs] = useState([])
+
+  useEffect(() => {
+    if (user) localStorage.setItem('pos_user', JSON.stringify(user))
+    else localStorage.removeItem('pos_user')
+  }, [user])
+
+  const login = () => {
+    const found = USERS.find(u => u.name === loginData.name && u.password === loginData.password)
+    if (!found) return alert('Invalid login')
+    setUser(found)
+    setAuditLogs(p => [{ action:'LOGIN', user:found.name, time:new Date().toLocaleString() }, ...p])
+  }
+
+  const logout = () => {
+    setAuditLogs(p => [{ action:'LOGOUT', user:user.name, time:new Date().toLocaleString() }, ...p])
+    setUser(null)
+  }
+
+  const can = (perm) => {
+    if (!user) return false
+    if (user.role === 'Super Admin') return true
+    if (user.role === 'Manager' && perm !== 'settings') return true
+    if (user.role === 'Cashier') return perm === 'pos'
+    return false
+  }
+
+  /* ================= STATE (UNCHANGED CORE) ================= */
+  const [cart,setCart] = useState([])
+  const [activeCat,setActiveCat] = useState('shop')
+  const [search,setSearch] = useState('')
+  const [view,setView] = useState('pos')
+  const [customers,setCustomers] = useState([])
+  const [ledger,setLedger] = useState([])
+  const [salesData,setSalesData] = useState(defaultSales())
+
+  const subtotal = cart.reduce((s,i)=>s+i.price*i.qty,0)
+  const tax = Math.round(subtotal*0.16)
+  const grand = subtotal+tax
+
+  const completeSale = useCallback(() => {
+    const entry = {
+      id:'INV-'+Date.now(),
+      date:new Date().toLocaleString(),
+      user:user?.name,
+      total:grand
+    }
+    setLedger(p=>[entry,...p])
+    setCart([])
+  },[grand,user])
+
+  /* ================= LOGIN SCREEN ================= */
+  if (!user) {
+    return (
+      <div className="login-screen">
+        <h2>BerylBytes POS Login</h2>
+        <input placeholder="Username" value={loginData.name} onChange={e=>setLoginData({...loginData,name:e.target.value})}/>
+        <input type="password" placeholder="Password" value={loginData.password} onChange={e=>setLoginData({...loginData,password:e.target.value})}/>
+        <button onClick={login}>Login</button>
+      </div>
+    )
+  }
+
+  /* ================= MAIN APP ================= */
+  return (
+    <PayPalScriptProvider options={{'client-id':'sb'}}>
+
+      {/* TOP BAR */}
+      <div className="topbar">
+        <h3>BerylBytes POS</h3>
+        <div>
+          👤 {user.name} ({user.role})
+          <button onClick={logout}>Logout</button>
+        </div>
+      </div>
+
+      {/* ROLE CONTROL EXAMPLE */}
+      {!can('pos') && <div style={{padding:20}}>Access restricted</div>}
+
+      {can('pos') && (
+        <div className="app">
+          <h2>POS SYSTEM (WORKING VERSION)</h2>
+          <p>Cart items: {cart.length}</p>
+          <button onClick={completeSale}>Complete Sale</button>
+        </div>
+      )}
+
+      {/* AUDIT LOGS (ADMIN ONLY) */}
+      {user.role === 'Super Admin' && (
+        <div style={{padding:20}}>
+          <h3>Audit Logs</h3>
+          {auditLogs.map((l,i)=>(
+            <div key={i}>{l.time} - {l.user} - {l.action}</div>
+          ))}
+        </div>
+      )}
+
+    </PayPalScriptProvider>
+  )
+}
 
 const categories = {
   shop: { label:'General Shop', icon:'🛒', products:[
@@ -166,6 +279,15 @@ const getTier = p => [...TIERS].reverse().find(t=>p>=t.min)
 const NICHES = {all:Object.keys(categories),retail:['shop','laundry','hardware'],food:['cafe'],health:['pharmacy'],services:['airbnb','salon'],tech:['electronics']}
 
 export default function App() {
+  const USERS = [
+  { id: 1, name: "Beryl Munyao", role: "Super Admin" },
+  { id: 2, name: "Cashier", role: "Cashier" },
+  { id: 3, name: "Manager", role: "Manager" },
+  { id: 4, name: "Inventory Clerk", role: "Inventory Clerk" },
+  { id: 5, name: "Accountant", role: "Accountant" },
+  { id: 6, name: "Customer Support", role: "Customer Support" },
+]
+  const [showUserMenu, setShowUserMenu] = useState(false)
   const PAYSTACK_KEY = process.env.REACT_APP_PAYSTACK_PUBLIC_KEY || ''
   const PAYPAL_ID    = process.env.REACT_APP_PAYPAL_CLIENT_ID || 'sb'
   const API_URL      = process.env.REACT_APP_API_URL || 'http://localhost:3000'
