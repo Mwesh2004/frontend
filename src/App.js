@@ -425,7 +425,10 @@ export default function App() {
   const [selCust,setSelCust]           = useState(null)
   const [customPrices,setCustomPrices] = useState({})
   const [customItems,setCustomItems]   = useState([])
-  const [newItem,setNewItem]           = useState({name:'',price:'',category:'shop',icon:''})
+const [newItem,setNewItem]           = useState({name:'',price:'',category:'shop',icon:''})
+  const [customCats,setCustomCats]       = useState(()=>{try{return JSON.parse(localStorage.getItem('bb_custom_cats')||'[]')}catch{return[]}})
+  const [showAddCat,setShowAddCat]     = useState(false)
+  const [newCat,setNewCat]             = useState({label:'',icon:'🏪',id:''})
   const [outOfStockIds,setOutOfStockIds] = useState(()=>{try{return JSON.parse(localStorage.getItem('bb_oos')||'[]')}catch{return[]}})
   const [showOutOfStock,setShowOutOfStock] = useState(false)
 
