@@ -45,7 +45,7 @@ const SvgIcon = ({ icon, size = 14, ...props }) => (
 
 // ─── ROLES ────────────────────────────────────────────────────────────────────
 const ROLES = {
-  superadmin:{ label:'Super Admin',      color:'#10b981', bg:'rgba(16,185,129,.1)',  access:['pos','dashboard','crm','orders','add','settings','payments','manager'], canEdit:true,  canDelete:true  },
+  superadmin:{ label:'Super Admin',      color:'#b91010', bg:'rgba(16,185,129,.1)',  access:['pos','dashboard','crm','orders','add','settings','payments','manager'], canEdit:true,  canDelete:true  },
   manager:   { label:'Manager',          color:'#0ea5e9', bg:'rgba(14,165,233,.1)',  access:['pos','dashboard','crm','orders','add','manager'],                       canEdit:true,  canDelete:false },
   cashier:   { label:'Cashier',          color:'#8b5cf6', bg:'rgba(139,92,246,.1)',  access:['pos','dashboard'],                                                     canEdit:false, canDelete:false },
   inventory: { label:'Inventory Clerk',  color:'#f59e0b', bg:'rgba(245,158,11,.1)',  access:['orders','add','dashboard'],                                             canEdit:true,  canDelete:false },
@@ -60,7 +60,7 @@ const SYSTEM_USERS = [
   { id:3, name:'Cashier One',    email:'cashier1@berylbytes.co.ke', pin:'3456', role:'cashier',    initial:'C' },
   { id:4, name:'Cashier Two',    email:'cashier2@berylbytes.co.ke', pin:'4567', role:'cashier',    initial:'D' },
   { id:5, name:'Stock Manager',  email:'stock@berylbytes.co.ke',    pin:'5678', role:'inventory',  initial:'S' },
-  { id:6, name:'Mary Accounts',  email:'accounts@berylbytes.co.ke', pin:'6789', role:'accountant', initial:'M' },
+  { id:6, name:'Accountant',     email:'accounts@berylbytes.co.ke', pin:'6789', role:'accountant', initial:'M' },
   { id:7, name:'Audit Officer',  email:'audit@berylbytes.co.ke',    pin:'7890', role:'audit',      initial:'U' },
   { id:8, name:'Support Agent',  email:'support@berylbytes.co.ke',  pin:'8901', role:'support',    initial:'P' },
 ]
@@ -301,7 +301,8 @@ function LoginPortal({ onLogin, darkMode, toggleDark }) {
             </div>
           </div>
           <div className="login-copy">
-            <span className="login-kicker">Retail OS for modern teams</span>
+            <span className="login-kicker">Retail Operating System for modern teams. 
+              Your POS Control Starts Here — Log In</span>
             <h1>Run sales, stock, customers, and payments from one calm dashboard.</h1>
             <p>Fast checkout, role-based access, receipts, M-Pesa, Paystack, PayPal, inventory, and reports built into a single POS workspace.</p>
           </div>
@@ -361,7 +362,7 @@ function LoginPortal({ onLogin, darkMode, toggleDark }) {
               </button>
             ))}
           </div>
-          <button className="bio-btn" onClick={doBiometric} disabled={loading} aria-label="Sign in with biometric or passkey">
+          <button className="bio-btn" onClick={doBiometric} enabled={loading} aria-label="Sign in with biometric or passkey">
             <SvgIcon icon="fingerprint" size={16}/>
             {loading?'Authenticating…':'Biometric / Passkey Sign In'}
           </button>
@@ -475,7 +476,7 @@ export default function App() {
   const [receiptData,setReceiptData]   = useState(null)
 
   // Edit product price
-  const [editProd,setEditProd]         = useState(null)
+  const [editProd,setEditProd]         = useState('')
   const [editPrice,setEditPrice]       = useState('')
 
   // Bug reports
@@ -768,6 +769,8 @@ export default function App() {
     {id:'payments',icon:'payments',label:'Payment Settings'},
     {id:'manager',icon:'reports',label:'Bug Reports',badge:bugReports.filter(r=>r.status==='open').length||null},
     {id:'settings',icon:'settings',label:'Settings'},
+    {id:'support',icon:'support',label:'Support'},
+
   ].filter(item=>canAccess(item.id))
 
   if(!loggedIn) return <LoginPortal onLogin={handleLogin} darkMode={darkMode} toggleDark={()=>setDarkMode(!darkMode)}/>
@@ -913,7 +916,7 @@ export default function App() {
                     return(
                       <article key={p.id} className="pc" style={{animationDelay:`${i*0.025}s`}} onClick={()=>addToCart({...p,price:dp})} role="listitem button" tabIndex={0} aria-label={`Add ${p.name} — ${fKES(dp)}`} onKeyDown={e=>e.key==='Enter'&&addToCart({...p,price:dp})}>
                         {canEdit()&&<button className="pc-edit" title="Edit price" aria-label={`Edit price for ${p.name}`} onClick={e=>{e.stopPropagation();setEditProd(p);setEditPrice(String(dp))}}><SvgIcon icon="edit"/></button>}
-                        <div className="pc-icon" aria-hidden="true">{p.icon}</div>
+                        <div className="pc-icon" aria-hidden="true">{(p.name||'?').trim().slice(0,1).toUpperCase()}</div>
                         <div className="pc-nm">{p.name}</div>
                         <div className="pc-pr">{fKES(dp)}</div>
                         {p.tag&&<span className={`pc-tag ${p.tag==='POM'?'pom':'otc'}`}>{p.tag}</span>}
@@ -1113,7 +1116,7 @@ export default function App() {
                   )}
                   {inventory.length===0
                     ?<div className="empty-state"><div className="empty-icon"><SvgIcon icon="inventory" size={22}/></div><p>No inventory items</p><span>Add items to track stock, cost, and expiry dates.</span></div>
-                    :<><div className="table-wrap"><table className="data-table" aria-label="Inventory"><thead><tr><th>Name</th><th>SKU</th><th>Retail</th><th>Cost</th><th>Stock</th><th>Expiry</th>{canEdit()&&<th></th>}</tr></thead><tbody>{inventory.map(item=><tr key={item.id}><td>{item.name}</td><td style={{color:'var(--text3)',fontFamily:'monospace'}}>{item.sku}</td><td>{fKES(item.retailPrice)}</td><td style={{color:'var(--text2)'}}>{fKES(item.buyingPrice)}</td><td>{item.stockLevel}{item.stockLevel<=item.minAlert&&<span className="alert-badge" role="alert">Low</span>}</td><td>{item.expiry||'—'}</td>{canEdit()&&<td><button className="btn-g btn-xs danger" onClick={()=>setInventory(p=>p.filter(i=>i.id!==item.id))} aria-label={`Remove ${item.name}`}>Remove</button></td>}</tr>)}</tbody></table></div><div className="card-list">{inventory.map(item=><div key={item.id} className="m-card"><div className="m-card-hd"><span className="m-card-id">{item.name}</span>{item.stockLevel<=item.minAlert&&<span className="pill failed" role="alert">Low Stock</span>}</div><div className="m-card-body"><span className="m-tag">Retail: <strong>{fKES(item.retailPrice)}</strong></span><span className="m-tag">Stock: <strong>{item.stockLevel}</strong></span></div></div>)}</div></>
+                    :<><div className="table-wrap"><table className="data-table" aria-label="Inventory"><thead><tr><th>Name</th><th>Product Category</th><th>SKU</th><th>Batch No</th><th>Min Stock Level</th><th>Current Stock</th><th>Expiry</th>{canEdit()&&<th></th>}</tr></thead><tbody>{inventory.map(item=>{const low=item.stockLevel<=item.minAlert;return(<tr key={item.id}><td>{item.name}</td><td>{item.category||'—'}</td><td style={{color:'var(--text3)',fontFamily:'monospace'}}>{item.sku||'—'}</td><td style={{color:'var(--text2)',fontFamily:'monospace'}}>{item.batch||'—'}</td><td>{item.minAlert||0}</td><td>{item.stockLevel}{low&&<span className="alert-badge" role="alert">Low</span>}</td><td>{item.expiry||'—'}</td>{canEdit()&&<td><button className="btn-g btn-xs danger" onClick={()=>setInventory(p=>p.filter(i=>i.id!==item.id))} aria-label={`Remove ${item.name}`}>Remove</button></td>}</tr>)})}</tbody></table></div><div className="card-list">{inventory.map(item=>{const low=item.stockLevel<=item.minAlert;return(<div key={item.id} className="m-card"><div className="m-card-hd"><span className="m-card-id">{item.name}</span>{low&&<span className="pill failed" role="alert">Low Stock</span>}</div><div className="m-card-body"><span className="m-tag">{item.category||'—'}</span><span className="m-tag">SKU: <strong style={{color:'var(--text)'}}>{item.sku||'—'}</strong></span><span className="m-tag">Batch: <strong style={{color:'var(--text)'}}>{item.batch||'—'}</strong></span><span className="m-tag">Min: <strong style={{color:'var(--text)'}}>{item.minAlert||0}</strong></span><span className="m-tag">Current: <strong style={{color:'var(--text)'}}>{item.stockLevel}</strong></span><span className="m-tag">Expiry: <strong style={{color:'var(--text)'}}>{item.expiry||'—'}</strong></span></div></div>)})}</div></>
                   }
                 </div>
               </div>
@@ -1298,7 +1301,7 @@ export default function App() {
                   ?<div className="ci-empty"><div className="ci-empty-icon"><SvgIcon icon="cart" size={18}/></div><p>Cart is empty</p><span>Tap products to add them</span></div>
                   :cart.map(item=>(
                     <div key={item.id} className="ci" role="listitem">
-                      <span className="ci-ico" aria-hidden="true">{item.icon}</span>
+                      <span className="ci-ico" aria-hidden="true">{(item.name||'?').trim().slice(0,1).toUpperCase()}</span>
                       <div className="ci-inf"><div className="ci-nm">{item.name}</div><div className="ci-pr">{fKES(item.price*item.qty)}</div></div>
                       <div className="ci-ctl" role="group" aria-label={`Quantity controls for ${item.name}`}>
                         <button className="qb" onClick={()=>updQty(item.id,-1)} aria-label="Decrease quantity">−</button>
