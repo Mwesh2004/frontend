@@ -45,7 +45,7 @@ const SvgIcon = ({ icon, size = 14, ...props }) => (
 
 // ─── ROLES ────────────────────────────────────────────────────────────────────
 const ROLES = {
-  superadmin:{ label:'Super Admin',      color:'#b91010', bg:'rgba(16,185,129,.1)',  access:['pos','dashboard','crm','orders','add','settings','payments','manager'], canEdit:true,  canDelete:true  },
+  superadmin:{ label:'Super Admin',      color:'#8d2a64', bg:'rgba(16,185,129,.1)',  access:['pos','dashboard','crm','orders','add','settings','payments','manager'], canEdit:true,  canDelete:true  },
   manager:   { label:'Manager',          color:'#0ea5e9', bg:'rgba(14,165,233,.1)',  access:['pos','dashboard','crm','orders','add','manager'],                       canEdit:true,  canDelete:false },
   cashier:   { label:'Cashier',          color:'#8b5cf6', bg:'rgba(139,92,246,.1)',  access:['pos','dashboard'],                                                     canEdit:false, canDelete:false },
   inventory: { label:'Inventory Clerk',  color:'#f59e0b', bg:'rgba(245,158,11,.1)',  access:['orders','add','dashboard'],                                             canEdit:true,  canDelete:false },
