@@ -288,7 +288,7 @@ function LoginPortal({ onLogin, darkMode, toggleDark }) {
 
   return (
     <div className="login-portal">
-      <div className="login-aura"></div> aria-hidden="true"/
+      <div className="login-aura" aria-hidden="true"/>
       <div className="login-shell">
         <section className="login-showcase" aria-label="BerylBytes overview">
           <div className="login-showcase-top">
