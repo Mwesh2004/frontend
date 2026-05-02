@@ -11,8 +11,8 @@ const mockExpenses = []
 
 const mockUsers = [
   { id: 1, name: 'Beryl Munyao', role: 'Super Admin', status: 'active', lastLogin: 'Today 8:00 AM' },
-  { id: 2, name: 'Jane Wanjiku', role: 'Cashier', status: 'active', lastLogin: 'Today 9:00 AM' },
-  { id: 3, name: 'John Kamau', role: 'Cashier', status: 'inactive', lastLogin: 'Yesterday' },
+  { id: 2, name: 'Winner Mutheu', role: 'Cashier', status: 'active', lastLogin: 'Today 9:00 AM' },
+  { id: 3, name: 'Christian Musumbi', role: 'Accountant', status: 'inactive', lastLogin: 'Yesterday' },
 ]
 
 function BgOrbs({ subtle }) {

@@ -45,7 +45,7 @@ const SvgIcon = ({ icon, size = 14, ...props }) => (
 
 // ─── ROLES ────────────────────────────────────────────────────────────────────
 const ROLES = {
-  superadmin:{ label:'Super Admin',      color:'#8d2a64', bg:'rgba(16,185,129,.1)',  access:['pos','dashboard','crm','orders','add','settings','payments','manager'], canEdit:true,  canDelete:true  },
+ superadmin: { label:'Super Admin',      color:'#10b981', bg:'rgba(16,185,129,.1)',  access:['pos','dashboard','crm','orders','add','settings','payments','manager','users'],canEdit:true, canDelete:true },
   manager:   { label:'Manager',          color:'#0ea5e9', bg:'rgba(14,165,233,.1)',  access:['pos','dashboard','crm','orders','add','manager'],                       canEdit:true,  canDelete:false },
   cashier:   { label:'Cashier',          color:'#8b5cf6', bg:'rgba(139,92,246,.1)',  access:['pos','dashboard'],                                                     canEdit:false, canDelete:false },
   inventory: { label:'Inventory Clerk',  color:'#f59e0b', bg:'rgba(245,158,11,.1)',  access:['orders','add','dashboard'],                                             canEdit:true,  canDelete:false },
@@ -409,6 +409,8 @@ export default function App() {
   const [loggedIn,setLoggedIn]         = useState(false)
   const [currentUser,setCurrentUser]   = useState(null)
   const [showUserMenu,setShowUserMenu] = useState(false)
+  const [suspendedUsers, setSuspendedUsers] = useState([])
+  const [auditLog, setAuditLog]             = useState([])
 
   // App state
   const [darkMode,setDarkMode]         = useState(true)
@@ -762,19 +764,22 @@ const [newItem,setNewItem]           = useState({name:'',price:'',category:'shop
   const totalPages=Math.max(1,Math.ceil(filteredLedger.length/PAGE_SIZE))
   const pagedLedger=filteredLedger.slice((txnPage-1)*PAGE_SIZE,txnPage*PAGE_SIZE)
 
-  // Nav
+// Nav
   const NAV_ITEMS = [
-    {id:'pos',icon:'pos',label:'Point of Sale'},
-    {id:'dashboard',icon:'dashboard',label:'Dashboard'},
-    {id:'crm',icon:'crm',label:'CRM & Loyalty',badge:customers.length||null},
-    {id:'orders',icon:'inventory',label:'Inventory'},
-    {id:'add',icon:'add',label:'Add Item'},
-    {id:'payments',icon:'payments',label:'Payment Settings'},
-    {id:'manager',icon:'reports',label:'Bug Reports',badge:bugReports.filter(r=>r.status==='open').length||null},
-    {id:'settings',icon:'settings',label:'Settings'},
-    {id:'support',icon:'support',label:'Support'},
-
-  ].filter(item=>canAccess(item.id))
+    {id:'pos',       icon:'pos',       label:'Point of Sale'},
+    {id:'dashboard', icon:'dashboard', label:'Dashboard'},
+    {id:'crm',       icon:'crm',       label:'CRM & Loyalty', badge:customers.length||null},
+    {id:'orders',    icon:'inventory', label:'Inventory'},
+    {id:'add',       icon:'add',       label:'Add Item'},
+    {id:'payments',  icon:'payments',  label:'Payment Settings'},
+    {id:'manager',   icon:'reports',   label:'Bug Reports', badge:bugReports.filter(r=>r.status==='open').length||null},
+    {id:'settings',  icon:'settings',  label:'Settings'},
+    {id:'users',     icon:'crm',       label:'User Management'},
+  ].filter(item=>{
+    if(!canAccess(item.id)) return false
+    if(item.id==='users') return currentUser?.role==='superadmin'
+    return true
+  });
 
   if(!loggedIn) return <LoginPortal onLogin={handleLogin} darkMode={darkMode} toggleDark={()=>setDarkMode(!darkMode)}/>
 
@@ -932,6 +937,156 @@ const [newItem,setNewItem]           = useState({name:'',price:'',category:'shop
             </>)}
 
             {/* DASHBOARD */}
+            {/* USER MANAGEMENT — superadmin only */}
+{view==='users' && currentUser?.role==='superadmin' && (
+  <div className="dash-grid">
+    <div className="panel full-col">
+      <div className="panel-hd">
+        <h2>User Management</h2>
+        <div style={{display:'flex',gap:8,alignItems:'center'}}>
+          <span style={{fontSize:11,color:'var(--text-tertiary)'}}>{SYSTEM_USERS.length} accounts</span>
+          <button className="btn-p btn-sm">+ Add User</button>
+        </div>
+      </div>
+      <p style={{fontSize:12,color:'var(--text-secondary)',marginBottom:16,lineHeight:1.6}}>
+        Only Super Admins can view, edit, suspend, or remove user accounts. 
+        Changes take effect immediately across all active sessions.
+      </p>
+      <div className="um-grid">
+        {SYSTEM_USERS.map(u => {
+          const role  = ROLES[u.role]
+          const isMe  = u.id === currentUser.id
+          const suspended = suspendedUsers?.includes(u.id)
+          return (
+            <div key={u.id} className="um-card">
+              <div className="um-card-hd" style={{'--hd-color':role.color}}>
+                <div className="um-av" style={{background:role.color}}>{u.initial}</div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div className="um-name" style={{display:'flex',alignItems:'center',gap:6}}>
+                    {u.name}
+                    {isMe && <span style={{fontSize:9,background:'var(--brand-subtle)',color:'var(--brand)',padding:'1px 6px',borderRadius:20,fontWeight:700,flexShrink:0}}>You</span>}
+                  </div>
+                  <div className="um-email">{u.email}</div>
+                </div>
+                <div className="um-badge" style={{background:role.bg,color:role.color,border:`1px solid ${role.color}30`}}>
+                  {role.label}
+                </div>
+              </div>
+
+              <div className="um-card-body">
+                <div className="um-field">
+                  <span className="um-field-label">Status</span>
+                  <div style={{display:'flex',alignItems:'center',gap:6}}>
+                    <div className={`um-status-dot ${suspended?'suspended':'active'}`}/>
+                    <span className="um-field-val">{suspended?'Suspended':'Active'}</span>
+                  </div>
+                </div>
+                <div className="um-field">
+                  <span className="um-field-label">Access Level</span>
+                  <span className="um-field-val" style={{color:role.color}}>{role.label}</span>
+                </div>
+                <div className="um-field">
+                  <span className="um-field-label">Permissions</span>
+                  <span className="um-field-val" style={{fontSize:10,color:'var(--text-tertiary)'}}>{(ROLES[u.role]?.access||[]).slice(0,3).join(', ')}{(ROLES[u.role]?.access||[]).length>3&&` +${(ROLES[u.role]?.access||[]).length-3}`}</span>
+                </div>
+                <div className="um-field">
+                  <span className="um-field-label">Can Edit</span>
+                  <span className="um-field-val" style={{color:ROLES[u.role]?.canEdit?'var(--success)':'var(--text-tertiary)'}}>{ROLES[u.role]?.canEdit?'Yes':'No'}</span>
+                </div>
+                <div className="um-field">
+                  <span className="um-field-label">Can Delete</span>
+                  <span className="um-field-val" style={{color:ROLES[u.role]?.canDelete?'var(--success)':'var(--text-tertiary)'}}>{ROLES[u.role]?.canDelete?'Yes':'No'}</span>
+                </div>
+              </div>
+
+              <div className="um-card-ft">
+                <button className="btn-g btn-xs" style={{flex:1}} disabled={isMe} title={isMe?'Cannot edit your own account':''}>
+                  <SvgIcon icon="edit" size={10}/>Edit Role
+                </button>
+                {suspended
+                  ?<button className="btn-p btn-xs green" disabled={isMe} onClick={()=>setSuspendedUsers(p=>p.filter(x=>x!==u.id))}>
+                    <SvgIcon icon="check" size={10}/>Restore
+                  </button>
+                  :<button className="btn-g btn-xs danger" disabled={isMe} title={isMe?'Cannot suspend yourself':''} onClick={()=>setSuspendedUsers(p=>[...(p||[]),u.id])}>
+                    Suspend
+                  </button>
+                }
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+
+    {/* Role matrix */}
+    <div className="panel full-col">
+      <div className="panel-hd"><h2>Role Permission Matrix</h2></div>
+      <div style={{overflowX:'auto'}}>
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Role</th>
+              <th>POS</th>
+              <th>Dashboard</th>
+              <th>CRM</th>
+              <th>Inventory</th>
+              <th>Payments</th>
+              <th>Settings</th>
+              <th>User Mgmt</th>
+              <th>Can Edit</th>
+              <th>Can Delete</th>
+            </tr>
+          </thead>
+          <tbody>
+            {Object.entries(ROLES).map(([key,role])=>{
+              const has = view => role.access.includes(view)||role.access.includes('*')
+              const tick = ok => <span style={{color:ok?'var(--success)':'var(--text-tertiary)',fontWeight:700,fontSize:14}}>{ok?'✓':'–'}</span>
+              return (
+                <tr key={key}>
+                  <td><div style={{display:'flex',alignItems:'center',gap:7}}><div style={{width:8,height:8,borderRadius:'50%',background:role.color,flexShrink:0}}/><strong style={{color:role.color}}>{role.label}</strong></div></td>
+                  <td>{tick(has('pos'))}</td>
+                  <td>{tick(has('dashboard'))}</td>
+                  <td>{tick(has('crm'))}</td>
+                  <td>{tick(has('orders'))}</td>
+                  <td>{tick(has('payments'))}</td>
+                  <td>{tick(has('settings'))}</td>
+                  <td>{tick(has('users'))}</td>
+                  <td>{tick(role.canEdit)}</td>
+                  <td>{tick(role.canDelete)}</td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    {/* Audit log preview */}
+    <div className="panel full-col">
+      <div className="panel-hd">
+        <h2>Recent Auth Events</h2>
+        <span style={{fontSize:11,color:'var(--text-tertiary)'}}>Last {Math.min(auditLog?.length||0,10)} events</span>
+      </div>
+      {(!auditLog||auditLog.length===0)
+        ?<div className="empty-state"><div className="empty-icon"><SvgIcon icon="eye" size={22}/></div><p>No auth events yet</p><span>Login and payment activity appears here.</span></div>
+        :<table className="data-table">
+          <thead><tr><th>Time</th><th>User</th><th>Action</th><th>IP</th></tr></thead>
+          <tbody>
+            {(auditLog||[]).slice(0,10).map((e,i)=>(
+              <tr key={i}>
+                <td style={{color:'var(--text-tertiary)',fontFamily:'monospace',fontSize:11}}>{new Date(e.time).toLocaleTimeString('en-KE')}</td>
+                <td>{e.userId}</td>
+                <td><span className={`pill ${e.action.includes('SUCCESS')||e.action.includes('VERIFY')?'paid':e.action.includes('FAIL')?'failed':'reviewed'}`}>{e.action}</span></td>
+                <td style={{color:'var(--text-tertiary)',fontFamily:'monospace',fontSize:11}}>{e.ip}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      }
+    </div>
+  </div>
+)}
+
             {view==='dashboard' && canAccess('dashboard') && (
               <div className="dash-grid">
                 <div className="panel full-col">
