@@ -10,12 +10,26 @@ export default function LoginPortal() {
   const [loading, setLoading] = useState(false)
   const [bioLoading, setBioLoading] = useState(false)
   const [showHints, setShowHints] = useState(false)
-  const [loaded, setLoaded] = useState(false)
+const [loaded, setLoaded] = useState(false)
+  const [kickerIndex, setKickerIndex] = useState(0)
   const hasBio = checkBiometricSupport()
+
+  const kickers = [
+    "Lightning Fast Transactions",
+    "Bank-Grade Security", 
+    "Effortless Inventory",
+    "Enterprise Ready POS"
+  ]
 
   useEffect(() => {
     const timer = setTimeout(() => setLoaded(true), 100)
-    return () => clearTimeout(timer)
+    const kickerInterval = setInterval(() => {
+      setKickerIndex((prev) => (prev + 1) % kickers.length)
+    }, 4000)
+    return () => {
+      clearTimeout(timer)
+      clearInterval(kickerInterval)
+    }
   }, [])
 
   const handleLogin = async (e) => {
@@ -71,6 +85,11 @@ export default function LoginPortal() {
           <div className="lb-text">
             <div className="lb-name">Beryl<em>Bytes</em></div>
             <div className="lb-sub">POINT OF SALE SYSTEM</div>
+            <div className="lb-kickers">
+              <div className="kicker-text" key={kickerIndex}>
+                {kickers[kickerIndex]}
+              </div>
+            </div>
           </div>
         </div>
 

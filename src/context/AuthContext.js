@@ -34,19 +34,7 @@ export function AuthProvider({ children }) {
     }
   })
 
-  const [currentUser, setCurrentUser] = useState(() => {
-    try {
-      const saved = localStorage.getItem(AUTH_KEY)
-      if (saved) {
-        const auth = JSON.parse(saved)
-        const user = DEFAULT_USERS.find(u => u.id === auth.id) || JSON.parse(localStorage.getItem(STORAGE_KEY))?.find(u => u.id === auth.id)
-        if (user) return user
-      }
-      return null
-    } catch {
-      return null
-    }
-  })
+  const [currentUser, setCurrentUser] = useState(null)
 
   const [isAuthenticated, setIsAuthenticated] = useState(!!currentUser)
 

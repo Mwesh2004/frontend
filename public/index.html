@@ -1,17 +1,696 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="BBytes POS System" />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <title>BBytes POS System</title>
-    <script src="https://js.paystack.co/v1/inline.js"></script>
-  </head>
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
-  </body>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BerylBytes — Sign In</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* ── ROOT ── */
+  .login-root {
+    position: fixed;
+    inset: 0;
+    background: #04070f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    z-index: 10000;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  /* ── BACKGROUND ── */
+  .login-bg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .lg-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0, 240, 160, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 240, 160, 0.02) 1px, transparent 1px);
+    background-size: 60px 60px;
+    animation: lg-grid 25s linear infinite;
+  }
+  @keyframes lg-grid {
+    from { transform: translateY(0); }
+    to   { transform: translateY(60px); }
+  }
+
+  .lg-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    animation: lg-orb-breathe ease-in-out infinite alternate;
+  }
+  .lg-o1 { width:600px;height:600px;background:radial-gradient(circle,rgba(0,240,160,.10),transparent 70%);top:-200px;left:-100px;animation-duration:10s; }
+  .lg-o2 { width:500px;height:500px;background:radial-gradient(circle,rgba(56,190,255,.08),transparent 70%);top:20%;right:-150px;animation-duration:13s; }
+  .lg-o3 { width:400px;height:400px;background:radial-gradient(circle,rgba(181,123,255,.07),transparent 70%);bottom:-100px;left:25%;animation-duration:11s; }
+  .lg-o4 { width:350px;height:350px;background:radial-gradient(circle,rgba(0,229,255,.06),transparent 70%);bottom:20%;right:20%;animation-duration:15s; }
+  @keyframes lg-orb-breathe {
+    from { transform:scale(1) translateY(0);opacity:.5; }
+    to   { transform:scale(1.1) translateY(-20px);opacity:.8; }
+  }
+
+  /* particles */
+  .lg-particle { position:absolute;width:2px;height:2px;border-radius:50%;animation:lg-particle-rise linear infinite;opacity:0; }
+  .lp-1{background:#00f0a0;left:8%;animation-duration:12s;animation-delay:0s}
+  .lp-2{background:#38beff;left:18%;animation-duration:15s;animation-delay:-2s}
+  .lp-3{background:#b57bff;left:28%;width:1px;height:1px;animation-duration:10s;animation-delay:-4s}
+  .lp-4{background:#00f0a0;left:38%;animation-duration:14s;animation-delay:-1s}
+  .lp-5{background:#38beff;left:48%;animation-duration:11s;animation-delay:-3s}
+  .lp-6{background:#00e5ff;left:58%;animation-duration:9s;animation-delay:-5s}
+  .lp-7{background:#00f0a0;left:68%;animation-duration:13s;animation-delay:-2s}
+  .lp-8{background:#b57bff;left:78%;width:1px;height:1px;animation-duration:10s;animation-delay:-6s}
+  .lp-9{background:#38beff;left:88%;animation-duration:12s;animation-delay:-4s}
+  .lp-10{background:#00f0a0;left:13%;animation-duration:11s;animation-delay:-7s}
+  .lp-11{background:#00e5ff;left:53%;animation-duration:9s;animation-delay:-3s}
+  .lp-12{background:#38beff;left:73%;animation-duration:14s;animation-delay:-5s}
+  @keyframes lg-particle-rise {
+    0%   { opacity:0;transform:translateY(100vh) scale(0); }
+    10%  { opacity:.6; }
+    90%  { opacity:.2; }
+    100% { opacity:0;transform:translateY(-5vh) scale(.5); }
+  }
+
+  /* rings */
+  .lg-ring {
+    position:absolute;top:50%;left:50%;
+    transform:translate(-50%,-50%);
+    width:500px;height:500px;
+    border:1px solid rgba(0,240,160,.03);
+    border-radius:50%;
+    animation:lg-ring-spin 60s linear infinite;
+  }
+  .lg-ring::before { content:'';position:absolute;inset:40px;border:1px solid rgba(56,190,255,.03);border-radius:50%; }
+  .lg-ring::after  { content:'';position:absolute;inset:80px;border:1px solid rgba(181,123,255,.03);border-radius:50%; }
+  @keyframes lg-ring-spin {
+    from { transform:translate(-50%,-50%) rotate(0deg); }
+    to   { transform:translate(-50%,-50%) rotate(360deg); }
+  }
+
+  /* ── CONTENT ── */
+  .login-content {
+    position:relative;z-index:1;
+    display:flex;flex-direction:column;align-items:center;
+    gap:24px;width:100%;max-width:440px;padding:20px;
+  }
+
+  /* ── BRAND ── */
+  .login-brand {
+    display:flex;align-items:center;gap:14px;
+    opacity:0;transform:translateY(-20px);
+    transition:all .6s cubic-bezier(.23,1,.32,1);
+  }
+  .login-root.in .login-brand { opacity:1;transform:translateY(0); }
+
+  .lb-logo {
+    width:44px;height:44px;border-radius:10px;
+    background:linear-gradient(135deg,#00f0a0,#0070ff);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:#000;
+    flex-shrink:0;box-shadow:0 0 20px rgba(0,240,160,.5);position:relative;
+  }
+  .lb-logo::after {
+    content:'';position:absolute;inset:-2px;border-radius:12px;
+    border:1px solid rgba(0,240,160,.3);
+    animation:logo-pulse 2.5s ease infinite;
+  }
+  @keyframes logo-pulse {
+    0%,100%{opacity:.2;transform:scale(1)}50%{opacity:.6;transform:scale(1.06)}
+  }
+
+  .lb-text { display:flex;flex-direction:column;gap:2px; }
+  .lb-name {
+    font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#ddeeff;line-height:1;
+  }
+  .lb-name em {
+    font-style:normal;
+    background:linear-gradient(90deg,#00f0a0,#38beff);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  }
+  .lb-sub { font-size:10px;color:#5a7a9a;letter-spacing:2px;text-transform:uppercase; }
+
+  /* subtitle under logo */
+  .login-tagline {
+    font-size:14px;color:#3d5a74;letter-spacing:.3px;
+    opacity:0;transform:translateY(-8px);
+    transition:all .6s .1s cubic-bezier(.23,1,.32,1);
+  }
+  .login-root.in .login-tagline { opacity:1;transform:translateY(0); }
+
+  /* ── CARD ── */
+  .login-card {
+    position:relative;
+    background:rgba(13,21,32,.85);
+    border:1px solid rgba(30,48,72,.6);
+    border-radius:20px;padding:32px;width:100%;
+    backdrop-filter:blur(20px);
+    box-shadow:0 24px 80px rgba(0,0,0,.5),0 0 0 1px rgba(0,240,160,.05);
+    opacity:0;transform:scale(.96);
+    transition:all .6s .1s cubic-bezier(.23,1,.32,1);
+  }
+  .login-root.in .login-card { opacity:1;transform:scale(1); }
+
+  /* top glow line */
+  .lc-glow {
+    position:absolute;top:-1px;left:20%;right:20%;height:1px;
+    background:linear-gradient(90deg,transparent,#00f0a0,#38beff,transparent);
+    opacity:.4;
+  }
+
+  /* ── TABS ── */
+  .lc-tabs {
+    display:flex;background:rgba(8,14,26,.8);border:1px solid #162030;
+    border-radius:12px;padding:4px;margin-bottom:28px;gap:4px;
+  }
+  .lc-tab {
+    flex:1;padding:10px;border:none;border-radius:9px;
+    font-family:'Syne',sans-serif;font-size:13px;font-weight:700;
+    cursor:pointer;transition:all .2s;background:transparent;color:#5a7a9a;
+  }
+  .lc-tab.active {
+    background:rgba(0,240,160,.1);color:#00f0a0;
+    box-shadow:0 0 0 1px rgba(0,240,160,.15);
+  }
+  .lc-tab:hover:not(.active) { color:#ddeeff; }
+
+  /* ── PANELS ── */
+  .lc-panel { display:none; }
+  .lc-panel.active { display:flex;flex-direction:column;gap:16px; }
+
+  /* ── FIELDS ── */
+  .lc-field { display:flex;flex-direction:column;gap:6px;position:relative; }
+  .lc-field label { font-size:11px;font-weight:600;color:#5a7a9a;text-transform:uppercase;letter-spacing:.8px;transition:color .2s; }
+  .lc-field.has-value label { color:#00f0a0; }
+  .lc-field input {
+    background:rgba(8,14,26,.9);border:1px solid #162030;border-radius:12px;
+    color:#ddeeff;padding:12px 44px 12px 16px;
+    font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:all .2s;width:100%;
+  }
+  .lc-field input:focus { border-color:#00f0a0;box-shadow:0 0 0 3px rgba(0,240,160,.08); }
+  .lc-field input::placeholder { color:#243545; }
+
+  .lc-icon { position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:14px;opacity:.3;pointer-events:none; }
+
+  /* password toggle */
+  .pw-toggle {
+    position:absolute;right:14px;top:50%;transform:translateY(-50%);
+    background:none;border:none;cursor:pointer;color:#5a7a9a;
+    font-size:13px;padding:2px;transition:color .2s;
+  }
+  .pw-toggle:hover { color:#00f0a0; }
+
+  /* ── TWO-COL ROW ── */
+  .lc-row { display:grid;grid-template-columns:1fr 1fr;gap:12px; }
+
+  /* ── ERROR ── */
+  .lc-error {
+    background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.2);
+    border-radius:10px;padding:10px 14px;font-size:12px;color:#ff6b6b;text-align:center;
+    display:none;
+  }
+  .lc-error.visible { display:block; }
+  .lc-error.shake { animation:shake .4s ease; }
+  @keyframes shake {
+    0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}
+  }
+
+  /* ── SUCCESS ── */
+  .lc-success {
+    background:rgba(0,240,160,.08);border:1px solid rgba(0,240,160,.2);
+    border-radius:10px;padding:10px 14px;font-size:12px;color:#00f0a0;text-align:center;
+    display:none;
+  }
+  .lc-success.visible { display:block; }
+
+  /* ── BUTTONS ── */
+  .lc-btn {
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    width:100%;padding:14px;
+    background:linear-gradient(135deg,#00c47a,#00f0a0);
+    border:none;border-radius:12px;color:#000;
+    font-family:'Syne',sans-serif;font-size:14px;font-weight:700;
+    cursor:pointer;transition:all .2s;position:relative;overflow:hidden;
+  }
+  .lc-btn::before {
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);
+    transform:translateX(-100%);transition:transform .5s;
+  }
+  .lc-btn:hover { transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,240,160,.3); }
+  .lc-btn:hover::before { transform:translateX(100%); }
+  .lc-btn:active { transform:translateY(0); }
+  .lc-btn.loading { pointer-events:none;opacity:.8; }
+
+  .lc-spinner { width:18px;height:18px;border:2px solid rgba(0,0,0,.2);border-top-color:#000;border-radius:50%;animation:spin .8s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  .lc-arrow { transition:transform .2s;display:inline-block; }
+  .lc-btn:hover .lc-arrow { transform:translateX(4px); }
+
+  /* forgot */
+  .lc-forgot {
+    text-align:right;margin-top:-8px;
+  }
+  .lc-forgot button {
+    background:none;border:none;color:#5a7a9a;font-size:11px;font-family:'DM Sans',sans-serif;
+    cursor:pointer;text-decoration:underline;text-underline-offset:3px;transition:color .2s;
+  }
+  .lc-forgot button:hover { color:#00f0a0; }
+
+  /* divider */
+  .lc-divider { display:flex;align-items:center;gap:10px; }
+  .lc-divider::before,.lc-divider::after {
+    content:'';flex:1;height:1px;background:rgba(30,48,72,.6);
+  }
+  .lc-divider span { font-size:11px;color:#243545;white-space:nowrap; }
+
+  /* biometric */
+  .lc-bio-btn {
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    width:100%;padding:12px;
+    background:rgba(13,21,32,.9);border:1px solid #1e3048;border-radius:12px;
+    color:#5a7a9a;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;
+    cursor:pointer;transition:all .2s;
+  }
+  .lc-bio-btn:hover { border-color:#38beff;color:#38beff;background:rgba(56,190,255,.05); }
+
+  /* ── WORKSPACE PICKER (register) ── */
+  .lc-ws-row { display:flex;gap:8px; }
+  .lc-ws-row input { flex:1; }
+  .lc-ws-badge {
+    display:flex;align-items:center;padding:0 14px;
+    background:rgba(0,240,160,.08);border:1px solid rgba(0,240,160,.15);
+    border-radius:12px;font-size:12px;color:#00f0a0;font-weight:600;
+    white-space:nowrap;
+  }
+
+  /* ── FOOTER META ── */
+  .login-meta {
+    display:flex;align-items:center;gap:10px;font-size:10px;color:#243545;letter-spacing:.5px;
+    opacity:0;transform:translateY(10px);
+    transition:all .6s .3s cubic-bezier(.23,1,.32,1);
+  }
+  .login-root.in .login-meta { opacity:1;transform:translateY(0); }
+  .login-meta span { color:#162030; }
+
+  /* ── HINT SECTION ── */
+  .lc-footer { margin-top:20px;padding-top:16px;border-top:1px solid rgba(30,48,72,.4); }
+  .lc-hint-toggle {
+    background:none;border:none;color:#5a7a9a;font-size:11px;font-family:'DM Sans',sans-serif;
+    cursor:pointer;text-decoration:underline;text-underline-offset:3px;transition:color .2s;
+  }
+  .lc-hint-toggle:hover { color:#00f0a0; }
+  .lc-hints {
+    display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;
+    animation:fade-up .3s ease;
+  }
+  @keyframes fade-up { from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)} }
+  .lc-hint {
+    background:rgba(8,14,26,.9);border:1px solid #162030;border-radius:10px;padding:10px;
+    cursor:pointer;transition:all .2s;display:flex;flex-direction:column;gap:2px;
+  }
+  .lc-hint:hover { border-color:#00f0a0;background:rgba(0,240,160,.05);transform:translateY(-2px); }
+  .hint-role { font-size:10px;font-weight:700;color:#00f0a0;text-transform:uppercase;letter-spacing:.5px; }
+  .hint-creds { font-size:11px;color:#5a7a9a; }
+
+  /* ── STRENGTH BAR ── */
+  .pw-strength { margin-top:6px; }
+  .pw-strength-bar { height:3px;border-radius:2px;background:#162030;overflow:hidden; }
+  .pw-strength-fill { height:100%;border-radius:2px;width:0;transition:width .3s,background .3s; }
+  .pw-strength-label { font-size:10px;color:#5a7a9a;margin-top:4px; }
+
+  /* ── TERMS ── */
+  .lc-terms { display:flex;align-items:flex-start;gap:8px; }
+  .lc-terms input[type=checkbox] { margin-top:2px;accent-color:#00f0a0;flex-shrink:0; }
+  .lc-terms label { font-size:11px;color:#5a7a9a;cursor:pointer; }
+  .lc-terms label a { color:#00f0a0;text-decoration:none; }
+  .lc-terms label a:hover { text-decoration:underline; }
+</style>
+</head>
+<body>
+
+<div class="login-root" id="loginRoot">
+
+  <!-- background layer -->
+  <div class="login-bg">
+    <div class="lg-grid"></div>
+    <div class="lg-orb lg-o1"></div>
+    <div class="lg-orb lg-o2"></div>
+    <div class="lg-orb lg-o3"></div>
+    <div class="lg-orb lg-o4"></div>
+    <div class="lg-particle lp-1"></div>
+    <div class="lg-particle lp-2"></div>
+    <div class="lg-particle lp-3"></div>
+    <div class="lg-particle lp-4"></div>
+    <div class="lg-particle lp-5"></div>
+    <div class="lg-particle lp-6"></div>
+    <div class="lg-particle lp-7"></div>
+    <div class="lg-particle lp-8"></div>
+    <div class="lg-particle lp-9"></div>
+    <div class="lg-particle lp-10"></div>
+    <div class="lg-particle lp-11"></div>
+    <div class="lg-particle lp-12"></div>
+    <div class="lg-ring"></div>
+  </div>
+
+  <!-- main content -->
+  <div class="login-content">
+
+    <!-- brand -->
+    <div class="login-brand" id="loginBrand">
+      <div class="lb-logo">B</div>
+      <div class="lb-text">
+        <div class="lb-name"><em>Beryl</em>Bytes</div>
+        <div class="lb-sub">Point of Sale Systems</div>
+      </div>
+    </div>
+
+    <!-- tagline -->
+    <div class="login-tagline" id="loginTagline">Sign in to access your terminal</div>
+
+    <!-- card -->
+    <div class="login-card" id="loginCard">
+      <div class="lc-glow"></div>
+
+      <!-- tabs -->
+      <div class="lc-tabs">
+        <button class="lc-tab active" id="tabSignIn" onclick="switchTab('signin')">Sign In</button>
+        <button class="lc-tab" id="tabCreate" onclick="switchTab('create')">Create Account</button>
+      </div>
+
+      <!-- SIGN IN PANEL -->
+      <div class="lc-panel active" id="panelSignin">
+        <div class="lc-field" id="fieldEmail">
+          <label>Email</label>
+          <input type="email" id="emailInput" placeholder="you@business.com"
+                 oninput="syncField(this,'fieldEmail')" autocomplete="email">
+          <span class="lc-icon">✉</span>
+        </div>
+
+        <div class="lc-field" id="fieldPass">
+          <label>Password</label>
+          <input type="password" id="passInput" placeholder="••••••••"
+                 oninput="syncField(this,'fieldPass')" autocomplete="current-password">
+          <button class="pw-toggle" onclick="togglePw('passInput',this)" tabindex="-1">👁</button>
+        </div>
+
+        <div class="lc-forgot">
+          <button onclick="showForgot()">Forgot password?</button>
+        </div>
+
+        <div class="lc-error" id="signinError">Invalid email or password. Please try again.</div>
+        <div class="lc-success" id="signinSuccess">Welcome back! Redirecting…</div>
+
+        <button class="lc-btn" id="signinBtn" onclick="handleSignin()">
+          <span id="signinBtnText">Sign in</span>
+          <span class="lc-arrow" id="signinArrow">→</span>
+          <div class="lc-spinner" id="signinSpinner" style="display:none"></div>
+        </button>
+
+        <div class="lc-divider"><span>or continue with</span></div>
+
+        <button class="lc-bio-btn" onclick="handleBio()">
+          <span class="bio-icon">🔐</span>
+          Use PIN / Biometrics
+        </button>
+
+        <!-- demo hints -->
+        <div class="lc-footer">
+          <button class="lc-hint-toggle" onclick="toggleHints()">Show demo accounts ↓</button>
+          <div class="lc-hints" id="hintList" style="display:none">
+            <div class="lc-hint" onclick="fillHint('admin@berylbytes.com','admin123')">
+              <span class="hint-role">Admin</span>
+              <span class="hint-creds">admin@berylbytes.com</span>
+            </div>
+            <div class="lc-hint" onclick="fillHint('cashier@berylbytes.com','cash123')">
+              <span class="hint-role">Cashier</span>
+              <span class="hint-creds">cashier@berylbytes.com</span>
+            </div>
+            <div class="lc-hint" onclick="fillHint('manager@berylbytes.com','mgr123')">
+              <span class="hint-role">Manager</span>
+              <span class="hint-creds">manager@berylbytes.com</span>
+            </div>
+            <div class="lc-hint" onclick="fillHint('audit@berylbytes.com','aud123')">
+              <span class="hint-role">Auditor</span>
+              <span class="hint-creds">audit@berylbytes.com</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CREATE ACCOUNT PANEL -->
+      <div class="lc-panel" id="panelCreate">
+        <div class="lc-row">
+          <div class="lc-field" id="fieldFirst">
+            <label>First Name</label>
+            <input type="text" placeholder="Jane" oninput="syncField(this,'fieldFirst')">
+          </div>
+          <div class="lc-field" id="fieldLast">
+            <label>Last Name</label>
+            <input type="text" placeholder="Doe" oninput="syncField(this,'fieldLast')">
+          </div>
+        </div>
+
+        <div class="lc-field" id="fieldRegEmail">
+          <label>Work Email</label>
+          <input type="email" placeholder="you@business.com" oninput="syncField(this,'fieldRegEmail')">
+          <span class="lc-icon">✉</span>
+        </div>
+
+        <div class="lc-field" id="fieldWs">
+          <label>Workspace Name</label>
+          <div class="lc-ws-row">
+            <input type="text" id="wsInput" placeholder="my-business"
+                   oninput="updateWsBadge(this);syncField(this,'fieldWs')">
+            <div class="lc-ws-badge" id="wsBadge">.berylbytes.app</div>
+          </div>
+        </div>
+
+        <div class="lc-field" id="fieldRegPass">
+          <label>Password</label>
+          <input type="password" id="regPassInput" placeholder="Min. 8 characters"
+                 oninput="checkStrength(this);syncField(this,'fieldRegPass')">
+          <button class="pw-toggle" onclick="togglePw('regPassInput',this)" tabindex="-1">👁</button>
+          <div class="pw-strength">
+            <div class="pw-strength-bar"><div class="pw-strength-fill" id="strengthFill"></div></div>
+            <div class="pw-strength-label" id="strengthLabel"></div>
+          </div>
+        </div>
+
+        <div class="lc-terms">
+          <input type="checkbox" id="termsBox">
+          <label for="termsBox">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></label>
+        </div>
+
+        <div class="lc-error" id="createError">Please fill in all fields and accept the terms.</div>
+        <div class="lc-success" id="createSuccess">Account created! Check your email to verify.</div>
+
+        <button class="lc-btn" id="createBtn" onclick="handleCreate()">
+          <span id="createBtnText">Create Account</span>
+          <span class="lc-arrow" id="createArrow">→</span>
+          <div class="lc-spinner" id="createSpinner" style="display:none"></div>
+        </button>
+      </div>
+
+    </div><!-- /.login-card -->
+
+    <!-- footer meta -->
+    <div class="login-meta" id="loginMeta">
+      <span>BerylBytes v2.0</span>
+      <span>·</span>
+      <span>Secure Session</span>
+      <span>·</span>
+      <span>24/7 Support</span>
+    </div>
+
+  </div><!-- /.login-content -->
+</div><!-- /.login-root -->
+
+<script>
+  /* ── BOOT ── */
+  window.addEventListener('load', () => {
+    setTimeout(() => document.getElementById('loginRoot').classList.add('in'), 80);
+  });
+
+  /* ── TAB SWITCH ── */
+  function switchTab(tab) {
+    const isSignin = tab === 'signin';
+    document.getElementById('tabSignIn').classList.toggle('active', isSignin);
+    document.getElementById('tabCreate').classList.toggle('active', !isSignin);
+    document.getElementById('panelSignin').classList.toggle('active', isSignin);
+    document.getElementById('panelCreate').classList.toggle('active', !isSignin);
+    clearMessages();
+  }
+
+  /* ── FIELD FEEDBACK ── */
+  function syncField(input, wrapperId) {
+    const wrap = document.getElementById(wrapperId);
+    if (wrap) wrap.classList.toggle('has-value', input.value.length > 0);
+  }
+
+  /* ── SIGN IN ── */
+  function handleSignin() {
+    const email = document.getElementById('emailInput').value.trim();
+    const pass  = document.getElementById('passInput').value;
+    const btn   = document.getElementById('signinBtn');
+    const err   = document.getElementById('signinError');
+    const ok    = document.getElementById('signinSuccess');
+
+    clearMessages();
+
+    if (!email || !pass) {
+      showError('signinError', 'Please enter your email and password.');
+      return;
+    }
+
+    setLoading(btn, 'signinSpinner', 'signinBtnText', 'signinArrow', true);
+
+    setTimeout(() => {
+      setLoading(btn, 'signinSpinner', 'signinBtnText', 'signinArrow', false);
+      // demo: any matching email/pass combo triggers success
+      if (email.includes('@') && pass.length >= 3) {
+        ok.classList.add('visible');
+        btn.style.background = 'linear-gradient(135deg,#00a06a,#00c47a)';
+      } else {
+        showError('signinError', 'Invalid email or password. Please try again.');
+      }
+    }, 1400);
+  }
+
+  /* ── CREATE ACCOUNT ── */
+  function handleCreate() {
+    const terms = document.getElementById('termsBox').checked;
+    const btn   = document.getElementById('createBtn');
+
+    clearMessages();
+
+    if (!terms) {
+      showError('createError', 'Please accept the Terms of Service to continue.');
+      return;
+    }
+
+    setLoading(btn, 'createSpinner', 'createBtnText', 'createArrow', true);
+
+    setTimeout(() => {
+      setLoading(btn, 'createSpinner', 'createBtnText', 'createArrow', false);
+      document.getElementById('createSuccess').classList.add('visible');
+    }, 1600);
+  }
+
+  /* ── BIOMETRIC ── */
+  function handleBio() {
+    const btn = document.querySelector('.lc-bio-btn');
+    btn.classList.add('loading');
+    btn.textContent = '⏳ Authenticating…';
+    setTimeout(() => {
+      btn.classList.remove('loading');
+      btn.innerHTML = '<span class="bio-icon">🔐</span> Use PIN / Biometrics';
+    }, 2000);
+  }
+
+  /* ── FORGOT ── */
+  function showForgot() {
+    const err = document.getElementById('signinError');
+    err.textContent = 'Password reset link sent — check your inbox.';
+    err.style.color = '#38beff';
+    err.style.borderColor = 'rgba(56,190,255,.2)';
+    err.style.background = 'rgba(56,190,255,.05)';
+    err.classList.add('visible');
+  }
+
+  /* ── HINT FILL ── */
+  function fillHint(email, pass) {
+    document.getElementById('emailInput').value = email;
+    document.getElementById('passInput').value  = pass;
+    syncField({value:email}, 'fieldEmail');
+    syncField({value:pass},  'fieldPass');
+    toggleHints();
+  }
+
+  /* ── HINTS TOGGLE ── */
+  let hintsOpen = false;
+  function toggleHints() {
+    hintsOpen = !hintsOpen;
+    const list = document.getElementById('hintList');
+    const btn  = document.querySelector('.lc-hint-toggle');
+    list.style.display = hintsOpen ? 'grid' : 'none';
+    btn.textContent = hintsOpen ? 'Hide demo accounts ↑' : 'Show demo accounts ↓';
+  }
+
+  /* ── PASSWORD TOGGLE ── */
+  function togglePw(inputId, btn) {
+    const inp = document.getElementById(inputId);
+    const show = inp.type === 'password';
+    inp.type = show ? 'text' : 'password';
+    btn.textContent = show ? '🙈' : '👁';
+  }
+
+  /* ── PASSWORD STRENGTH ── */
+  function checkStrength(input) {
+    const v = input.value;
+    const fill  = document.getElementById('strengthFill');
+    const label = document.getElementById('strengthLabel');
+    let score = 0;
+    if (v.length >= 8) score++;
+    if (/[A-Z]/.test(v)) score++;
+    if (/[0-9]/.test(v)) score++;
+    if (/[^A-Za-z0-9]/.test(v)) score++;
+    const levels = [
+      { w:'0%',   bg:'#162030', text:'' },
+      { w:'25%',  bg:'#ff6b6b', text:'Weak' },
+      { w:'50%',  bg:'#ffa94d', text:'Fair' },
+      { w:'75%',  bg:'#38beff', text:'Good' },
+      { w:'100%', bg:'#00f0a0', text:'Strong' },
+    ];
+    const l = v.length === 0 ? levels[0] : levels[score] || levels[1];
+    fill.style.width = l.w;
+    fill.style.background = l.bg;
+    label.textContent = l.text;
+    label.style.color = l.bg;
+  }
+
+  /* ── WORKSPACE BADGE ── */
+  function updateWsBadge(input) {
+    const badge = document.getElementById('wsBadge');
+    const slug  = input.value.toLowerCase().replace(/[^a-z0-9-]/g,'').slice(0,20);
+    badge.textContent = (slug || 'my-business') + '.berylbytes.app';
+  }
+
+  /* ── HELPERS ── */
+  function setLoading(btn, spinnerId, textId, arrowId, on) {
+    btn.classList.toggle('loading', on);
+    document.getElementById(spinnerId).style.display = on ? 'block' : 'none';
+    document.getElementById(textId).style.display    = on ? 'none'  : 'inline';
+    document.getElementById(arrowId).style.display   = on ? 'none'  : 'inline';
+  }
+
+  function showError(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.style.color = '';
+    el.style.borderColor = '';
+    el.style.background = '';
+    el.classList.add('visible');
+    el.classList.remove('shake');
+    void el.offsetWidth; // reflow for re-trigger
+    el.classList.add('shake');
+  }
+
+  function clearMessages() {
+    document.querySelectorAll('.lc-error,.lc-success').forEach(el => {
+      el.classList.remove('visible','shake');
+    });
+  }
+</script>
+</body>
 </html>

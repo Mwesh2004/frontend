@@ -938,26 +938,26 @@ const [newItem,setNewItem]           = useState({name:'',price:'',category:'shop
 
             {/* DASHBOARD */}
             {/* USER MANAGEMENT — superadmin only */}
-{view==='users' && currentUser?.role==='superadmin' && (
-  <div className="dash-grid">
-    <div className="panel full-col">
-      <div className="panel-hd">
-        <h2>User Management</h2>
-        <div style={{display:'flex',gap:8,alignItems:'center'}}>
-          <span style={{fontSize:11,color:'var(--text-tertiary)'}}>{SYSTEM_USERS.length} accounts</span>
-          <button className="btn-p btn-sm">+ Add User</button>
-        </div>
-      </div>
-      <p style={{fontSize:12,color:'var(--text-secondary)',marginBottom:16,lineHeight:1.6}}>
-        Only Super Admins can view, edit, suspend, or remove user accounts. 
-        Changes take effect immediately across all active sessions.
-      </p>
-      <div className="um-grid">
-        {SYSTEM_USERS.map(u => {
-          const role  = ROLES[u.role]
-          const isMe  = u.id === currentUser.id
-          const suspended = suspendedUsers?.includes(u.id)
-          return (
+            {view==='users' && currentUser?.role==='superadmin' && (
+            <div className="dash-grid">
+            <div className="panel full-col">
+            <div className="panel-hd">
+            <h2>User Management</h2>
+            <div style={{display:'flex',gap:8,alignItems:'center'}}>
+            <span style={{fontSize:11,color:'var(--text-tertiary)'}}>{SYSTEM_USERS.length} accounts</span>
+            <button className="btn-p btn-sm">+ Add User</button>
+            </div>
+            </div>
+            <p style={{fontSize:12,color:'var(--text-secondary)',marginBottom:16,lineHeight:1.6}}>
+            Only Super Admins can view, edit, suspend, or remove user accounts. 
+            Changes take effect immediately across all active sessions.
+            </p>
+            <div className="um-grid">
+            {SYSTEM_USERS.map(u => {
+            const role  = ROLES[u.role]
+            const isMe  = u.id === currentUser.id
+            const suspended = suspendedUsers?.includes(u.id)
+            return (
             <div key={u.id} className="um-card">
               <div className="um-card-hd" style={{'--hd-color':role.color}}>
                 <div className="um-av" style={{background:role.color}}>{u.initial}</div>
@@ -1013,17 +1013,17 @@ const [newItem,setNewItem]           = useState({name:'',price:'',category:'shop
                 }
               </div>
             </div>
-          )
-        })}
-      </div>
-    </div>
+            )
+            })}
+            </div>
+            </div>
 
-    {/* Role matrix */}
-    <div className="panel full-col">
-      <div className="panel-hd"><h2>Role Permission Matrix</h2></div>
-      <div style={{overflowX:'auto'}}>
-        <table className="data-table">
-          <thead>
+            {/* Role matrix */}
+            <div className="panel full-col">
+            <div className="panel-hd"><h2>Role Permission Matrix</h2></div>
+            <div style={{overflowX:'auto'}}>
+            <table className="data-table">
+            <thead>
             <tr>
               <th>Role</th>
               <th>POS</th>
@@ -1036,8 +1036,8 @@ const [newItem,setNewItem]           = useState({name:'',price:'',category:'shop
               <th>Can Edit</th>
               <th>Can Delete</th>
             </tr>
-          </thead>
-          <tbody>
+            </thead>
+            <tbody>
             {Object.entries(ROLES).map(([key,role])=>{
               const has = view => role.access.includes(view)||role.access.includes('*')
               const tick = ok => <span style={{color:ok?'var(--success)':'var(--text-tertiary)',fontWeight:700,fontSize:14}}>{ok?'✓':'–'}</span>
@@ -1056,22 +1056,22 @@ const [newItem,setNewItem]           = useState({name:'',price:'',category:'shop
                 </tr>
               )
             })}
-          </tbody>
-        </table>
-      </div>
-    </div>
+            </tbody>
+            </table>
+            </div>
+            </div>
 
-    {/* Audit log preview */}
-    <div className="panel full-col">
-      <div className="panel-hd">
-        <h2>Recent Auth Events</h2>
-        <span style={{fontSize:11,color:'var(--text-tertiary)'}}>Last {Math.min(auditLog?.length||0,10)} events</span>
-      </div>
-      {(!auditLog||auditLog.length===0)
-        ?<div className="empty-state"><div className="empty-icon"><SvgIcon icon="eye" size={22}/></div><p>No auth events yet</p><span>Login and payment activity appears here.</span></div>
-        :<table className="data-table">
-          <thead><tr><th>Time</th><th>User</th><th>Action</th><th>IP</th></tr></thead>
-          <tbody>
+            {/* Audit log preview */}
+            <div className="panel full-col">
+            <div className="panel-hd">
+            <h2>Recent Auth Events</h2>
+            <span style={{fontSize:11,color:'var(--text-tertiary)'}}>Last {Math.min(auditLog?.length||0,10)} events</span>
+            </div>
+            {(!auditLog||auditLog.length===0)
+            ?<div className="empty-state"><div className="empty-icon"><SvgIcon icon="eye" size={22}/></div><p>No auth events yet</p><span>Login and payment activity appears here.</span></div>
+            :<table className="data-table">
+            <thead><tr><th>Time</th><th>User</th><th>Action</th><th>IP</th></tr></thead>
+            <tbody>
             {(auditLog||[]).slice(0,10).map((e,i)=>(
               <tr key={i}>
                 <td style={{color:'var(--text-tertiary)',fontFamily:'monospace',fontSize:11}}>{new Date(e.time).toLocaleTimeString('en-KE')}</td>
@@ -1080,12 +1080,12 @@ const [newItem,setNewItem]           = useState({name:'',price:'',category:'shop
                 <td style={{color:'var(--text-tertiary)',fontFamily:'monospace',fontSize:11}}>{e.ip}</td>
               </tr>
             ))}
-          </tbody>
-        </table>
-      }
-    </div>
-  </div>
-)}
+            </tbody>
+            </table>
+            }
+            </div>
+            </div>
+            )}
 
             {view==='dashboard' && canAccess('dashboard') && (
               <div className="dash-grid">
@@ -1124,7 +1124,7 @@ const [newItem,setNewItem]           = useState({name:'',price:'',category:'shop
                         <button className="btn-g" onClick={()=>setShowAddExp(false)}>Cancel</button>
                       </div>
                     </div>
-                  )}
+            )}
                   {expenses.length===0
                     ?<div className="empty-state"><div className="empty-icon"><SvgIcon icon="payments" size={22}/></div><p>No expenses logged</p></div>
                     :<><div className="table-wrap"><table className="data-table"><thead><tr><th>Description</th><th>Category</th><th>Amount</th><th>Date</th></tr></thead><tbody>{expenses.map(e=><tr key={e.id}><td>{e.desc}</td><td>{e.category}</td><td>{fKES(e.amount)}</td><td>{e.date}</td></tr>)}</tbody></table></div><div className="card-list">{expenses.map(e=><div key={e.id} className="m-card"><div className="m-card-hd"><span className="m-card-id">{e.desc}</span><span className="m-tag"><strong>{fKES(e.amount)}</strong></span></div></div>)}</div><div style={{padding:'9px 0',fontSize:12,color:'var(--text2)',borderTop:'1px solid var(--border)',marginTop:8}}>Total Expenses: <strong style={{color:'var(--red)'}}>{fKES(totalExp)}</strong></div></>
