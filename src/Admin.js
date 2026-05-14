@@ -2,17 +2,19 @@ import { useState, useEffect } from 'react'
 import './Admin.css'
 
 const USERS = {
-  admin: { username: 'admin', password: 'bbytes2026', role: 'Super Admin', name: 'Beryl Munyao' },
-  cashier: { username: 'cashier', password: 'cashier123', role: 'Cashier', name: 'Jane Wanjiku' },
+  admin: { username: 'admin', password: 'bbytes2026', role: 'Super Admin', name: 'User Admin' },
+  cashier: { username: 'cashier', password: 'cashier123', role: 'Cashier', name: 'User Cashier' },
 }
+
 
 const mockSales = []
 const mockExpenses = []
 
 const mockUsers = [
-  { id: 1, name: 'Beryl Munyao', role: 'Super Admin', status: 'active', lastLogin: 'Today 8:00 AM' },
-  { id: 2, name: 'Winner Mutheu', role: 'Cashier', status: 'active', lastLogin: 'Today 9:00 AM' },
-  { id: 3, name: 'Christian Musumbi', role: 'Accountant', status: 'inactive', lastLogin: 'Yesterday' },
+  { id: 1, name: 'User 1', role: 'Super Admin', status: 'active', lastLogin: 'Today 8:00 AM' },
+  { id: 2, name: 'User 2', role: 'Cashier', status: 'active', lastLogin: 'Today 9:00 AM' },
+  { id: 3, name: 'User 3', role: 'Accountant', status: 'inactive', lastLogin: 'Yesterday' },
+
 ]
 
 function BgOrbs({ subtle }) {
