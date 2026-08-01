@@ -35,6 +35,8 @@ const I = {
   moon:      () => <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>,
   attach:    () => <svg viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>,
   export:    () => <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>,
+  security:  () => <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+  firewall:  () => <svg viewBox="0 0 24 24"><path d="M20 16V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12m16 0a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2m16 0v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-4M8 2h8M12 22v-4M8 12h8"/></svg>,
 }
 
 const SvgIcon = ({ icon, size = 14, ...props }) => (
@@ -45,8 +47,8 @@ const SvgIcon = ({ icon, size = 14, ...props }) => (
 
 // ─── ROLES ────────────────────────────────────────────────────────────────────
 const ROLES = {
- superadmin: { label:'Super Admin',      color:'#10b981', bg:'rgba(16,185,129,.1)',  access:['pos','dashboard','crm','orders','add','settings','payments','manager','users'],canEdit:true, canDelete:true },
-  manager:   { label:'Manager',          color:'#0ea5e9', bg:'rgba(14,165,233,.1)',  access:['pos','dashboard','crm','orders','add','manager'],                       canEdit:true,  canDelete:false },
+  superadmin:{ label:'Super Admin',      color:'#1bdab0ff', bg:'rgba(16,185,129,.1)',  access:['pos','dashboard','crm','orders','add','settings','payments','manager','security'], canEdit:true,  canDelete:true  },
+  manager:   { label:'Manager',          color:'#0ea5e9', bg:'rgba(14,165,233,.1)',  access:['pos','dashboard','crm','orders','add','manager','security'],                       canEdit:true,  canDelete:false },
   cashier:   { label:'Cashier',          color:'#8b5cf6', bg:'rgba(139,92,246,.1)',  access:['pos','dashboard'],                                                     canEdit:false, canDelete:false },
   inventory: { label:'Inventory Clerk',  color:'#f59e0b', bg:'rgba(245,158,11,.1)',  access:['orders','add','dashboard'],                                             canEdit:true,  canDelete:false },
   accountant:{ label:'Accountant',       color:'#14b8a6', bg:'rgba(20,184,166,.1)',  access:['dashboard'],                                                            canEdit:false, canDelete:false },
@@ -67,7 +69,7 @@ const SYSTEM_USERS = [
 
 // ─── CATALOGUE ────────────────────────────────────────────────────────────────
 export const categories = {
-  shop: { label:'General Shop', icon:'🛒', products:[
+  shop: { label:'General Shop', products:[
     {id:1,name:'Maize Flour 2kg',price:220},{id:2,name:'Maize Flour 5kg',price:520},
     {id:3,name:'Cooking Oil 1L',price:350},{id:4,name:'Cooking Oil 2L',price:680},
     {id:5,name:'Cooking Oil 5L',price:1550},{id:6,name:'Sugar 1kg',price:180},
@@ -94,7 +96,7 @@ export const categories = {
     {id:47,name:'Tissue Roll x4',price:180},{id:48,name:'Tissue Box',price:120},
     {id:49,name:'Garbage Bags x10',price:150},{id:50,name:'Washing Up Liquid 500ml',price:130},
   ]},
-  pharmacy: { label:'Pharmacy', icon:'💊', products:[
+  pharmacy: { label:'Pharmacy', products:[
     {id:101,name:'Panadol 500mg x8',price:50,tag:'OTC'},{id:102,name:'Panadol Extra x8',price:80,tag:'OTC'},
     {id:103,name:'Ibuprofen 400mg x8',price:80,tag:'OTC'},{id:104,name:'Aspirin 300mg x8',price:40,tag:'OTC'},
     {id:105,name:'Amoxicillin 250mg x21',price:320,tag:'POM'},{id:106,name:'Amoxicillin 500mg x21',price:580,tag:'POM'},
@@ -116,7 +118,7 @@ export const categories = {
     {id:137,name:'Calcium 500mg x30',price:280,tag:'OTC'},{id:138,name:'Omega-3 x30',price:550,tag:'OTC'},
     {id:139,name:'Eye Drops Lubricant',price:350,tag:'OTC'},{id:140,name:'Sunscreen SPF50 100ml',price:750,tag:'OTC'},
   ]},
-  airbnb: { label:'Hospitality', icon:'🏠', products:[
+  airbnb: { label:'Hospitality', products:[
     {id:201,name:'Single Room 1 Night',price:2500},{id:202,name:'Double Room 1 Night',price:4500},
     {id:203,name:'Deluxe Room 1 Night',price:6500},{id:204,name:'Full House 1 Night',price:8000},
     {id:205,name:'Villa 1 Night',price:15000},{id:206,name:'Airport Pickup',price:1500},
@@ -131,7 +133,7 @@ export const categories = {
     {id:223,name:'Conference Room Half-Day',price:5000},{id:224,name:'Conference Room Full Day',price:8000},
     {id:225,name:'Projector Rental',price:1000},
   ]},
-  electronics: { label:'Electronics', icon:'🔌', products:[
+  electronics: { label:'Electronics', products:[
     {id:301,name:'Smartphone Entry-level',price:8500},{id:302,name:'Smartphone Mid-range',price:18500},
     {id:303,name:'Smartphone Flagship',price:45000},{id:304,name:'Wireless Earbuds',price:4200},
     {id:305,name:'Wired Earphones',price:650},{id:306,name:'Bluetooth Speaker',price:2800},
@@ -148,7 +150,7 @@ export const categories = {
     {id:327,name:'Smart Plug',price:1200},{id:328,name:'LED Strip 5m',price:1500},
     {id:329,name:'Solar Lamp',price:2200},{id:330,name:'Digital Camera Basic',price:12000},
   ]},
-  salon: { label:'Salon & Beauty', icon:'💇', products:[
+  salon: { label:'Salon & Beauty', products:[
     {id:401,name:'Haircut (Men)',price:850},{id:402,name:'Haircut (Women)',price:1200},
     {id:403,name:'Haircut (Kids)',price:500},{id:404,name:'Beard Trim',price:450},
     {id:405,name:'Beard Shape Up',price:650},{id:406,name:'Full Shave',price:700},
@@ -165,7 +167,7 @@ export const categories = {
     {id:427,name:'Waxing (Legs)',price:1800},{id:428,name:'Waxing (Arms)',price:1200},
     {id:429,name:'Body Scrub',price:3000},{id:430,name:'Head Massage 30min',price:1500},
   ]},
-  cafe: { label:'Cafe & Restaurant', icon:'☕', products:[
+  cafe: { label:'Cafe & Restaurant', products:[
     {id:501,name:'Espresso Single',price:180},{id:502,name:'Espresso Double',price:280},
     {id:503,name:'Cappuccino',price:280},{id:504,name:'Latte',price:320},
     {id:505,name:'Flat White',price:300},{id:506,name:'Americano',price:220},
@@ -187,14 +189,14 @@ export const categories = {
     {id:537,name:'Ugali & Stew',price:350},{id:538,name:'Pilau (Plate)',price:480},
     {id:539,name:'Nyama Choma 200g',price:850},{id:540,name:'Tiramisu',price:450},
   ]},
-  laundry: { label:'Laundry', icon:'👕', products:[
+  laundry: { label:'Laundry', products:[
     {id:601,name:'Shirt Iron & Press',price:80},{id:602,name:'Trouser Iron & Press',price:100},
     {id:603,name:'Suit Dry Clean',price:850},{id:604,name:'Dress Dry Clean',price:650},
     {id:605,name:'Bedsheet Wash & Iron',price:250},{id:606,name:'Duvet Clean',price:700},
     {id:607,name:'Shoes Clean',price:300},{id:608,name:'Leather Jacket Clean',price:1200},
     {id:609,name:'Express Laundry 2kg',price:450},{id:610,name:'Standard Laundry 5kg',price:800},
   ]},
-  hardware: { label:'Hardware', icon:'🔧', products:[
+  hardware: { label:'Hardware', products:[
     {id:701,name:'Hammer',price:650},{id:702,name:'Screwdriver Set',price:850},
     {id:703,name:'Measuring Tape 5m',price:380},{id:704,name:'Spirit Level',price:550},
     {id:705,name:'Paint Roller',price:350},{id:706,name:'Paint Brush Set',price:280},
@@ -248,152 +250,627 @@ function LoginPortal({ onLogin, darkMode, toggleDark }) {
   const [entered2FA, set2FA]    = useState('')
   const [error, setError]       = useState('')
   const [loading, setLoading]   = useState(false)
+  const [failedAttempts, setFailedAttempts] = useState(0)
+  const [lockoutTime, setLockoutTime] = useState(null)
+  const [smsStatus, setSmsStatus] = useState(null)
+  const [email, setEmail]             = useState('')
+  const [password, setPassword]       = useState('')
+  const [showOAuthModal, setShowOAuthModal] = useState(false)
+  const [oauthProvider, setOauthProvider] = useState('')
+  const [oauthStep, setOauthStep] = useState(1) // 1: loading, 2: confirm, 3: finalizing
 
   const role = selUser ? ROLES[selUser.role] : null
 
-  const selectUser = u => { setSelUser(u); setPin(''); setError(''); setStep('pin') }
-
-  const handlePin = d => {
-    if(pin.length>=4) return
-    const np = pin+d
-    setPin(np)
-    if(np.length===4) {
-      setTimeout(()=>{
-        if(np===selUser.pin){
-          const c = String(Math.floor(100000+Math.random()*900000))
-          setTfaCode(c); set2FA(''); setError(''); setStep('2fa')
-        } else { setError('Incorrect PIN. Try again.'); setPin('') }
-      },200)
+  const selectUser = u => { 
+    if (lockoutTime && Date.now() < lockoutTime) {
+      setError(`Account locked. Try again later.`);
+      return;
     }
+    setSelUser(u); setPin(''); setError(''); setStep('pin') 
   }
 
-  const verify2FA = () => {
-    if(entered2FA===tfaCode) onLogin(selUser)
-    else { setError('Invalid verification code.'); set2FA('') }
+  const handleEmailLogin = () => {
+    if (!email || !email.includes('@')) {
+      setError('Please enter a valid email address')
+      return
+    }
+    if (!password) {
+      setError('Please enter your password')
+      return
+    }
+    setLoading(true); setError('')
+    
+    // Simulate API call for login
+    setTimeout(() => {
+      const user = SYSTEM_USERS.find(u => u.email.toLowerCase() === email.toLowerCase())
+      if (user) {
+        setSelUser(user)
+        setStep('2fa')
+      } else {
+        setError('Invalid email or password')
+      }
+      setLoading(false)
+    }, 800)
   }
 
-  const doBiometric = async () => {
+  const verifyOTP = async () => {
+    if (entered2FA.length !== 6) {
+      setError('Please enter a 6-digit code')
+      return
+    }
+    setLoading(true); setError('')
+    // Simulate 2FA verification
+    setTimeout(() => {
+      if (entered2FA === '123456') {
+        doBiometric(selUser)
+      } else {
+        setError('Invalid OTP code. Try 123456 for demo.')
+      }
+      setLoading(false)
+    }, 800)
+  }
+
+  const handleOAuth = (provider) => {
+    setOauthProvider(provider)
+    setShowOAuthModal(true)
+    setOauthStep(1)
+    setTimeout(() => {
+      setOauthStep(2)
+    }, 1500)
+  }
+
+  const completeOAuth = () => {
+    setOauthStep(3)
+    setTimeout(() => {
+      setShowOAuthModal(false)
+      onLogin(SYSTEM_USERS[0]) // Fallback to superadmin for demo
+    }, 1500)
+  }
+
+  const doBiometric = async (user) => {
     setLoading(true); setError('')
     try {
       if(window.PublicKeyCredential) {
-        await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),timeout:60000,allowCredentials:[],userVerification:'preferred'}})
+        await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),timeout:60000,allowCredentials:[],userVerification:'required'}})
       }
-      onLogin(selUser)
+      onLogin(user)
     } catch(e) {
       if(e.name==='NotAllowedError') setError('Biometric cancelled or not enrolled.')
-      else onLogin(selUser)
+      else onLogin(user) // fallback if not supported on desktop
     }
     setLoading(false)
   }
 
-  return (
-    <div className="login-portal">
-      <div className="login-aura" aria-hidden="true"/>
-      <div className="login-shell">
-        <section className="login-showcase" aria-label="BerylBytes overview">
-          <div className="login-showcase-top">
-            <img src="/logo.png" alt="" className="login-mark"
-            onError={e=>{e.target.style.display='none'; const fb=e.target.nextSibling; if(fb) fb.style.display='flex'}}/>
-            <div className="brand-logo-fb login-mark-fb" style={{display:'none'}}>B</div>
-            <div>
-              <div className="login-brand">Beryl<em>Bytes</em></div>
-              <div className="login-brand-sub">Enterprise Point of Sale</div>
-            </div>
-          </div>
-          <div className="login-copy">
-            <span className="login-kicker">Retail Operating System for modern teams. 
-              Your POS Control Starts Here — Log In</span>
-            <h1>Run sales, stock, customers, and payments from one calm dashboard.</h1>
-            <p>Fast checkout, role-based access, receipts, M-Pesa, Paystack, PayPal, inventory, and reports built into a single POS workspace.</p>
-          </div>
-          <div className="login-metrics">
-            <div><strong>8</strong><span>Roles</span></div>
-            <div><strong>240+</strong><span>Items</span></div>
-            <div><strong>24/7</strong><span>Sync</span></div>
-          </div>
-        </section>
+  const handlePin = d => {
+    setPin(prevPin => {
+      if(prevPin.length >= 4) return prevPin
+      const np = prevPin + d
+      if(np.length === 4) {
+        setTimeout(()=>{
+          if(np === selUser.pin){
+            setFailedAttempts(0)
+            // Enforce biometric after correct PIN
+            doBiometric(selUser)
+          } else { 
+            const newAttempts = failedAttempts + 1;
+            setFailedAttempts(newAttempts);
+            if (newAttempts >= 5) {
+              setLockoutTime(Date.now() + 15 * 60 * 1000); // 15 mins
+              setError('Too many failed attempts. Locked for 15 minutes.');
+              setStep('select');
+            } else {
+              setError(`Incorrect PIN. Try again. (${5 - newAttempts} attempts left)`); 
+            }
+            setPin('') 
+          }
+        },200)
+      }
+      return np
+    })
+  }
 
-        <div className="login-box" role="main" aria-label="BerylBytes Login">
-          <div className="login-logo">
-            <div className="login-card-eyebrow">Welcome back</div>
-            <h2 className="login-card-title">Sign in to your workspace</h2>
-            <p className="login-card-sub">Choose a team account, then verify with PIN and 2FA.</p>
-          </div>
+  return (
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: '#04060a',
+      backgroundImage: `radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.15), transparent 50%),
+                        radial-gradient(circle at 100% 100%, rgba(5, 150, 105, 0.1), transparent 50%)`,
+      padding: '20px',
+      color: '#e2e8f0',
+      fontFamily: '"Inter", sans-serif'
+    }}>
+      <div className="glass-panel fade-in-up" style={{
+        width: '100%',
+        maxWidth: '440px',
+        padding: '40px',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.05)',
+        textAlign: 'center'
+      }}>
+        
+        <img src="/logo.jpg" alt="BerylBytes Logo" style={{ width: '64px', height: '64px', margin: '0 auto 24px', display: 'block', borderRadius: '16px', objectFit: 'cover', boxShadow: '0 0 20px rgba(16,185,129,0.3)' }} />
+
+        <h2 style={{ fontFamily: '"Syne", sans-serif', fontSize: '1.8rem', fontWeight: 700, margin: '0 0 8px 0', color: '#fff' }}>BerylBytes</h2>
+        <p style={{ color: '#94a3b8', margin: '0 0 32px 0', fontSize: '0.95rem' }}>Enterprise Point of Sale System</p>
 
         {step==='select' && (<>
-          <div className="login-methods" aria-label="Sign in methods">
-            <button className="login-method active" type="button">Team PIN</button>
-            <button className="login-method" type="button">Passkey</button>
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+            <button className="hover-scale" onClick={() => handleOAuth('google')} style={{
+              flex: 1, padding: '12px', background: '#fff', border: 'none', borderRadius: '10px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer',
+              color: '#0f172a', fontWeight: 600, fontSize: '0.95rem', boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+            }}>
+              <svg width={18} height={18} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+              </svg> Google
+            </button>
+            <button className="hover-scale" onClick={() => handleOAuth('apple')} style={{
+              flex: 1, padding: '12px', background: '#0a0a0a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer',
+              color: '#fff', fontWeight: 600, fontSize: '0.95rem'
+            }}>
+              <svg width={18} height={18} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill="currentColor" d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.05 2.26.7 2.94.7.7 0 1.81-.84 3.12-.76 1.41.07 2.66.57 3.5 1.49-3.03 1.83-2.55 5.56.32 6.74-.69 2-1.7 4.14-1.88 4.8zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.36 2.37-1.81 4.19-3.74 4.25z" />
+              </svg> Apple
+            </button>
           </div>
-          <label className="login-field">
-            <span>Workspace</span>
-            <input value="beryl_bytes_global" readOnly aria-label="Workspace"/>
-          </label>
-          <h3 className="login-title">Select Account</h3>
-          <div className="user-sel-grid" role="listbox" aria-label="User accounts">
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+            <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
+            <span style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: 500 }}>OR EMAIL SIGN IN</span>
+            <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', textAlign: 'left' }}>
+            {error && <div style={{ color: '#ef4444', background: 'rgba(239,68,68,0.1)', padding: '12px', borderRadius: '8px', fontSize: '0.9rem', marginBottom: '8px' }} role="alert">{error}</div>}
+            
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '6px', fontWeight: 500 }}>Work Email</label>
+              <input type="email" placeholder="name@berylbytes.co.ke" value={email} onChange={e=>setEmail(e.target.value)} style={{
+                width: '100%', padding: '12px 16px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '10px', color: '#fff', fontSize: '0.95rem', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box'
+              }} onFocus={e => e.target.style.borderColor = '#10b981'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '6px', fontWeight: 500 }}>Password</label>
+              <input type="password" placeholder="••••••••" value={password} onChange={e=>setPassword(e.target.value)} style={{
+                width: '100%', padding: '12px 16px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '10px', color: '#fff', fontSize: '0.95rem', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box'
+              }} onFocus={e => e.target.style.borderColor = '#10b981'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} 
+              onKeyDown={e => e.key === 'Enter' && handleEmailLogin()} />
+            </div>
+
+            <button className="hover-scale" onClick={handleEmailLogin} disabled={loading} style={{
+              width: '100%', padding: '14px', marginTop: '8px',
+              background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff',
+              border: 'none', borderRadius: '10px', fontWeight: 600, fontSize: '1rem',
+              cursor: loading ? 'not-allowed' : 'pointer', boxShadow: '0 8px 20px rgba(16,185,129,0.3)', opacity: loading ? 0.7 : 1
+            }}>
+              {loading ? 'Authenticating...' : 'Sign In'}
+            </button>
+          </div>
+
+          <div style={{ marginTop: '32px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <button className="hover-scale" onClick={() => setStep('cashier_select')} style={{
+              width: '100%', padding: '12px', background: 'rgba(15,23,42,0.6)', color: '#94a3b8',
+              border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', fontWeight: 500, fontSize: '0.9rem',
+              cursor: 'pointer', transition: 'all 0.2s'
+            }}>
+              Staff / Cashier Terminal Login →
+            </button>
+          </div>
+        </>)}
+
+        {step==='2fa' && selUser && (<>
+          <button className="hover-scale" onClick={()=>{setStep('select');set2FA('');setError('')}} style={{
+            background: 'none', border: 'none', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px',
+            cursor: 'pointer', marginBottom: '24px', fontSize: '0.9rem', fontWeight: 500
+          }}>
+            <SvgIcon icon="arrow_l"/> Back to Login
+          </button>
+          
+          <h3 style={{ fontFamily: '"Syne", sans-serif', fontSize: '1.2rem', color: '#fff', marginBottom: '8px' }}>Two-Factor Authentication</h3>
+          <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '24px' }}>
+            We've sent a 6-digit code to the phone number ending in <strong>{selUser.phone.slice(-4)}</strong>.
+          </p>
+          
+          {error && <div style={{ color: '#ef4444', background: 'rgba(239,68,68,0.1)', padding: '12px', borderRadius: '8px', fontSize: '0.9rem', marginBottom: '16px' }} role="alert">{error}</div>}
+
+          <div style={{ marginBottom: '24px' }}>
+            <input type="text" placeholder="123456" maxLength={6} value={entered2FA} onChange={e=>set2FA(e.target.value.replace(/\D/g, ''))} style={{
+              width: '100%', padding: '16px', background: 'rgba(0,0,0,0.3)', border: '1px solid #10b981',
+              borderRadius: '12px', color: '#fff', fontSize: '1.5rem', outline: 'none', textAlign: 'center', letterSpacing: '8px'
+            }} onKeyDown={e => e.key === 'Enter' && verifyOTP()} />
+          </div>
+
+          <button className="hover-scale" onClick={verifyOTP} disabled={loading} style={{
+            width: '100%', padding: '14px',
+            background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff',
+            border: 'none', borderRadius: '10px', fontWeight: 600, fontSize: '1rem',
+            cursor: loading ? 'not-allowed' : 'pointer', boxShadow: '0 8px 20px rgba(16,185,129,0.3)', opacity: loading ? 0.7 : 1
+          }}>
+            {loading ? 'Verifying...' : 'Verify & Continue'}
+          </button>
+        </>)}
+
+        {step==='cashier_select' && (<>
+          <button onClick={()=>{setStep('select');setError('')}} style={{
+            background: 'none', border: 'none', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px',
+            cursor: 'pointer', marginBottom: '24px', fontSize: '0.9rem', fontWeight: 500
+          }}>
+            <SvgIcon icon="arrow_l"/> Back to Main Login
+          </button>
+          <h3 style={{ fontFamily: '"Syne", sans-serif', fontSize: '1.2rem', color: '#fff', marginBottom: '20px' }}>Select Account</h3>
+          <div className="user-sel-grid" role="listbox" aria-label="User accounts" style={{
+            display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px'
+          }}>
             {SYSTEM_USERS.map(u=>(
-              <button key={u.id} className="usc" onClick={()=>selectUser(u)} role="option" aria-label={`${u.name} — ${ROLES[u.role].label}`} tabIndex={0}>
-                <div className="usc-av" style={{background:ROLES[u.role].color}}>{u.initial}</div>
-                <div className="usc-name">{u.name}</div>
-                <div className="usc-role">{ROLES[u.role].label}</div>
+              <button key={u.id} onClick={()=>selectUser(u)} style={{
+                background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px',
+                padding: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
+                cursor: 'pointer', transition: 'all 0.2s', color: '#fff'
+              }} className="hover-scale">
+                <div style={{
+                  width: '40px', height: '40px', borderRadius: '50%', background: ROLES[u.role].color,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1rem'
+                }}>{u.initial}</div>
+                <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>{u.name}</div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{ROLES[u.role].label}</div>
               </button>
             ))}
           </div>
         </>)}
 
         {step==='pin' && selUser && (<>
-          <button className="login-back" onClick={()=>{setStep('select');setPin('');setError('')}} aria-label="Go back">
-            <SvgIcon icon="arrow_l"/><span>Back</span>
+          <button className="hover-scale" onClick={()=>{setStep('cashier_select');setPin('');setError('')}} style={{
+            background: 'none', border: 'none', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px',
+            cursor: 'pointer', marginBottom: '24px', fontSize: '0.9rem', fontWeight: 500
+          }}>
+            <SvgIcon icon="arrow_l"/> Back to Accounts
           </button>
-          <div className="login-user-preview" aria-live="polite">
-            <div className="lup-av" style={{background:role.color}}>{selUser.initial}</div>
-            <div><div className="lup-name">{selUser.name}</div><div className="lup-role">{role.label}</div></div>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '16px', marginBottom: '24px' }}>
+            <div style={{
+              width: '44px', height: '44px', borderRadius: '50%', background: ROLES[selUser.role].color,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.2rem', color: '#fff'
+            }}>{selUser.initial}</div>
+            <div style={{ textAlign: 'left' }}>
+              <div style={{ color: '#fff', fontWeight: 700, fontSize: '1.05rem' }}>{selUser.name}</div>
+              <div style={{ color: '#94a3b8', fontSize: '0.85rem' }}>{ROLES[selUser.role].label}</div>
+            </div>
           </div>
-          <h2 className="login-title">Enter PIN</h2>
-          <div className="pin-dots" role="status" aria-label={`${pin.length} of 4 digits entered`}>
-            {[0,1,2,3].map(i=><div key={i} className={`pin-dot ${pin.length>i?'filled':''}`}/>)}
+
+          <h3 style={{ fontFamily: '"Syne", sans-serif', fontSize: '1.2rem', color: '#fff', marginBottom: '16px' }}>Enter PIN</h3>
+          
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }} role="status" aria-label={`${pin.length} of 4 digits entered`}>
+            {[0,1,2,3].map(i => (
+              <div key={i} style={{
+                width: '16px', height: '16px', borderRadius: '50%',
+                background: pin.length > i ? '#0ea5e9' : 'rgba(255,255,255,0.1)',
+                boxShadow: pin.length > i ? '0 0 10px rgba(14,165,233,0.5)' : 'none',
+                transition: 'all 0.2s'
+              }}/>
+            ))}
           </div>
-          {error && <div className="login-error" role="alert">{error}</div>}
-          <div className="pin-pad" role="group" aria-label="PIN keypad">
+
+          {error && <div style={{ color: '#ef4444', background: 'rgba(239,68,68,0.1)', padding: '12px', borderRadius: '8px', fontSize: '0.9rem', marginBottom: '16px' }} role="alert">{error}</div>}
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', maxWidth: '280px', margin: '0 auto' }} role="group" aria-label="PIN keypad">
             {['1','2','3','4','5','6','7','8','9','','0','⌫'].map((d,i)=>(
-              <button key={i} className={`pin-key ${!d?'empty':''}`} aria-label={d==='⌫'?'Backspace':d||''}
+              <button key={i} className={d ? 'hover-scale' : ''} aria-label={d==='⌫'?'Backspace':d||''}
+                style={{
+                  height: '60px', background: d ? 'rgba(15,23,42,0.6)' : 'transparent', border: d ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                  borderRadius: '12px', color: '#fff', fontSize: '1.4rem', fontWeight: 600, cursor: d ? 'pointer' : 'default',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}
                 onClick={()=>d==='⌫'?setPin(p=>p.slice(0,-1)):d&&handlePin(d)}>
                 {d}
               </button>
             ))}
           </div>
-          <button className="bio-btn" onClick={doBiometric} enabled={loading} aria-label="Sign in with biometric or passkey">
+          
+          <button className="hover-scale" onClick={doBiometric} disabled={loading} aria-label="Sign in with biometric or passkey" style={{
+            width: '100%', padding: '14px', marginTop: '24px', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer'
+          }}>
             <SvgIcon icon="fingerprint" size={16}/>
             {loading?'Authenticating…':'Biometric / Passkey Sign In'}
           </button>
-          <p style={{textAlign:'center',fontSize:10,color:'var(--text3)',marginTop:12}}>Demo PINs — Admin: 1234 · Cashier: 3456 · Inventory: 5678</p>
         </>)}
 
-        {step==='2fa' && (<>
-          <button className="login-back" onClick={()=>{setStep('pin');setPin('');setError('')}} aria-label="Go back">
-            <SvgIcon icon="arrow_l"/><span>Back</span>
-          </button>
-          <h2 className="login-title">Two-Factor Verification</h2>
-          <p className="login-desc">Enter the 6-digit code sent to your registered device.<br/><strong style={{color:'var(--accent)'}}>Demo code: {tfaCode}</strong></p>
-          <input className="twofa-input" placeholder="000000" maxLength={6} value={entered2FA}
-            onChange={e=>set2FA(e.target.value.replace(/\D/g,''))} onKeyDown={e=>e.key==='Enter'&&verify2FA()}
-            autoFocus aria-label="6-digit verification code"/>
-          {error && <div className="login-error" role="alert">{error}</div>}
-          <button className="login-submit" onClick={verify2FA} disabled={entered2FA.length!==6} aria-label="Verify and sign in">
-            Verify and Sign In
-          </button>
-          <button className="login-resend" onClick={()=>{const c=String(Math.floor(100000+Math.random()*900000));setTfaCode(c);set2FA('');setError('')}} aria-label="Resend code">
-            <SvgIcon icon="refresh" size={11}/>Resend Code
-          </button>
-        </>)}
+      </div>
 
-        <div className="login-footer">
-          <button onClick={toggleDark} style={{background:'none',border:'1px solid var(--border2)',borderRadius:7,padding:'4px 10px',color:'var(--text2)',fontSize:11,cursor:'pointer',display:'flex',alignItems:'center',gap:5,fontFamily:'DM Sans,sans-serif'}}>
-            {darkMode?<><SvgIcon icon="sun" size={12}/>Light Mode</>:<><SvgIcon icon="moon" size={12}/>Dark Mode</>}
-          </button>
-          <span>BerylBytes POS v4.4.0</span>
+      {/* Simulated OAuth Modal */}
+      {showOAuthModal && (
+        <div className="overlay" style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '380px', padding: '32px', background: '#fff', color: '#202124', borderRadius: '8px', textAlign: 'center', boxShadow: '0 10px 40px rgba(0,0,0,0.5)' }}>
+            
+            {oauthStep === 1 && (
+              <div style={{ padding: '40px 0' }}>
+                <div style={{ width: '30px', height: '30px', border: '3px solid #f3f3f3', borderTop: `3px solid ${oauthProvider === 'google' ? '#4285F4' : '#000'}`, borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 20px' }}></div>
+                <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 500 }}>Connecting to {oauthProvider === 'google' ? 'Google' : 'Apple'}...</h3>
+              </div>
+            )}
+
+            {oauthStep === 2 && (
+              <div className="fade-in-up">
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                  {oauthProvider === 'google' ? (
+                    <svg width={32} height={32} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                    </svg>
+                  ) : (
+                    <svg width={32} height={32} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path fill="#000" d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.05 2.26.7 2.94.7.7 0 1.81-.84 3.12-.76 1.41.07 2.66.57 3.5 1.49-3.03 1.83-2.55 5.56.32 6.74-.69 2-1.7 4.14-1.88 4.8zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.36 2.37-1.81 4.19-3.74 4.25z" />
+                    </svg>
+                  )}
+                </div>
+                <h2 style={{ fontSize: '1.4rem', fontWeight: 500, marginBottom: '8px' }}>Sign in</h2>
+                <p style={{ color: '#5f6368', fontSize: '1rem', marginBottom: '24px' }}>to continue to BerylBytes</p>
+                
+                <div style={{ textAlign: 'left', border: '1px solid #dadce0', borderRadius: '8px', padding: '12px 16px', marginBottom: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', transition: 'background 0.2s' }} onClick={completeOAuth} onMouseOver={e => e.currentTarget.style.background='#f8f9fa'} onMouseOut={e => e.currentTarget.style.background='transparent'}>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#10b981', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>B</div>
+                  <div>
+                    <div style={{ fontWeight: 500, fontSize: '0.95rem' }}>Beryl Munyao</div>
+                    <div style={{ color: '#5f6368', fontSize: '0.85rem' }}>beryl@berylbytes.co.ke</div>
+                  </div>
+                </div>
+
+                <div style={{ textAlign: 'left', color: '#5f6368', fontSize: '0.85rem' }}>
+                  To continue, {oauthProvider === 'google' ? 'Google' : 'Apple'} will share your name, email address, and profile picture with BerylBytes.
+                </div>
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '32px' }}>
+                  <button onClick={() => setShowOAuthModal(false)} style={{ background: 'none', border: 'none', color: '#1a73e8', fontWeight: 500, fontSize: '0.95rem', cursor: 'pointer' }}>Cancel</button>
+                </div>
+              </div>
+            )}
+
+            {oauthStep === 3 && (
+              <div style={{ padding: '40px 0' }}>
+                <div style={{ width: '30px', height: '30px', border: '3px solid #f3f3f3', borderTop: `3px solid ${oauthProvider === 'google' ? '#4285F4' : '#000'}`, borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 20px' }}></div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 500 }}>Authenticating...</h3>
+              </div>
+            )}
+          </div>
         </div>
+      )}
+    </div>
+  )
+}
+
+// ─── SECURITY DASHBOARD ────────────────────────────────────────────────────────
+function SecurityDashboard({ darkMode }) {
+  const [view, setView] = useState('list') // list, detail, firewall
+  
+  const mockEvents = [
+    { id: 'SEC-000001', type: 'Web Discovery Attack', desc: 'Automated directory enumeration detected on admin endpoints', src: '32.122.195.63', time: '2 minutes ago', status: 'UNASSIGNED', severity: 'MEDIUM' },
+    { id: 'SEC-000002', type: 'Suspicious Port Scanning', desc: 'Sequential port scan detected from external IP', src: '203.0.113.5', time: '5 minutes ago', status: 'ASSIGNED', severity: 'HIGH', assignedTo: 'John Smith' },
+    { id: 'SEC-000003', type: 'Unusual Database Query Pattern', desc: 'Enumeration attempt on customer database', src: 'Internal-DB-01', time: '12 minutes ago', status: 'INVESTIGATING', severity: 'MEDIUM', assignedTo: 'Sarah Johnson' },
+    { id: 'SEC-000004', type: 'SQL Injection Attack', desc: 'Automated SQL injection detected on payment form', src: '198.51.100.45', time: '25 minutes ago', status: 'UNASSIGNED', severity: 'CRITICAL' },
+  ]
+
+  const mockLiveLog = [
+    { time: '22:49:20', ip: '10.0.0.4', proto: 'HTTPS', action: 'ALLOW' },
+    { time: '22:49:19', ip: '32.122.195.63', proto: 'HTTPS', action: 'ALLOW' },
+    { time: '22:49:18', ip: '10.0.1.12', proto: 'HTTPS', action: 'ALLOW' },
+    { time: '22:49:17', ip: '32.122.195.63', proto: 'HTTPS', action: 'ALLOW' },
+    { time: '22:49:16', ip: '32.122.195.63', proto: 'HTTP', action: 'ALLOW' },
+    { time: '22:49:15', ip: '192.168.1.198', proto: 'TCP', action: 'ALLOW' },
+    { time: '22:49:14', ip: '10.0.0.4', proto: 'HTTP', action: 'ALLOW' },
+    { time: '22:49:13', ip: '10.0.0.4', proto: 'ICMP', action: 'ALLOW' },
+  ]
+
+  const [rules, setRules] = useState([
+    { ip: '192.168.0.0/16', action: 'ALLOW' },
+    { ip: '10.0.0.0/8', action: 'ALLOW' },
+    { ip: '0.0.0.0/0', action: 'ALLOW' },
+    { ip: '185.117.88.255', action: 'BLOCK' }
+  ])
+
+  const [newRuleIp, setNewRuleIp] = useState('0.0.0.0')
+  const [newRuleAct, setNewRuleAct] = useState('ALLOW')
+
+  const getSevColor = (sev) => {
+    if(sev === 'CRITICAL') return '#ef4444'
+    if(sev === 'HIGH') return '#f97316'
+    if(sev === 'MEDIUM') return '#eab308'
+    return '#10b981'
+  }
+
+  const handleAddRule = () => {
+    if(newRuleIp) {
+      setRules([{ ip: newRuleIp, action: newRuleAct }, ...rules])
+      setNewRuleIp('')
+    }
+  }
+
+  return (
+    <div className="sec-dashboard">
+      <div className="sec-header">
+        <div>
+          <h2>Security Ops</h2>
+          <div className="sec-nav">
+            <button className={view === 'list' ? 'act' : ''} onClick={() => setView('list')}>Event Management</button>
+            <button className={view === 'firewall' ? 'act' : ''} onClick={() => setView('firewall')}>Firewall Manager</button>
+          </div>
         </div>
+      </div>
+
+      <div className="sec-content">
+        {view === 'list' && (
+          <div className="sec-list-view">
+            <div className="sec-events-grid">
+              {mockEvents.map(ev => (
+                <div key={ev.id} className="sec-event-card" onClick={() => setView(ev.id)}>
+                  <div className="sec-card-hd">
+                    <span className="sec-sev" style={{ background: getSevColor(ev.severity) + '22', color: getSevColor(ev.severity), border: `1px solid ${getSevColor(ev.severity)}` }}>{ev.severity}</span>
+                    <span className="sec-status">{ev.status}</span>
+                  </div>
+                  <h3>{ev.type}</h3>
+                  <p>{ev.desc}</p>
+                  <div className="sec-card-meta">
+                    <div><SvgIcon icon="search" size={12}/> Source: {ev.src}</div>
+                    <div><SvgIcon icon="refresh" size={12}/> {ev.time}</div>
+                    {ev.assignedTo && <div><SvgIcon icon="check" size={12}/> Assigned to: {ev.assignedTo}</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {view === 'SEC-000001' && (
+          <div className="sec-detail-view">
+            <button className="sec-back" onClick={() => setView('list')}><SvgIcon icon="arrow_l"/> Back to Events</button>
+            
+            <div className="sec-det-grid">
+              <div className="sec-det-main">
+                <div className="sec-det-header">
+                  <div className="sdh-top">
+                    <span className="sec-sev" style={{ background: getSevColor('MEDIUM') + '22', color: getSevColor('MEDIUM'), border: `1px solid ${getSevColor('MEDIUM')}` }}>MEDIUM</span>
+                    <span className="sec-status">UNASSIGNED</span>
+                    <span className="sec-id">Event ID: SEC-000001</span>
+                  </div>
+                  <h1>Web Discovery Attack</h1>
+                  <p>Automated directory enumeration detected on admin endpoints</p>
+                </div>
+
+                <div className="sec-panel">
+                  <h3>Attack Summary</h3>
+                  <div className="sec-stats">
+                    <div><span>Attack Started</span><strong>14/07/2025, 10:21:39</strong></div>
+                    <div><span>Duration</span><strong>16m 32s</strong></div>
+                    <div><span>URLs Attempted</span><strong>31</strong></div>
+                    <div><span>Blocked Requests</span><strong>10</strong></div>
+                  </div>
+                </div>
+
+                <div className="sec-panel">
+                  <h3>URL Discovery Attempts</h3>
+                  <table className="sec-table">
+                    <thead><tr><th>Method</th><th>Status</th><th>Time</th><th>URL</th><th>Action</th></tr></thead>
+                    <tbody>
+                      <tr><td>GET</td><td><span className="http-404">404</span></td><td>10:39:07</td><td>https://fakebank.com/admin</td><td><button className="sec-btn-small">Copy</button></td></tr>
+                      <tr><td>GET</td><td><span className="http-403">403</span></td><td>10:35:05</td><td>https://fakebank.com/administrator</td><td><button className="sec-btn-small">Copy</button></td></tr>
+                      <tr><td>GET</td><td><span className="http-404">404</span></td><td>10:37:44</td><td>https://fakebank.com/wp-admin</td><td><button className="sec-btn-small">Copy</button></td></tr>
+                      <tr><td>GET</td><td><span className="http-404">404</span></td><td>10:37:04</td><td>https://fakebank.com/login</td><td><button className="sec-btn-small">Copy</button></td></tr>
+                      <tr><td>GET</td><td><span className="http-200">200</span></td><td>10:37:23</td><td>https://fakebank.com/</td><td><button className="sec-btn-small">Copy</button></td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="sec-det-side">
+                <div className="sec-panel">
+                  <h3>Threat Intelligence</h3>
+                  <div className="ti-row"><span>Source IP</span><strong>32.122.195.63</strong></div>
+                  <div className="ti-row"><span>IP Reputation</span><strong className="text-red">Malicious</strong></div>
+                  <div className="ti-row"><span>Geolocation</span><strong>Russia, Moscow</strong></div>
+                  <div className="ti-row"><span>ASN</span><strong>AS12345</strong></div>
+                  <div className="ti-row"><span>Previous Attacks</span><strong>47 incidents</strong></div>
+                </div>
+                
+                <div className="sec-panel">
+                  <h3>Recommended Actions</h3>
+                  <ul className="sec-actions-list">
+                    <li><SvgIcon icon="check" size={14}/> Block source IP address</li>
+                    <li><SvgIcon icon="check" size={14}/> Review admin panel access logs</li>
+                    <li><SvgIcon icon="check" size={14}/> Implement rate limiting</li>
+                    <li><SvgIcon icon="check" size={14}/> Update WAF rules</li>
+                  </ul>
+                  <button className="sec-btn-primary" onClick={() => setView('firewall')}>Implement Security Actions</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {view === 'firewall' && (
+          <div className="sec-firewall-view">
+            <div className="sec-fw-header">
+              <div className="fw-title">
+                <SvgIcon icon="firewall" size={24}/>
+                <div>
+                  <h2>fw-01.acmecorp.internal</h2>
+                  <span className="fw-status">Active</span>
+                </div>
+              </div>
+              <div className="fw-stats">
+                <div><span>PACKETS/S</span><strong>1,709</strong></div>
+                <div><span>BLOCKED TODAY</span><strong>15</strong></div>
+                <div><span>ACTIVE RULES</span><strong>4</strong></div>
+                <div><span>UPTIME</span><strong>47d 12h</strong></div>
+              </div>
+            </div>
+
+            <div className="sec-fw-grid">
+              <div className="fw-col">
+                <div className="sec-panel">
+                  <h3>Add Firewall Rule</h3>
+                  <div className="fw-add-rule">
+                    <div className="fw-input-group">
+                      <label>Source IP</label>
+                      <input value={newRuleIp} onChange={e=>setNewRuleIp(e.target.value)} placeholder="0.0.0.0"/>
+                    </div>
+                    <div className="fw-input-group">
+                      <label>Action</label>
+                      <select value={newRuleAct} onChange={e=>setNewRuleAct(e.target.value)}>
+                        <option>ALLOW</option>
+                        <option>BLOCK</option>
+                      </select>
+                    </div>
+                    <button className="sec-btn-primary" onClick={handleAddRule}>Apply Rule</button>
+                  </div>
+                </div>
+
+                <div className="sec-panel">
+                  <h3>Active Rules</h3>
+                  <table className="sec-table">
+                    <thead><tr><th>Rule / CIDR</th><th>Action</th></tr></thead>
+                    <tbody>
+                      {rules.map((r,i) => (
+                        <tr key={i}>
+                          <td style={{fontFamily:'monospace'}}>{r.ip}</td>
+                          <td><span className={`fw-act ${r.action}`}>{r.action}</span></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="fw-col">
+                <div className="sec-panel fw-live-panel">
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                    <h3>Live Log</h3>
+                    <span className="live-badge"><span className="pulse"></span> Live</span>
+                  </div>
+                  <div className="fw-live-log">
+                    {mockLiveLog.map((l,i) => (
+                      <div key={i} className="log-line">
+                        <span className="log-time">{l.time}</span>
+                        <span className="log-ip">{l.ip}</span>
+                        <span className="log-proto">{l.proto}</span>
+                        <span className={`fw-act ${l.action}`}>{l.action}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -409,8 +886,6 @@ export default function App() {
   const [loggedIn,setLoggedIn]         = useState(false)
   const [currentUser,setCurrentUser]   = useState(null)
   const [showUserMenu,setShowUserMenu] = useState(false)
-  const [suspendedUsers, setSuspendedUsers] = useState([])
-  const [auditLog, setAuditLog]             = useState([])
 
   // App state
   const [darkMode,setDarkMode]         = useState(true)
@@ -427,10 +902,11 @@ export default function App() {
   const [selCust,setSelCust]           = useState(null)
   const [customPrices,setCustomPrices] = useState({})
   const [customItems,setCustomItems]   = useState([])
-const [newItem,setNewItem]           = useState({name:'',price:'',category:'shop',icon:''})
-  const [customCats,setCustomCats]       = useState(()=>{try{return JSON.parse(localStorage.getItem('bb_custom_cats')||'[]')}catch{return[]}})
-  const [showAddCat,setShowAddCat]     = useState(false)
-  const [newCat,setNewCat]             = useState({label:'',icon:'🏪',id:''})
+const [newItem,setNewItem]           = useState({name:'',price:'',category:'shop',minAlert:'',batch:'',expiry:'',serialNo:''})
+const [customCats,setCustomCats]     = useState({})
+const [showAddCat,setShowAddCat]     = useState(false)
+const [newCatName,setNewCatName]     = useState('')
+
   const [outOfStockIds,setOutOfStockIds] = useState(()=>{try{return JSON.parse(localStorage.getItem('bb_oos')||'[]')}catch{return[]}})
   const [showOutOfStock,setShowOutOfStock] = useState(false)
 
@@ -537,65 +1013,6 @@ const [newItem,setNewItem]           = useState({name:'',price:'',category:'shop
   },[mpesaStatus])
 
   // M-Pesa poll
-  useEffect(()=>{
-    if(!lastCheckoutId || mpesaStatus!=='pending') return
-    pollRef.current = setInterval(async()=>{
-      try{
-        const res = await fetch(`${API_URL}/api/mpesa/status/${lastCheckoutId}`)
-        const data = await res.json()
-        if(data.status==='success'){
-          clearInterval(pollRef.current); clearInterval(timerRef.current)
-          setMpesaStatus('success')
-          setAttempts(a=>a.map(x=>x.id===lastCheckoutId?{...x,status:'success'}:x))
-          setTimeout(()=>completeSale('M-Pesa'),800)
-        } else if(data.status==='failed'){
-          clearInterval(pollRef.current); clearInterval(timerRef.current)
-          setMpesaStatus('failed')
-          setAttempts(a=>a.map(x=>x.id===lastCheckoutId?{...x,status:'failed'}:x))
-          flash('M-Pesa payment failed. Retry?','error')
-        }
-      }catch{}
-    },3000)
-    return()=>clearInterval(pollRef.current)
-  },[lastCheckoutId,mpesaStatus])
-
-  const canAccess = s => ROLES[currentUser?.role]?.access?.includes(s)
-  const canEdit   = () => ROLES[currentUser?.role]?.canEdit
-  const flash     = (m,t='success')=>{ setMsg(m);setMsgType(t);setTimeout(()=>setMsg(''),5000) }
-
-  const handleLogin = u => {
-    setCurrentUser(u); setLoggedIn(true)
-    setView(ROLES[u.role].access[0])
-  }
-  const handleLogout = ()=>{ setLoggedIn(false);setCurrentUser(null);setCart([]);setShowUserMenu(false);localStorage.removeItem('bb_cart') }
-
-  // Cart
-  const getPrice = p => customPrices[p.id]||p.price
-  const addToCart = p => {
-    if(outOfStockIds.includes(p.id)){
-      flash(`${p.name} is marked out of stock.`, 'error')
-      return
-    }
-    setCart(prev=>{
-      const ex=prev.find(i=>i.id===p.id)
-      return ex?prev.map(i=>i.id===p.id?{...i,qty:i.qty+1}:i):[...prev,{...p,price:getPrice(p),qty:1}]
-    })
-    if(window.innerWidth<900) setCartOpen(true)
-  }
-  const markOutOfStock = p => {
-    setOutOfStockIds(ids=>ids.includes(p.id)?ids:[...ids,p.id])
-    setCart(items=>items.filter(i=>i.id!==p.id))
-    flash(`${p.name} removed from sale until restocked.`)
-    setEditProd(null)
-  }
-  const restoreStock = p => {
-    setOutOfStockIds(ids=>ids.filter(id=>id!==p.id))
-    flash(`${p.name} is back in stock.`)
-    setEditProd(null)
-  }
-  const remFromCart = id=>setCart(c=>c.filter(i=>i.id!==id))
-  const updQty = (id,d)=>setCart(c=>c.map(i=>i.id===id?{...i,qty:Math.max(1,i.qty+d)}:i))
-
   const loyaltyDisc = selCust ? getTier(selCust.points).disc/100 : 0
   const subtotal = cart.reduce((s,i)=>s+i.price*i.qty,0)
   const discount = Math.round(subtotal*loyaltyDisc)
@@ -633,6 +1050,57 @@ const [newItem,setNewItem]           = useState({name:'',price:'',category:'shop
     setMpesaStatus(null); setLastCheckoutId(null); setAttempts([]); setMpesaTimer(MPESA_TIMEOUT)
     localStorage.removeItem('bb_cart')
   },[cart,grand,ledger,selCust])
+
+
+  useEffect(()=>{
+    if(!lastCheckoutId || mpesaStatus!=='pending') return
+    pollRef.current = setInterval(async()=>{
+      try{
+        const res = await fetch(`${API_URL}/api/mpesa/status/${lastCheckoutId}`)
+        const data = await res.json()
+        if(data.status==='success'){
+          clearInterval(pollRef.current); clearInterval(timerRef.current)
+          setMpesaStatus('success')
+          setAttempts(a=>a.map(x=>x.id===lastCheckoutId?{...x,status:'success'}:x))
+          setTimeout(()=>completeSale('M-Pesa'),800)
+        } else if(data.status==='failed'){
+          clearInterval(pollRef.current); clearInterval(timerRef.current)
+          setMpesaStatus('failed')
+          setAttempts(a=>a.map(x=>x.id===lastCheckoutId?{...x,status:'failed'}:x))
+          flash('M-Pesa payment failed. Retry?','error')
+        }
+      }catch{}
+    },3000)
+    return()=>clearInterval(pollRef.current)
+  },[lastCheckoutId,mpesaStatus,API_URL,completeSale])
+
+  const canAccess = s => ROLES[currentUser?.role]?.access?.includes(s)
+  const canEdit   = () => ROLES[currentUser?.role]?.canEdit
+  const flash     = (m,t='success')=>{ setMsg(m);setMsgType(t);setTimeout(()=>setMsg(''),5000) }
+
+  const handleLogin = u => {
+    setCurrentUser(u); setLoggedIn(true)
+    setView(ROLES[u.role].access[0])
+  }
+  const handleLogout = ()=>{ setLoggedIn(false);setCurrentUser(null);setCart([]);setShowUserMenu(false);localStorage.removeItem('bb_cart') }
+
+  // Cart
+  const getPrice = p => customPrices[p.id]||p.price
+  const addToCart = p => {
+    if(outOfStockIds.includes(p.id)){
+      flash(`${p.name} is marked out of stock.`, 'error')
+      return
+    }
+    setCart(prev=>{
+      const ex=prev.find(i=>i.id===p.id)
+      return ex?prev.map(i=>i.id===p.id?{...i,qty:i.qty+1}:i):[...prev,{...p,price:getPrice(p),qty:1}]
+    })
+    if(window.innerWidth<900) setCartOpen(true)
+  }
+  const remFromCart = id=>setCart(c=>c.filter(i=>i.id!==id))
+  const updQty = (id,d)=>setCart(c=>c.map(i=>i.id===id?{...i,qty:Math.max(1,i.qty+d)}:i))
+
+
 
   const handleMpesa = async () => {
     if(!phone){ flash('Enter customer phone number','error'); return }
@@ -764,22 +1232,20 @@ const [newItem,setNewItem]           = useState({name:'',price:'',category:'shop
   const totalPages=Math.max(1,Math.ceil(filteredLedger.length/PAGE_SIZE))
   const pagedLedger=filteredLedger.slice((txnPage-1)*PAGE_SIZE,txnPage*PAGE_SIZE)
 
-// Nav
+  // Nav
   const NAV_ITEMS = [
-    {id:'pos',       icon:'pos',       label:'Point of Sale'},
-    {id:'dashboard', icon:'dashboard', label:'Dashboard'},
-    {id:'crm',       icon:'crm',       label:'CRM & Loyalty', badge:customers.length||null},
-    {id:'orders',    icon:'inventory', label:'Inventory'},
-    {id:'add',       icon:'add',       label:'Add Item'},
-    {id:'payments',  icon:'payments',  label:'Payment Settings'},
-    {id:'manager',   icon:'reports',   label:'Bug Reports', badge:bugReports.filter(r=>r.status==='open').length||null},
-    {id:'settings',  icon:'settings',  label:'Settings'},
-    {id:'users',     icon:'crm',       label:'User Management'},
-  ].filter(item=>{
-    if(!canAccess(item.id)) return false
-    if(item.id==='users') return currentUser?.role==='superadmin'
-    return true
-  });
+    {id:'pos',icon:'pos',label:'Point of Sale'},
+    {id:'dashboard',icon:'dashboard',label:'Dashboard'},
+    {id:'crm',icon:'crm',label:'CRM & Loyalty',badge:customers.length||null},
+    {id:'orders',icon:'inventory',label:'Inventory'},
+    {id:'add',icon:'add',label:'Add Item'},
+    {id:'payments',icon:'payments',label:'Payment Settings'},
+    {id:'manager',icon:'reports',label:'Bug Reports',badge:bugReports.filter(r=>r.status==='open').length||null},
+    {id:'settings',icon:'settings',label:'Settings'},
+    {id:'security',icon:'security',label:'Security Ops'},
+    {id:'support',icon:'support',label:'Support'},
+
+  ].filter(item=>canAccess(item.id))
 
   if(!loggedIn) return <LoginPortal onLogin={handleLogin} darkMode={darkMode} toggleDark={()=>setDarkMode(!darkMode)}/>
 
@@ -796,13 +1262,12 @@ const [newItem,setNewItem]           = useState({name:'',price:'',category:'shop
         </div>
       )}
 
-      <div className={`shell ${loaded?'in':''}`} style={{paddingTop:schemaBanner?36:0}}>
+      <div className={`shell ${loaded?'in':''}`} style={{paddingTop:schemaBanner?36:0, display: 'grid', gridTemplateColumns: 'var(--sw) minmax(0, 1fr)', gridTemplateRows: 'var(--th) 1fr', height: '100vh', overflow: 'hidden'}}>
 
         {/* TOPBAR */}
         <header className="topbar" role="banner">
           <div className="brand" onClick={()=>canAccess('dashboard')&&setView('dashboard')} role="link" aria-label="BerylBytes — Go to dashboard" tabIndex={0} onKeyDown={e=>e.key==='Enter'&&canAccess('dashboard')&&setView('dashboard')}>
-            <img src="/logo.png" alt="BerylBytes logo" className="brand-logo-img" onError={e=>{e.target.style.display='none';const fb=e.target.nextSibling;if(fb)fb.style.display='flex'}}/>
-            <div className="brand-logo-fb" style={{display:'none'}}>B</div>
+            <div className="brand-logo-fb" style={{ display: 'flex' }}>B</div>
             <div className="brand-text">
               <span className="brand-name">Beryl<em>Bytes</em></span>
               <span className="brand-sub">POS System</span>
@@ -901,8 +1366,8 @@ const [newItem,setNewItem]           = useState({name:'',price:'',category:'shop
         </aside>
 
         {/* MAIN */}
-        <div className="main">
-          <main className="content" id="main-content" aria-label="Main content">
+        <div className="main" style={{ display: 'flex', flexDirection: 'row', overflow: 'hidden', minWidth: 0, height: '100%', minHeight: 0 }}>
+          <main className="content" id="main-content" aria-label="Main content" style={{ flex: 1, minWidth: 0, overflowY: 'auto' }}>
 
             {/* POS */}
             {view==='pos' && (<>
@@ -920,7 +1385,6 @@ const [newItem,setNewItem]           = useState({name:'',price:'',category:'shop
                   ?<div className="no-results" role="status"><SvgIcon icon="search" size={36} style={{margin:'0 auto 12px',display:'block',opacity:.2}}/><p>No products found{search?` for "${search}"`:''}.</p></div>
                   :products.map((p,i)=>{
                     const dp=customPrices[p.id]||p.price
-                    const isOut=outOfStockIds.includes(p.id)
                     return(
                       <article key={p.id} className="pc" style={{animationDelay:`${i*0.025}s`}} onClick={()=>addToCart({...p,price:dp})} role="listitem button" tabIndex={0} aria-label={`Add ${p.name} — ${fKES(dp)}`} onKeyDown={e=>e.key==='Enter'&&addToCart({...p,price:dp})}>
                         {canEdit()&&<button className="pc-edit" title="Edit price" aria-label={`Edit price for ${p.name}`} onClick={e=>{e.stopPropagation();setEditProd(p);setEditPrice(String(dp))}}><SvgIcon icon="edit"/></button>}
@@ -937,156 +1401,6 @@ const [newItem,setNewItem]           = useState({name:'',price:'',category:'shop
             </>)}
 
             {/* DASHBOARD */}
-            {/* USER MANAGEMENT — superadmin only */}
-            {view==='users' && currentUser?.role==='superadmin' && (
-            <div className="dash-grid">
-            <div className="panel full-col">
-            <div className="panel-hd">
-            <h2>User Management</h2>
-            <div style={{display:'flex',gap:8,alignItems:'center'}}>
-            <span style={{fontSize:11,color:'var(--text-tertiary)'}}>{SYSTEM_USERS.length} accounts</span>
-            <button className="btn-p btn-sm">+ Add User</button>
-            </div>
-            </div>
-            <p style={{fontSize:12,color:'var(--text-secondary)',marginBottom:16,lineHeight:1.6}}>
-            Only Super Admins can view, edit, suspend, or remove user accounts. 
-            Changes take effect immediately across all active sessions.
-            </p>
-            <div className="um-grid">
-            {SYSTEM_USERS.map(u => {
-            const role  = ROLES[u.role]
-            const isMe  = u.id === currentUser.id
-            const suspended = suspendedUsers?.includes(u.id)
-            return (
-            <div key={u.id} className="um-card">
-              <div className="um-card-hd" style={{'--hd-color':role.color}}>
-                <div className="um-av" style={{background:role.color}}>{u.initial}</div>
-                <div style={{flex:1,minWidth:0}}>
-                  <div className="um-name" style={{display:'flex',alignItems:'center',gap:6}}>
-                    {u.name}
-                    {isMe && <span style={{fontSize:9,background:'var(--brand-subtle)',color:'var(--brand)',padding:'1px 6px',borderRadius:20,fontWeight:700,flexShrink:0}}>You</span>}
-                  </div>
-                  <div className="um-email">{u.email}</div>
-                </div>
-                <div className="um-badge" style={{background:role.bg,color:role.color,border:`1px solid ${role.color}30`}}>
-                  {role.label}
-                </div>
-              </div>
-
-              <div className="um-card-body">
-                <div className="um-field">
-                  <span className="um-field-label">Status</span>
-                  <div style={{display:'flex',alignItems:'center',gap:6}}>
-                    <div className={`um-status-dot ${suspended?'suspended':'active'}`}/>
-                    <span className="um-field-val">{suspended?'Suspended':'Active'}</span>
-                  </div>
-                </div>
-                <div className="um-field">
-                  <span className="um-field-label">Access Level</span>
-                  <span className="um-field-val" style={{color:role.color}}>{role.label}</span>
-                </div>
-                <div className="um-field">
-                  <span className="um-field-label">Permissions</span>
-                  <span className="um-field-val" style={{fontSize:10,color:'var(--text-tertiary)'}}>{(ROLES[u.role]?.access||[]).slice(0,3).join(', ')}{(ROLES[u.role]?.access||[]).length>3&&` +${(ROLES[u.role]?.access||[]).length-3}`}</span>
-                </div>
-                <div className="um-field">
-                  <span className="um-field-label">Can Edit</span>
-                  <span className="um-field-val" style={{color:ROLES[u.role]?.canEdit?'var(--success)':'var(--text-tertiary)'}}>{ROLES[u.role]?.canEdit?'Yes':'No'}</span>
-                </div>
-                <div className="um-field">
-                  <span className="um-field-label">Can Delete</span>
-                  <span className="um-field-val" style={{color:ROLES[u.role]?.canDelete?'var(--success)':'var(--text-tertiary)'}}>{ROLES[u.role]?.canDelete?'Yes':'No'}</span>
-                </div>
-              </div>
-
-              <div className="um-card-ft">
-                <button className="btn-g btn-xs" style={{flex:1}} disabled={isMe} title={isMe?'Cannot edit your own account':''}>
-                  <SvgIcon icon="edit" size={10}/>Edit Role
-                </button>
-                {suspended
-                  ?<button className="btn-p btn-xs green" disabled={isMe} onClick={()=>setSuspendedUsers(p=>p.filter(x=>x!==u.id))}>
-                    <SvgIcon icon="check" size={10}/>Restore
-                  </button>
-                  :<button className="btn-g btn-xs danger" disabled={isMe} title={isMe?'Cannot suspend yourself':''} onClick={()=>setSuspendedUsers(p=>[...(p||[]),u.id])}>
-                    Suspend
-                  </button>
-                }
-              </div>
-            </div>
-            )
-            })}
-            </div>
-            </div>
-
-            {/* Role matrix */}
-            <div className="panel full-col">
-            <div className="panel-hd"><h2>Role Permission Matrix</h2></div>
-            <div style={{overflowX:'auto'}}>
-            <table className="data-table">
-            <thead>
-            <tr>
-              <th>Role</th>
-              <th>POS</th>
-              <th>Dashboard</th>
-              <th>CRM</th>
-              <th>Inventory</th>
-              <th>Payments</th>
-              <th>Settings</th>
-              <th>User Mgmt</th>
-              <th>Can Edit</th>
-              <th>Can Delete</th>
-            </tr>
-            </thead>
-            <tbody>
-            {Object.entries(ROLES).map(([key,role])=>{
-              const has = view => role.access.includes(view)||role.access.includes('*')
-              const tick = ok => <span style={{color:ok?'var(--success)':'var(--text-tertiary)',fontWeight:700,fontSize:14}}>{ok?'✓':'–'}</span>
-              return (
-                <tr key={key}>
-                  <td><div style={{display:'flex',alignItems:'center',gap:7}}><div style={{width:8,height:8,borderRadius:'50%',background:role.color,flexShrink:0}}/><strong style={{color:role.color}}>{role.label}</strong></div></td>
-                  <td>{tick(has('pos'))}</td>
-                  <td>{tick(has('dashboard'))}</td>
-                  <td>{tick(has('crm'))}</td>
-                  <td>{tick(has('orders'))}</td>
-                  <td>{tick(has('payments'))}</td>
-                  <td>{tick(has('settings'))}</td>
-                  <td>{tick(has('users'))}</td>
-                  <td>{tick(role.canEdit)}</td>
-                  <td>{tick(role.canDelete)}</td>
-                </tr>
-              )
-            })}
-            </tbody>
-            </table>
-            </div>
-            </div>
-
-            {/* Audit log preview */}
-            <div className="panel full-col">
-            <div className="panel-hd">
-            <h2>Recent Auth Events</h2>
-            <span style={{fontSize:11,color:'var(--text-tertiary)'}}>Last {Math.min(auditLog?.length||0,10)} events</span>
-            </div>
-            {(!auditLog||auditLog.length===0)
-            ?<div className="empty-state"><div className="empty-icon"><SvgIcon icon="eye" size={22}/></div><p>No auth events yet</p><span>Login and payment activity appears here.</span></div>
-            :<table className="data-table">
-            <thead><tr><th>Time</th><th>User</th><th>Action</th><th>IP</th></tr></thead>
-            <tbody>
-            {(auditLog||[]).slice(0,10).map((e,i)=>(
-              <tr key={i}>
-                <td style={{color:'var(--text-tertiary)',fontFamily:'monospace',fontSize:11}}>{new Date(e.time).toLocaleTimeString('en-KE')}</td>
-                <td>{e.userId}</td>
-                <td><span className={`pill ${e.action.includes('SUCCESS')||e.action.includes('VERIFY')?'paid':e.action.includes('FAIL')?'failed':'reviewed'}`}>{e.action}</span></td>
-                <td style={{color:'var(--text-tertiary)',fontFamily:'monospace',fontSize:11}}>{e.ip}</td>
-              </tr>
-            ))}
-            </tbody>
-            </table>
-            }
-            </div>
-            </div>
-            )}
-
             {view==='dashboard' && canAccess('dashboard') && (
               <div className="dash-grid">
                 <div className="panel full-col">
@@ -1124,7 +1438,7 @@ const [newItem,setNewItem]           = useState({name:'',price:'',category:'shop
                         <button className="btn-g" onClick={()=>setShowAddExp(false)}>Cancel</button>
                       </div>
                     </div>
-            )}
+                  )}
                   {expenses.length===0
                     ?<div className="empty-state"><div className="empty-icon"><SvgIcon icon="payments" size={22}/></div><p>No expenses logged</p></div>
                     :<><div className="table-wrap"><table className="data-table"><thead><tr><th>Description</th><th>Category</th><th>Amount</th><th>Date</th></tr></thead><tbody>{expenses.map(e=><tr key={e.id}><td>{e.desc}</td><td>{e.category}</td><td>{fKES(e.amount)}</td><td>{e.date}</td></tr>)}</tbody></table></div><div className="card-list">{expenses.map(e=><div key={e.id} className="m-card"><div className="m-card-hd"><span className="m-card-id">{e.desc}</span><span className="m-tag"><strong>{fKES(e.amount)}</strong></span></div></div>)}</div><div style={{padding:'9px 0',fontSize:12,color:'var(--text2)',borderTop:'1px solid var(--border)',marginTop:8}}>Total Expenses: <strong style={{color:'var(--red)'}}>{fKES(totalExp)}</strong></div></>
@@ -1167,7 +1481,7 @@ const [newItem,setNewItem]           = useState({name:'',price:'',category:'shop
                       {/* Mobile cards */}
                       <div className="card-list" aria-label="Transactions list">
                         {pagedLedger.map(r=>(
-                          <article key={r.id} className={`m-card ${expandedCard===r.id?'expanded':''}`} tabIndex={0} role="article" aria-label={`Transaction ${r.id}, ${r.customer}, ${fKES(r.total)}`} onKeyDown={e=>e.key==='Enter'&&setDetailTxn(r)}>
+                          <article key={r.id} className={`m-card ${expandedCard===r.id?'expanded':''}`} tabIndex={0} aria-label={`Transaction ${r.id}, ${r.customer}, ${fKES(r.total)}`} onKeyDown={e=>e.key==='Enter'&&setDetailTxn(r)}>
                             <div className="m-card-hd" onClick={()=>setExpandedCard(expandedCard===r.id?null:r.id)}>
                               <input type="checkbox" className="m-card-sel" checked={selTxns.includes(r.id)} onChange={e=>{e.stopPropagation();setSelTxns(p=>e.target.checked?[...p,r.id]:p.filter(x=>x!==r.id))}} onClick={e=>e.stopPropagation()} aria-label={`Select ${r.id}`}/>
                               <span className="m-card-id">{r.id}</span>
@@ -1288,10 +1602,47 @@ const [newItem,setNewItem]           = useState({name:'',price:'',category:'shop
                   <div className="form-grid">
                     <div className="sf full"><label>Item Name</label><input value={newItem.name} onChange={e=>setNewItem({...newItem,name:e.target.value})} placeholder="e.g. Special Bundle"/></div>
                     <div className="sf"><label>Price (KES)</label><input type="number" value={newItem.price} onChange={e=>setNewItem({...newItem,price:e.target.value})}/></div>
-                    <div className="sf"><label>Icon (Emoji)</label><input value={newItem.icon} onChange={e=>setNewItem({...newItem,icon:e.target.value})} placeholder="Optional"/></div>
-                    <div className="sf full"><label>Category</label><select value={newItem.category} onChange={e=>setNewItem({...newItem,category:e.target.value})}>{Object.entries(categories).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}</select></div>
+                    <div className="sf"><label>Min Stock Level</label><input type="number" value={newItem.minAlert} onChange={e=>setNewItem({...newItem,minAlert:e.target.value})} placeholder="e.g. 5"/></div>
+                    <div className="sf"><label>Batch No</label><input value={newItem.batch} onChange={e=>setNewItem({...newItem,batch:e.target.value})} placeholder="e.g. BATCH-123"/></div>
+                    <div className="sf"><label>Expiry Date</label><input type="date" value={newItem.expiry} onChange={e=>setNewItem({...newItem,expiry:e.target.value})}/></div>
+                    <div className="sf"><label>Serial No</label><input value={newItem.serialNo} onChange={e=>setNewItem({...newItem,serialNo:e.target.value})} placeholder="e.g. SN-9988"/></div>
+                    <div className="sf full">
+                      <label>Category</label>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        {!showAddCat ? (
+                          <>
+                            <select style={{ flex: 1 }} value={newItem.category} onChange={e=>setNewItem({...newItem,category:e.target.value})}>
+                              {Object.entries({...categories, ...customCats}).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
+                            </select>
+                            <button className="btn-g" onClick={() => setShowAddCat(true)} aria-label="Add new category" style={{ padding: '0 12px' }}>
+                              <SvgIcon icon="add" size={16}/>
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <input style={{ flex: 1 }} value={newCatName} onChange={e=>setNewCatName(e.target.value)} placeholder="New Category Name"/>
+                            <button className="btn-p" onClick={() => {
+                              if(newCatName.trim()){
+                                const key = newCatName.toLowerCase().replace(/[^a-z0-9]/g, '');
+                                setCustomCats(p => ({...p, [key]: { label: newCatName, products: [] }}));
+                                setNewItem({...newItem, category: key});
+                                setNewCatName('');
+                                setShowAddCat(false);
+                              }
+                            }}>Add</button>
+                            <button className="btn-g danger" onClick={() => setShowAddCat(false)}>Cancel</button>
+                          </>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <button className="btn-p" style={{marginTop:16,width:'100%'}} onClick={()=>{if(!newItem.name||!newItem.price){flash('Name and price are required.','error');return};setCustomItems(p=>[...p,{id:Date.now(),...newItem,price:parseInt(newItem.price)}]);flash('Item added to catalogue.');setNewItem({name:'',price:'',category:'shop',icon:''});setView('pos')}}>Add to Catalogue</button>
+                  <button className="btn-p" style={{marginTop:16,width:'100%'}} onClick={()=>{
+                    if(!newItem.name||!newItem.price){flash('Name and price are required.','error');return};
+                    setCustomItems(p=>[...p,{id:Date.now(),...newItem,price:parseInt(newItem.price)}]);
+                    flash('Item added to catalogue.');
+                    setNewItem({name:'',price:'',category:'shop',minAlert:'',batch:'',expiry:'',serialNo:''});
+                    setView('pos')
+                  }}>Add to Catalogue</button>
                   <p className="help-text">The item will appear in the selected category immediately and can be sold from the POS.</p>
                 </div>
                 <div className="panel">
@@ -1349,8 +1700,8 @@ const [newItem,setNewItem]           = useState({name:'',price:'',category:'shop
 
             {/* MANAGER — BUG REPORTS */}
             {view==='manager' && canAccess('manager') && (
-              <div className="dash-grid">
-                <div className="panel full-col">
+              <div className="dash-grid" style={{ display: 'grid', gridTemplateColumns: '1fr', height: '100%' }}>
+                <div className="panel full-col" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                   <div className="panel-hd">
                     <h2>Bug Reports</h2>
                     <span style={{fontSize:11,color:'var(--text3)'}}>{bugReports.filter(r=>r.status==='open').length} open</span>
@@ -1390,6 +1741,11 @@ const [newItem,setNewItem]           = useState({name:'',price:'',category:'shop
                   }
                 </div>
               </div>
+            )}
+
+            {/* SECURITY DASHBOARD */}
+            {view==='security' && canAccess('security') && (
+              <SecurityDashboard darkMode={darkMode} />
             )}
 
             {/* SETTINGS */}
@@ -1441,7 +1797,7 @@ const [newItem,setNewItem]           = useState({name:'',price:'',category:'shop
 
           {/* CART PANEL */}
           {view==='pos' && (
-            <aside className={`cart-panel ${cartOpen?'open':''}`} aria-label="Shopping cart">
+            <aside className={`cart-panel ${cartOpen?'open':''}`} aria-label="Shopping cart" style={{ display: 'flex', flexDirection: 'column', width: '290px', minWidth: '290px', flexShrink: 0, position: 'relative', height: '100%', minHeight: 0, borderLeft: '1px solid var(--border)', background: 'var(--topbar-bg)' }}>
               <div className="cp-hd" onClick={()=>setCartOpen(!cartOpen)} style={{cursor:'pointer'}} role="button" aria-expanded={cartOpen} aria-label={`Cart — ${cart.reduce((s,i)=>s+i.qty,0)} items`}>
                 <h2>Order {cart.length>0&&`(${cart.reduce((s,i)=>s+i.qty,0)})`}</h2>
                 {cart.length>0&&<button className="clr-btn" onClick={e=>{e.stopPropagation();setCart([]); localStorage.removeItem('bb_cart')}} aria-label="Clear cart">Clear all</button>}
@@ -1733,53 +2089,33 @@ const [newItem,setNewItem]           = useState({name:'',price:'',category:'shop
         </button>
         {showReport && (
           <div className="overlay" role="dialog" aria-modal="true" aria-label="Report an issue" onClick={e=>e.target===e.currentTarget&&setShowReport(false)}>
-            <div className="report-modal">
-              <div className="modal-hd">
+            <form action="https://formspree.io/f/mkodebob" method="POST" className="report-modal" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div className="modal-hd" style={{ marginBottom: 0 }}>
                 <h3>Report an Issue</h3>
-                <button className="modal-close" onClick={()=>setShowReport(false)} aria-label="Close"><SvgIcon icon="x" size={18}/></button>
+                <button type="button" className="modal-close" onClick={()=>setShowReport(false)} aria-label="Close"><SvgIcon icon="x" size={18}/></button>
               </div>
+              
               <div className="report-context" aria-label="Report context">
-                User: {currentUser.name} ({ROLES[currentUser.role].label}) | Page: {view}{'\n'}
-                Time: {new Date().toLocaleTimeString('en-KE')} | Cart: {cart.length} items
+                User: {currentUser.name} ({ROLES[currentUser.role].label}) | Page: {view}
+              </div>
+              <input type="hidden" name="user" value={`${currentUser.name} (${ROLES[currentUser.role].label})`} />
+              <input type="hidden" name="page" value={view} />
+
+              <div className="sf">
+                <label style={{ marginBottom: '8px', display: 'block' }}>Your Email</label>
+                <input type="email" name="email" required style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', boxSizing: 'border-box' }} />
               </div>
 
-              {/* Duplicate check preview */}
-              {reportText.length>20 && bugReports.some(r=>r.sig?.includes(reportText.slice(0,20))) && (
-                <div className="dup-warning" role="alert"><SvgIcon icon="alert" size={13}/>A similar report already exists. Submitting will link to the master report.</div>
-              )}
-
-              <div className="sf" style={{marginBottom:10}}>
-                <label>Category (select all that apply)</label>
-                <div className="cat-grid" role="group" aria-label="Report categories">
-                  {['Payments','Inventory','Invoices','Dashboard','POS','CRM','Settings'].map(c=>(
-                    <button key={c} className={`cat-chip ${reportCats.includes(c.toLowerCase())?'sel':''}`} onClick={()=>setReportCats(p=>p.includes(c.toLowerCase())?p.filter(x=>x!==c.toLowerCase()):[...p,c.toLowerCase()])} aria-pressed={reportCats.includes(c.toLowerCase())}>
-                      {c}
-                    </button>
-                  ))}
-                </div>
+              <div className="sf">
+                <label style={{ marginBottom: '8px', display: 'block' }}>Describe the issue</label>
+                <textarea name="message" required rows="4" style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', resize: 'vertical', boxSizing: 'border-box' }} placeholder="What happened? Steps to reproduce..."></textarea>
               </div>
 
-              <div className="sf" style={{marginBottom:10}}>
-                <label htmlFor="report-text">Describe the issue</label>
-                <textarea id="report-text" className="sf" style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:'var(--rs)',color:'var(--text)',padding:'9px 12px',fontSize:12.5,fontFamily:'DM Sans,sans-serif',outline:'none',resize:'vertical',minHeight:90,transition:'border-color .18s',width:'100%'}}
-                  placeholder="What happened? What were you trying to do? Steps to reproduce…" value={reportText} onChange={e=>setReportText(e.target.value)} aria-label="Issue description"/>
+              <div className="btn-row" style={{ marginTop: '10px' }}>
+                <button type="submit" className="btn-p" style={{flex:1}}>Send to Support</button>
+                <button type="button" className="btn-g" onClick={()=>setShowReport(false)}>Cancel</button>
               </div>
-
-              <div className="sf" style={{marginBottom:14}}>
-                <label>Screenshot (optional)</label>
-                <div className="screenshot-zone" role="button" tabIndex={0} aria-label="Attach screenshot" onClick={()=>document.getElementById('ss-input').click()} onKeyDown={e=>e.key==='Enter'&&document.getElementById('ss-input').click()}>
-                  <input id="ss-input" type="file" accept="image/*" style={{display:'none'}} onChange={e=>{const f=e.target.files[0];if(f){const r=new FileReader();r.onload=ev=>setReportScreenshot(ev.target.result);r.readAsDataURL(f)}}}/>
-                  <SvgIcon icon="attach" size={16} style={{display:'block',margin:'0 auto 6px'}}/>
-                  {reportScreenshot?'Screenshot attached':'Attach Screenshot'}
-                </div>
-                {reportScreenshot&&<img src={reportScreenshot} alt="Report screenshot" className="screenshot-preview"/>}
-              </div>
-
-              <div className="btn-row">
-                <button className="btn-p" style={{flex:1}} onClick={submitReport} disabled={!reportText} aria-label="Submit bug report">Submit Report</button>
-                <button className="btn-g" onClick={()=>{setShowReport(false);setReportText('');setReportCats([]);setReportScreenshot(null)}} aria-label="Cancel">Cancel</button>
-              </div>
-            </div>
+            </form>
           </div>
         )}
 

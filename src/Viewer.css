@@ -1,0 +1,222 @@
+.viewer-root {
+  min-height: 100vh;
+  background: #0f172a;
+  color: #f8fafc;
+  font-family: 'Inter', -apple-system, sans-serif;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.viewer-header {
+  padding: 1.5rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.viewer-brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.viewer-brand img {
+  height: 32px;
+}
+
+.viewer-brand-text {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.viewer-brand-text em {
+  font-style: normal;
+  color: #3b82f6;
+}
+
+.live-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border-radius: 99px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  background: #10b981;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.viewer-main {
+  padding: 2rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.v-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.v-card {
+  background: #1e293b;
+  border-radius: 16px;
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+.v-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.v-card:hover::before {
+  opacity: 1;
+}
+
+.v-card-title {
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.v-card-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #f8fafc;
+  line-height: 1.2;
+}
+
+.v-card-sub {
+  font-size: 0.875rem;
+  color: #10b981;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.v-table-container {
+  background: #1e293b;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+
+.v-table-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.v-table-header h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.v-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.v-table th, .v-table td {
+  padding: 1rem 1.5rem;
+  text-align: left;
+}
+
+.v-table th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.v-table td {
+  font-size: 0.875rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.v-table tr:last-child td {
+  border-bottom: none;
+}
+
+.v-table tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.v-pill {
+  padding: 0.25rem 0.75rem;
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.v-pill.success { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
+.v-pill.warning { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2); }
+
+.nav-links {
+  display: flex;
+  gap: 1rem;
+}
+
+.nav-link {
+  color: #94a3b8;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.nav-link:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #f8fafc;
+}

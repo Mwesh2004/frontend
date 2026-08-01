@@ -55,9 +55,13 @@ export default function LoginPortal({ onLogin, darkMode, toggleDark }) {
         return
       }
 
-      // App.js expects a user object shaped like SYSTEM_USERS in App.js.
-      // Provide a minimal object.
-      const user = { id: 0, username: match.u, name: match.role, role: match.role }
+      // App.js expects role keys like: superadmin/manager/cashier/inventory...
+      // Normalize role to match App.js ROLES keys.
+      const normalizedRole = String(match.role || '')
+        .toLowerCase()
+        .replace(/\s+/g,'')
+
+      const user = { id: 0, username: match.u, name: match.role, role: normalizedRole }
       onLogin(user)
       setLoading(false)
     }, 600)

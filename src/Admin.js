@@ -8,7 +8,7 @@ const USERS = {
 
 
 const mockSales = []
-const mockExpenses = []
+// const mockExpenses = []
 
 const mockUsers = [
   { id: 1, name: 'User 1', role: 'Super Admin', status: 'active', lastLogin: 'Today 8:00 AM' },
@@ -56,8 +56,8 @@ export default function Admin() {
   const [showAddItem, setShowAddItem] = useState(false)
   const [newItem, setNewItem] = useState({ name: '', sku: '', category: 'General', retailPrice: '', buyingPrice: '', stock: '', minAlert: '', expiry: '', batch: '' })
   const [qrScan, setQrScan] = useState(false)
-  const [autoRefresh, setAutoRefresh] = useState(true)
-  const [lastUpdate, setLastUpdate] = useState(new Date().toLocaleTimeString())
+  const [autoRefresh] = useState(true)
+  const [, setLastUpdate] = useState(new Date().toLocaleTimeString())
 
   useEffect(() => {
     setTimeout(() => setReady(true), 100)
