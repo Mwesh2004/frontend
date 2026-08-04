@@ -1,1 +1,1 @@
-import topbar from './topbar.css'
+import './topbar.css'

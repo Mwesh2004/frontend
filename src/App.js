@@ -1,699 +1,2323 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
-import './App.css'
-import jsPDF from 'jspdf'
-import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js'
+import { useState, useEffect, useCallback, useRef } from "react";
+import "./App.css";
+import jsPDF from "jspdf";
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 
 // ─── SVG ICONS ────────────────────────────────────────────────────────────────
 const I = {
-  pos:       () => <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>,
-  dashboard: () => <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
-  crm:       () => <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
-  inventory: () => <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>,
-  add:       () => <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>,
-  payments:  () => <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>,
-  settings:  () => <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
-  reports:   () => <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>,
-  search:    () => <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>,
-  x:         () => <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>,
-  arrow_r:   () => <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>,
-  arrow_l:   () => <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>,
-  check:     () => <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>,
-  alert:     () => <svg viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
-  edit:      () => <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
-  cart:      () => <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>,
-  refresh:   () => <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>,
-  download:  () => <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
-  eye:       () => <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>,
-  bug:       () => <svg viewBox="0 0 24 24"><path d="M8 2l1.88 1.88M16 2l-1.88 1.88M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6z"/><path d="M12 20v-9M6.53 9C4.6 8.8 3 7.1 3 5M6 13H2M20 13h-4M20.47 9C22.4 8.8 24 7.1 24 5M17 7l1-4M7 7L6 3"/></svg>,
-  logout:    () => <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
-  fingerprint:() => <svg viewBox="0 0 24 24"><path d="M2 12C2 6.5 6.5 2 12 2a10 10 0 0 1 8 4"/><path d="M5 19.5C5.5 18 6 15 6 12c0-1.7.9-3.2 2-4"/><path d="M17.8 4.5c1.3 1.6 2.2 3.6 2.2 5.5v2"/><path d="M12 8a4 4 0 0 1 4 4c0 3-.5 6-2 8.5"/><path d="M10 16c.5 1.5.5 3.5-.5 5"/><path d="M10 12c0-1.1.9-2 2-2"/></svg>,
-  mpesa:     () => <svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>,
-  card:      () => <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>,
-  paypal:    () => <svg viewBox="0 0 24 24"><path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c1.379 1.238 1.55 3.458.804 6.14-.95 3.417-3.693 5.084-7.353 5.084H12.27"/></svg>,
-  cash:      () => <svg viewBox="0 0 24 24"><rect x="1" y="6" width="22" height="13" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M5 12H1M23 12h-4"/></svg>,
-  sun:       () => <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>,
-  moon:      () => <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>,
-  attach:    () => <svg viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>,
-  export:    () => <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>,
-  security:  () => <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
-  firewall:  () => <svg viewBox="0 0 24 24"><path d="M20 16V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12m16 0a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2m16 0v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-4M8 2h8M12 22v-4M8 12h8"/></svg>,
-}
+  pos: () => (
+    <svg viewBox="0 0 24 24">
+      <rect x="2" y="3" width="20" height="14" rx="2" />
+      <path d="M8 21h8M12 17v4" />
+    </svg>
+  ),
+  dashboard: () => (
+    <svg viewBox="0 0 24 24">
+      <rect x="3" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="3" width="7" height="7" rx="1" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+      <rect x="14" y="14" width="7" height="7" rx="1" />
+    </svg>
+  ),
+  crm: () => (
+    <svg viewBox="0 0 24 24">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  ),
+  inventory: () => (
+    <svg viewBox="0 0 24 24">
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+    </svg>
+  ),
+  add: () => (
+    <svg viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 8v8M8 12h8" />
+    </svg>
+  ),
+  payments: () => (
+    <svg viewBox="0 0 24 24">
+      <rect x="1" y="4" width="22" height="16" rx="2" />
+      <path d="M1 10h22" />
+    </svg>
+  ),
+  settings: () => (
+    <svg viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  ),
+  reports: () => (
+    <svg viewBox="0 0 24 24">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <polyline points="14 2 14 8 20 8" />
+      <line x1="16" y1="13" x2="8" y2="13" />
+      <line x1="16" y1="17" x2="8" y2="17" />
+    </svg>
+  ),
+  search: () => (
+    <svg viewBox="0 0 24 24">
+      <circle cx="11" cy="11" r="8" />
+      <path d="m21 21-4.35-4.35" />
+    </svg>
+  ),
+  x: () => (
+    <svg viewBox="0 0 24 24">
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
+  ),
+  arrow_r: () => (
+    <svg viewBox="0 0 24 24">
+      <path d="M5 12h14M12 5l7 7-7 7" />
+    </svg>
+  ),
+  arrow_l: () => (
+    <svg viewBox="0 0 24 24">
+      <path d="M19 12H5M12 19l-7-7 7-7" />
+    </svg>
+  ),
+  check: () => (
+    <svg viewBox="0 0 24 24">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  ),
+  alert: () => (
+    <svg viewBox="0 0 24 24">
+      <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+      <line x1="12" y1="9" x2="12" y2="13" />
+      <line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
+  ),
+  edit: () => (
+    <svg viewBox="0 0 24 24">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+    </svg>
+  ),
+  cart: () => (
+    <svg viewBox="0 0 24 24">
+      <circle cx="9" cy="21" r="1" />
+      <circle cx="20" cy="21" r="1" />
+      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+    </svg>
+  ),
+  refresh: () => (
+    <svg viewBox="0 0 24 24">
+      <polyline points="23 4 23 10 17 10" />
+      <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+    </svg>
+  ),
+  download: () => (
+    <svg viewBox="0 0 24 24">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  ),
+  eye: () => (
+    <svg viewBox="0 0 24 24">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  ),
+  bug: () => (
+    <svg viewBox="0 0 24 24">
+      <path d="M8 2l1.88 1.88M16 2l-1.88 1.88M9 7.13v-1a3.003 3.003 0 1 1 6 0v1" />
+      <path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6z" />
+      <path d="M12 20v-9M6.53 9C4.6 8.8 3 7.1 3 5M6 13H2M20 13h-4M20.47 9C22.4 8.8 24 7.1 24 5M17 7l1-4M7 7L6 3" />
+    </svg>
+  ),
+  logout: () => (
+    <svg viewBox="0 0 24 24">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>
+  ),
+  fingerprint: () => (
+    <svg viewBox="0 0 24 24">
+      <path d="M2 12C2 6.5 6.5 2 12 2a10 10 0 0 1 8 4" />
+      <path d="M5 19.5C5.5 18 6 15 6 12c0-1.7.9-3.2 2-4" />
+      <path d="M17.8 4.5c1.3 1.6 2.2 3.6 2.2 5.5v2" />
+      <path d="M12 8a4 4 0 0 1 4 4c0 3-.5 6-2 8.5" />
+      <path d="M10 16c.5 1.5.5 3.5-.5 5" />
+      <path d="M10 12c0-1.1.9-2 2-2" />
+    </svg>
+  ),
+  mpesa: () => (
+    <svg viewBox="0 0 24 24">
+      <rect x="5" y="2" width="14" height="20" rx="2" />
+      <path d="M12 18h.01" />
+    </svg>
+  ),
+  card: () => (
+    <svg viewBox="0 0 24 24">
+      <rect x="1" y="4" width="22" height="16" rx="2" />
+      <path d="M1 10h22" />
+    </svg>
+  ),
+  paypal: () => (
+    <svg viewBox="0 0 24 24">
+      <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c1.379 1.238 1.55 3.458.804 6.14-.95 3.417-3.693 5.084-7.353 5.084H12.27" />
+    </svg>
+  ),
+  cash: () => (
+    <svg viewBox="0 0 24 24">
+      <rect x="1" y="6" width="22" height="13" rx="2" />
+      <circle cx="12" cy="12" r="3" />
+      <path d="M5 12H1M23 12h-4" />
+    </svg>
+  ),
+  sun: () => (
+    <svg viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="5" />
+      <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+    </svg>
+  ),
+  moon: () => (
+    <svg viewBox="0 0 24 24">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+    </svg>
+  ),
+  attach: () => (
+    <svg viewBox="0 0 24 24">
+      <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+    </svg>
+  ),
+  export: () => (
+    <svg viewBox="0 0 24 24">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="17 8 12 3 7 8" />
+      <line x1="12" y1="3" x2="12" y2="15" />
+    </svg>
+  ),
+  security: () => (
+    <svg viewBox="0 0 24 24">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    </svg>
+  ),
+  firewall: () => (
+    <svg viewBox="0 0 24 24">
+      <path d="M20 16V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12m16 0a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2m16 0v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-4M8 2h8M12 22v-4M8 12h8" />
+    </svg>
+  ),
+  phone: () => (
+    <svg viewBox="0 0 24 24">
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+    </svg>
+  ),
+};
 
 const SvgIcon = ({ icon, size = 14, ...props }) => (
-  <svg width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" {...props}>
+  <svg
+    width={size}
+    height={size}
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    viewBox="0 0 24 24"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
     {I[icon]?.().props?.children}
   </svg>
-)
+);
 
 // ─── ROLES ────────────────────────────────────────────────────────────────────
 const ROLES = {
-  superadmin:{ label:'Super Admin',      color:'#1bdab0ff', bg:'rgba(16,185,129,.1)',  access:['pos','dashboard','crm','orders','add','settings','payments','manager','security'], canEdit:true,  canDelete:true  },
-  manager:   { label:'Manager',          color:'#0ea5e9', bg:'rgba(14,165,233,.1)',  access:['pos','dashboard','crm','orders','add','manager','security'],                       canEdit:true,  canDelete:false },
-  cashier:   { label:'Cashier',          color:'#8b5cf6', bg:'rgba(139,92,246,.1)',  access:['pos','dashboard'],                                                     canEdit:false, canDelete:false },
-  inventory: { label:'Inventory Clerk',  color:'#f59e0b', bg:'rgba(245,158,11,.1)',  access:['orders','add','dashboard'],                                             canEdit:true,  canDelete:false },
-  accountant:{ label:'Accountant',       color:'#14b8a6', bg:'rgba(20,184,166,.1)',  access:['dashboard'],                                                            canEdit:false, canDelete:false },
-  audit:     { label:'Auditor',          color:'#ef4444', bg:'rgba(239,68,68,.1)',   access:['dashboard','crm','orders'],                                             canEdit:false, canDelete:false },
-  support:   { label:'Customer Support', color:'#a78bfa', bg:'rgba(167,139,250,.1)', access:['crm','pos'],                                                            canEdit:false, canDelete:false },
-}
+  superadmin: {
+    label: "Super Admin",
+    color: "#1bdab0ff",
+    bg: "rgba(16,185,129,.1)",
+    access: [
+      "pos",
+      "dashboard",
+      "crm",
+      "orders",
+      "add",
+      "settings",
+      "payments",
+      "manager",
+      "security",
+    ],
+    canEdit: true,
+    canDelete: true,
+  },
+  manager: {
+    label: "Manager",
+    color: "#0ea5e9",
+    bg: "rgba(14,165,233,.1)",
+    access: ["pos", "dashboard", "crm", "orders", "add", "manager", "security"],
+    canEdit: true,
+    canDelete: false,
+  },
+  cashier: {
+    label: "Cashier",
+    color: "#8b5cf6",
+    bg: "rgba(139,92,246,.1)",
+    access: ["pos", "dashboard"],
+    canEdit: false,
+    canDelete: false,
+  },
+  inventory: {
+    label: "Inventory Clerk",
+    color: "#f59e0b",
+    bg: "rgba(245,158,11,.1)",
+    access: ["orders", "add", "dashboard"],
+    canEdit: true,
+    canDelete: false,
+  },
+  accountant: {
+    label: "Accountant",
+    color: "#14b8a6",
+    bg: "rgba(20,184,166,.1)",
+    access: ["dashboard"],
+    canEdit: false,
+    canDelete: false,
+  },
+  audit: {
+    label: "Auditor",
+    color: "#ef4444",
+    bg: "rgba(239,68,68,.1)",
+    access: ["dashboard", "crm", "orders"],
+    canEdit: false,
+    canDelete: false,
+  },
+  support: {
+    label: "Customer Support",
+    color: "#a78bfa",
+    bg: "rgba(167,139,250,.1)",
+    access: ["crm", "pos"],
+    canEdit: false,
+    canDelete: false,
+  },
+};
 
+// NOTE: added a real `phone` field for every user (E.164-ish, Kenya default).
+// This was missing before, which crashed the 2FA screen at `selUser.phone.slice(-4)`.
 const SYSTEM_USERS = [
-  { id:1, name:'Beryl Munyao',   email:'beryl@berylbytes.co.ke',    pin:'1234', role:'superadmin', initial:'B' },
-  { id:2, name:'Admin User',     email:'admin@berylbytes.co.ke',    pin:'2345', role:'manager',    initial:'A' },
-  { id:3, name:'Cashier One',    email:'cashier1@berylbytes.co.ke', pin:'3456', role:'cashier',    initial:'C' },
-  { id:4, name:'Cashier Two',    email:'cashier2@berylbytes.co.ke', pin:'4567', role:'cashier',    initial:'D' },
-  { id:5, name:'Stock Manager',  email:'stock@berylbytes.co.ke',    pin:'5678', role:'inventory',  initial:'S' },
-  { id:6, name:'Accountant',     email:'accounts@berylbytes.co.ke', pin:'6789', role:'accountant', initial:'M' },
-  { id:7, name:'Audit Officer',  email:'audit@berylbytes.co.ke',    pin:'7890', role:'audit',      initial:'U' },
-  { id:8, name:'Support Agent',  email:'support@berylbytes.co.ke',  pin:'8901', role:'support',    initial:'P' },
-]
+  {
+    id: 1,
+    name: "Beryl Munyao",
+    email: "beryl@berylbytes.co.ke",
+    phone: "254712345601",
+    pin: "1234",
+    role: "superadmin",
+    initial: "B",
+  },
+  {
+    id: 2,
+    name: "Admin User",
+    email: "admin@berylbytes.co.ke",
+    phone: "254712345602",
+    pin: "2345",
+    role: "manager",
+    initial: "A",
+  },
+  {
+    id: 3,
+    name: "Cashier One",
+    email: "cashier1@berylbytes.co.ke",
+    phone: "254712345603",
+    pin: "3456",
+    role: "cashier",
+    initial: "C",
+  },
+  {
+    id: 4,
+    name: "Cashier Two",
+    email: "cashier2@berylbytes.co.ke",
+    phone: "254712345604",
+    pin: "4567",
+    role: "cashier",
+    initial: "D",
+  },
+  {
+    id: 5,
+    name: "Stock Manager",
+    email: "stock@berylbytes.co.ke",
+    phone: "254712345605",
+    pin: "5678",
+    role: "inventory",
+    initial: "S",
+  },
+  {
+    id: 6,
+    name: "Accountant",
+    email: "accounts@berylbytes.co.ke",
+    phone: "254712345606",
+    pin: "6789",
+    role: "accountant",
+    initial: "M",
+  },
+  {
+    id: 7,
+    name: "Audit Officer",
+    email: "audit@berylbytes.co.ke",
+    phone: "254712345607",
+    pin: "7890",
+    role: "audit",
+    initial: "U",
+  },
+  {
+    id: 8,
+    name: "Support Agent",
+    email: "support@berylbytes.co.ke",
+    phone: "254712345608",
+    pin: "8901",
+    role: "support",
+    initial: "P",
+  },
+];
 
 // ─── CATALOGUE ────────────────────────────────────────────────────────────────
 export const categories = {
-  shop: { label:'General Shop', products:[
-    {id:1,name:'Maize Flour 2kg',price:220},{id:2,name:'Maize Flour 5kg',price:520},
-    {id:3,name:'Cooking Oil 1L',price:350},{id:4,name:'Cooking Oil 2L',price:680},
-    {id:5,name:'Cooking Oil 5L',price:1550},{id:6,name:'Sugar 1kg',price:180},
-    {id:7,name:'Sugar 2kg',price:350},{id:8,name:'Rice 2kg',price:310},
-    {id:9,name:'Rice 5kg',price:760},{id:10,name:'Tea Leaves 500g',price:220},
-    {id:11,name:'Tea Leaves 250g',price:120},{id:12,name:'Milk 500ml',price:65},
-    {id:13,name:'Milk 1L Fresh',price:130},{id:14,name:'Long-life Milk 500ml',price:80},
-    {id:15,name:'Bread Loaf',price:75},{id:16,name:'Bread Roll x4',price:60},
-    {id:17,name:'Omo Detergent 1kg',price:320},{id:18,name:'Omo Detergent 500g',price:175},
-    {id:19,name:'Ariel Detergent 1kg',price:360},{id:20,name:'Bar Soap x3',price:150},
-    {id:21,name:'Bathing Soap',price:80},{id:22,name:'Toothpaste 75ml',price:120},
-    {id:23,name:'Toothpaste 150ml',price:200},{id:24,name:'Toothbrush x2',price:90},
-    {id:25,name:'Salt 500g',price:50},{id:26,name:'Baking Flour 1kg',price:140},
-    {id:27,name:'Baking Flour 2kg',price:270},{id:28,name:'Spaghetti 400g',price:120},
-    {id:29,name:'Macaroni 400g',price:110},{id:30,name:'Tomato Paste 70g',price:55},
-    {id:31,name:'Tomato Paste 150g',price:95},{id:32,name:'Royco Beef 75g',price:85},
-    {id:33,name:'Royco Chicken 75g',price:85},{id:34,name:'Margarine 250g',price:140},
-    {id:35,name:'Margarine 500g',price:260},{id:36,name:'Nescafe 200g',price:750},
-    {id:37,name:'Ovaltine 400g',price:590},{id:38,name:'Milo 400g',price:620},
-    {id:39,name:'Canned Tuna 185g',price:180},{id:40,name:'Canned Sardines',price:100},
-    {id:41,name:'Honey 250ml',price:350},{id:42,name:'Jam Strawberry 400g',price:280},
-    {id:43,name:'Peanut Butter 400g',price:320},{id:44,name:'Biscuits Digestive',price:95},
-    {id:45,name:'Biscuits Cream',price:80},{id:46,name:'Matchboxes x10',price:70},
-    {id:47,name:'Tissue Roll x4',price:180},{id:48,name:'Tissue Box',price:120},
-    {id:49,name:'Garbage Bags x10',price:150},{id:50,name:'Washing Up Liquid 500ml',price:130},
-  ]},
-  pharmacy: { label:'Pharmacy', products:[
-    {id:101,name:'Panadol 500mg x8',price:50,tag:'OTC'},{id:102,name:'Panadol Extra x8',price:80,tag:'OTC'},
-    {id:103,name:'Ibuprofen 400mg x8',price:80,tag:'OTC'},{id:104,name:'Aspirin 300mg x8',price:40,tag:'OTC'},
-    {id:105,name:'Amoxicillin 250mg x21',price:320,tag:'POM'},{id:106,name:'Amoxicillin 500mg x21',price:580,tag:'POM'},
-    {id:107,name:'Azithromycin 500mg x3',price:450,tag:'POM'},{id:108,name:'Ciprofloxacin 500mg',price:380,tag:'POM'},
-    {id:109,name:'Metronidazole 400mg x21',price:280,tag:'POM'},{id:110,name:'Actifed Syrup 100ml',price:280,tag:'OTC'},
-    {id:111,name:'ORS Sachet x5',price:100,tag:'OTC'},{id:112,name:'Coartem x24',price:850,tag:'POM'},
-    {id:113,name:'Vitamin C 1000mg x30',price:480,tag:'OTC'},{id:114,name:'Vitamin C 500mg x30',price:280,tag:'OTC'},
-    {id:115,name:'Dettol 250ml',price:320,tag:'OTC'},{id:116,name:'Thermometer Digital',price:850,tag:'OTC'},
-    {id:117,name:'Bandage Crepe 10cm',price:150,tag:'OTC'},{id:118,name:'Plasters x10',price:80,tag:'OTC'},
-    {id:119,name:'Cotton Wool 100g',price:120,tag:'OTC'},{id:120,name:'Surgical Spirit 100ml',price:90,tag:'OTC'},
-    {id:121,name:'Hydrogen Peroxide 100ml',price:130,tag:'OTC'},{id:122,name:'Antihistamine 10mg x10',price:120,tag:'OTC'},
-    {id:123,name:'Omeprazole 20mg x14',price:180,tag:'OTC'},{id:124,name:'Multivitamin x30',price:350,tag:'OTC'},
-    {id:125,name:'Iron + Folate x30',price:220,tag:'OTC'},{id:126,name:'Metformin 500mg x30',price:280,tag:'POM'},
-    {id:127,name:'Atorvastatin 20mg x30',price:650,tag:'POM'},{id:128,name:'Amlodipine 5mg x30',price:420,tag:'POM'},
-    {id:129,name:'Salbutamol Inhaler',price:680,tag:'POM'},{id:130,name:'Cough Syrup 100ml',price:220,tag:'OTC'},
-    {id:131,name:'Antifungal Cream 15g',price:280,tag:'OTC'},{id:132,name:'Pregnancy Test Kit',price:180,tag:'OTC'},
-    {id:133,name:'Blood Glucose Strips x50',price:1200,tag:'OTC'},{id:134,name:'Face Mask x10',price:150,tag:'OTC'},
-    {id:135,name:'Gloves Latex x10',price:200,tag:'OTC'},{id:136,name:'Folic Acid 5mg x30',price:150,tag:'OTC'},
-    {id:137,name:'Calcium 500mg x30',price:280,tag:'OTC'},{id:138,name:'Omega-3 x30',price:550,tag:'OTC'},
-    {id:139,name:'Eye Drops Lubricant',price:350,tag:'OTC'},{id:140,name:'Sunscreen SPF50 100ml',price:750,tag:'OTC'},
-  ]},
-  airbnb: { label:'Hospitality', products:[
-    {id:201,name:'Single Room 1 Night',price:2500},{id:202,name:'Double Room 1 Night',price:4500},
-    {id:203,name:'Deluxe Room 1 Night',price:6500},{id:204,name:'Full House 1 Night',price:8000},
-    {id:205,name:'Villa 1 Night',price:15000},{id:206,name:'Airport Pickup',price:1500},
-    {id:207,name:'Airport Drop-off',price:1500},{id:208,name:'Breakfast x1',price:800},
-    {id:209,name:'Full Board x1 Day',price:2500},{id:210,name:'Extra Towels',price:200},
-    {id:211,name:'Late Checkout Fee',price:1000},{id:212,name:'Early Check-in Fee',price:800},
-    {id:213,name:'Laundry Service',price:500},{id:214,name:'City Tour 4hrs',price:3500},
-    {id:215,name:'City Tour Full Day',price:6000},{id:216,name:'Pool Access',price:500},
-    {id:217,name:'Gym Access',price:400},{id:218,name:'Spa 1hr',price:2500},
-    {id:219,name:'Babysitting 4hrs',price:1200},{id:220,name:'Room Decoration',price:1500},
-    {id:221,name:'Catering Service',price:5000},{id:222,name:'BBQ Package',price:3000},
-    {id:223,name:'Conference Room Half-Day',price:5000},{id:224,name:'Conference Room Full Day',price:8000},
-    {id:225,name:'Projector Rental',price:1000},
-  ]},
-  electronics: { label:'Electronics', products:[
-    {id:301,name:'Smartphone Entry-level',price:8500},{id:302,name:'Smartphone Mid-range',price:18500},
-    {id:303,name:'Smartphone Flagship',price:45000},{id:304,name:'Wireless Earbuds',price:4200},
-    {id:305,name:'Wired Earphones',price:650},{id:306,name:'Bluetooth Speaker',price:2800},
-    {id:307,name:'Portable Charger 10000mAh',price:1600},{id:308,name:'Portable Charger 20000mAh',price:2800},
-    {id:309,name:'LED Desk Lamp',price:1050},{id:310,name:'Smartwatch',price:6800},
-    {id:311,name:'Fitness Tracker',price:3500},{id:312,name:'USB-C Cable 1m',price:280},
-    {id:313,name:'USB-C Cable 2m',price:380},{id:314,name:'Wall Charger 65W',price:1200},
-    {id:315,name:'Wireless Charger Pad',price:1800},{id:316,name:'Phone Case Universal',price:350},
-    {id:317,name:'Screen Protector',price:200},{id:318,name:'Memory Card 64GB',price:900},
-    {id:319,name:'Memory Card 128GB',price:1600},{id:320,name:'Flash Drive 32GB',price:650},
-    {id:321,name:'Flash Drive 64GB',price:950},{id:322,name:'Laptop Stand',price:1800},
-    {id:323,name:'Wireless Mouse',price:1200},{id:324,name:'Keyboard Wireless',price:2200},
-    {id:325,name:'HDMI Cable 2m',price:550},{id:326,name:'Extension Cable 4-way',price:850},
-    {id:327,name:'Smart Plug',price:1200},{id:328,name:'LED Strip 5m',price:1500},
-    {id:329,name:'Solar Lamp',price:2200},{id:330,name:'Digital Camera Basic',price:12000},
-  ]},
-  salon: { label:'Salon & Beauty', products:[
-    {id:401,name:'Haircut (Men)',price:850},{id:402,name:'Haircut (Women)',price:1200},
-    {id:403,name:'Haircut (Kids)',price:500},{id:404,name:'Beard Trim',price:450},
-    {id:405,name:'Beard Shape Up',price:650},{id:406,name:'Full Shave',price:700},
-    {id:407,name:'Manicure',price:1200},{id:408,name:'Pedicure',price:1500},
-    {id:409,name:'Manicure + Pedicure',price:2500},{id:410,name:'Gel Nails',price:2200},
-    {id:411,name:'Acrylic Nails Full Set',price:3500},{id:412,name:'Facial Basic',price:2200},
-    {id:413,name:'Facial Premium',price:4500},{id:414,name:'Blow Dry',price:700},
-    {id:415,name:'Hair Wash & Blow Dry',price:1200},{id:416,name:'Hair Colour Single',price:2500},
-    {id:417,name:'Hair Colour Full',price:4500},{id:418,name:'Highlights',price:5500},
-    {id:419,name:'Braids Simple',price:1500},{id:420,name:'Braids Full Head',price:4500},
-    {id:421,name:'Cornrows',price:1200},{id:422,name:'Relaxer Treatment',price:2200},
-    {id:423,name:'Deep Conditioning',price:1500},{id:424,name:'Eyebrow Threading',price:300},
-    {id:425,name:'Eyebrow Tinting',price:500},{id:426,name:'Eyelash Extensions',price:3500},
-    {id:427,name:'Waxing (Legs)',price:1800},{id:428,name:'Waxing (Arms)',price:1200},
-    {id:429,name:'Body Scrub',price:3000},{id:430,name:'Head Massage 30min',price:1500},
-  ]},
-  cafe: { label:'Cafe & Restaurant', products:[
-    {id:501,name:'Espresso Single',price:180},{id:502,name:'Espresso Double',price:280},
-    {id:503,name:'Cappuccino',price:280},{id:504,name:'Latte',price:320},
-    {id:505,name:'Flat White',price:300},{id:506,name:'Americano',price:220},
-    {id:507,name:'Chai Tea',price:150},{id:508,name:'Masala Tea',price:180},
-    {id:509,name:'Hot Chocolate',price:350},{id:510,name:'Smoothie Berry',price:390},
-    {id:511,name:'Smoothie Tropical',price:420},{id:512,name:'Fresh Juice Orange',price:250},
-    {id:513,name:'Fresh Juice Passion',price:250},{id:514,name:'Sandwich Club',price:420},
-    {id:515,name:'Sandwich Chicken',price:480},{id:516,name:'Sandwich Tuna',price:400},
-    {id:517,name:'Cake Slice',price:320},{id:518,name:'Muffin',price:180},
-    {id:519,name:'Croissant',price:220},{id:520,name:'Breakfast Full',price:850},
-    {id:521,name:'Breakfast Light',price:480},{id:522,name:'Avocado Toast',price:550},
-    {id:523,name:'Pancakes x3',price:380},{id:524,name:'Waffles',price:420},
-    {id:525,name:'Pasta Carbonara',price:680},{id:526,name:'Pizza Margherita',price:850},
-    {id:527,name:'Pizza Pepperoni',price:950},{id:528,name:'Burger Classic',price:650},
-    {id:529,name:'Burger Chicken',price:700},{id:530,name:'French Fries',price:280},
-    {id:531,name:'Salad Garden',price:420},{id:532,name:'Salad Caesar',price:520},
-    {id:533,name:'Soup of the Day',price:350},{id:534,name:'Mandazi x4',price:120},
-    {id:535,name:'Samosa x3',price:150},{id:536,name:'Chips & Chicken',price:580},
-    {id:537,name:'Ugali & Stew',price:350},{id:538,name:'Pilau (Plate)',price:480},
-    {id:539,name:'Nyama Choma 200g',price:850},{id:540,name:'Tiramisu',price:450},
-  ]},
-  laundry: { label:'Laundry', products:[
-    {id:601,name:'Shirt Iron & Press',price:80},{id:602,name:'Trouser Iron & Press',price:100},
-    {id:603,name:'Suit Dry Clean',price:850},{id:604,name:'Dress Dry Clean',price:650},
-    {id:605,name:'Bedsheet Wash & Iron',price:250},{id:606,name:'Duvet Clean',price:700},
-    {id:607,name:'Shoes Clean',price:300},{id:608,name:'Leather Jacket Clean',price:1200},
-    {id:609,name:'Express Laundry 2kg',price:450},{id:610,name:'Standard Laundry 5kg',price:800},
-  ]},
-  hardware: { label:'Hardware', products:[
-    {id:701,name:'Hammer',price:650},{id:702,name:'Screwdriver Set',price:850},
-    {id:703,name:'Measuring Tape 5m',price:380},{id:704,name:'Spirit Level',price:550},
-    {id:705,name:'Paint Roller',price:350},{id:706,name:'Paint Brush Set',price:280},
-    {id:707,name:'Wall Paint 4L White',price:1800},{id:708,name:'Gloss Paint 1L',price:650},
-    {id:709,name:'Cement Bag 50kg',price:950},{id:710,name:'Nails 1kg Assorted',price:280},
-    {id:711,name:'Wood Screws x50',price:220},{id:712,name:'PVC Pipe 2m',price:320},
-    {id:713,name:'Electrical Wire 1m',price:120},{id:714,name:'Light Switch',price:180},
-    {id:715,name:'Door Lock',price:1200},{id:716,name:'Padlock',price:350},
-    {id:717,name:'Sandpaper Sheet x5',price:150},{id:718,name:'Glue Gun',price:550},
-    {id:719,name:'Safety Gloves',price:320},{id:720,name:'Safety Goggles',price:450},
-  ]},
-}
+  shop: {
+    label: "General Shop",
+    products: [
+      { id: 1, name: "Maize Flour 2kg", price: 220 },
+      { id: 2, name: "Maize Flour 5kg", price: 520 },
+      { id: 3, name: "Cooking Oil 1L", price: 350 },
+      { id: 4, name: "Cooking Oil 2L", price: 680 },
+      { id: 5, name: "Cooking Oil 5L", price: 1550 },
+      { id: 6, name: "Sugar 1kg", price: 180 },
+      { id: 7, name: "Sugar 2kg", price: 350 },
+      { id: 8, name: "Rice 2kg", price: 310 },
+      { id: 9, name: "Rice 5kg", price: 760 },
+      { id: 10, name: "Tea Leaves 500g", price: 220 },
+      { id: 11, name: "Tea Leaves 250g", price: 120 },
+      { id: 12, name: "Milk 500ml", price: 65 },
+      { id: 13, name: "Milk 1L Fresh", price: 130 },
+      { id: 14, name: "Long-life Milk 500ml", price: 80 },
+      { id: 15, name: "Bread Loaf", price: 75 },
+      { id: 16, name: "Bread Roll x4", price: 60 },
+      { id: 17, name: "Omo Detergent 1kg", price: 320 },
+      { id: 18, name: "Omo Detergent 500g", price: 175 },
+      { id: 19, name: "Ariel Detergent 1kg", price: 360 },
+      { id: 20, name: "Bar Soap x3", price: 150 },
+      { id: 21, name: "Bathing Soap", price: 80 },
+      { id: 22, name: "Toothpaste 75ml", price: 120 },
+      { id: 23, name: "Toothpaste 150ml", price: 200 },
+      { id: 24, name: "Toothbrush x2", price: 90 },
+      { id: 25, name: "Salt 500g", price: 50 },
+      { id: 26, name: "Baking Flour 1kg", price: 140 },
+      { id: 27, name: "Baking Flour 2kg", price: 270 },
+      { id: 28, name: "Spaghetti 400g", price: 120 },
+      { id: 29, name: "Macaroni 400g", price: 110 },
+      { id: 30, name: "Tomato Paste 70g", price: 55 },
+      { id: 31, name: "Tomato Paste 150g", price: 95 },
+      { id: 32, name: "Royco Beef 75g", price: 85 },
+      { id: 33, name: "Royco Chicken 75g", price: 85 },
+      { id: 34, name: "Margarine 250g", price: 140 },
+      { id: 35, name: "Margarine 500g", price: 260 },
+      { id: 36, name: "Nescafe 200g", price: 750 },
+      { id: 37, name: "Ovaltine 400g", price: 590 },
+      { id: 38, name: "Milo 400g", price: 620 },
+      { id: 39, name: "Canned Tuna 185g", price: 180 },
+      { id: 40, name: "Canned Sardines", price: 100 },
+      { id: 41, name: "Honey 250ml", price: 350 },
+      { id: 42, name: "Jam Strawberry 400g", price: 280 },
+      { id: 43, name: "Peanut Butter 400g", price: 320 },
+      { id: 44, name: "Biscuits Digestive", price: 95 },
+      { id: 45, name: "Biscuits Cream", price: 80 },
+      { id: 46, name: "Matchboxes x10", price: 70 },
+      { id: 47, name: "Tissue Roll x4", price: 180 },
+      { id: 48, name: "Tissue Box", price: 120 },
+      { id: 49, name: "Garbage Bags x10", price: 150 },
+      { id: 50, name: "Washing Up Liquid 500ml", price: 130 },
+    ],
+  },
+  pharmacy: {
+    label: "Pharmacy",
+    products: [
+      { id: 101, name: "Panadol 500mg x8", price: 50, tag: "OTC" },
+      { id: 102, name: "Panadol Extra x8", price: 80, tag: "OTC" },
+      { id: 103, name: "Ibuprofen 400mg x8", price: 80, tag: "OTC" },
+      { id: 104, name: "Aspirin 300mg x8", price: 40, tag: "OTC" },
+      { id: 105, name: "Amoxicillin 250mg x21", price: 320, tag: "POM" },
+      { id: 106, name: "Amoxicillin 500mg x21", price: 580, tag: "POM" },
+      { id: 107, name: "Azithromycin 500mg x3", price: 450, tag: "POM" },
+      { id: 108, name: "Ciprofloxacin 500mg", price: 380, tag: "POM" },
+      { id: 109, name: "Metronidazole 400mg x21", price: 280, tag: "POM" },
+      { id: 110, name: "Actifed Syrup 100ml", price: 280, tag: "OTC" },
+      { id: 111, name: "ORS Sachet x5", price: 100, tag: "OTC" },
+      { id: 112, name: "Coartem x24", price: 850, tag: "POM" },
+      { id: 113, name: "Vitamin C 1000mg x30", price: 480, tag: "OTC" },
+      { id: 114, name: "Vitamin C 500mg x30", price: 280, tag: "OTC" },
+      { id: 115, name: "Dettol 250ml", price: 320, tag: "OTC" },
+      { id: 116, name: "Thermometer Digital", price: 850, tag: "OTC" },
+      { id: 117, name: "Bandage Crepe 10cm", price: 150, tag: "OTC" },
+      { id: 118, name: "Plasters x10", price: 80, tag: "OTC" },
+      { id: 119, name: "Cotton Wool 100g", price: 120, tag: "OTC" },
+      { id: 120, name: "Surgical Spirit 100ml", price: 90, tag: "OTC" },
+      { id: 121, name: "Hydrogen Peroxide 100ml", price: 130, tag: "OTC" },
+      { id: 122, name: "Antihistamine 10mg x10", price: 120, tag: "OTC" },
+      { id: 123, name: "Omeprazole 20mg x14", price: 180, tag: "OTC" },
+      { id: 124, name: "Multivitamin x30", price: 350, tag: "OTC" },
+      { id: 125, name: "Iron + Folate x30", price: 220, tag: "OTC" },
+      { id: 126, name: "Metformin 500mg x30", price: 280, tag: "POM" },
+      { id: 127, name: "Atorvastatin 20mg x30", price: 650, tag: "POM" },
+      { id: 128, name: "Amlodipine 5mg x30", price: 420, tag: "POM" },
+      { id: 129, name: "Salbutamol Inhaler", price: 680, tag: "POM" },
+      { id: 130, name: "Cough Syrup 100ml", price: 220, tag: "OTC" },
+      { id: 131, name: "Antifungal Cream 15g", price: 280, tag: "OTC" },
+      { id: 132, name: "Pregnancy Test Kit", price: 180, tag: "OTC" },
+      { id: 133, name: "Blood Glucose Strips x50", price: 1200, tag: "OTC" },
+      { id: 134, name: "Face Mask x10", price: 150, tag: "OTC" },
+      { id: 135, name: "Gloves Latex x10", price: 200, tag: "OTC" },
+      { id: 136, name: "Folic Acid 5mg x30", price: 150, tag: "OTC" },
+      { id: 137, name: "Calcium 500mg x30", price: 280, tag: "OTC" },
+      { id: 138, name: "Omega-3 x30", price: 550, tag: "OTC" },
+      { id: 139, name: "Eye Drops Lubricant", price: 350, tag: "OTC" },
+      { id: 140, name: "Sunscreen SPF50 100ml", price: 750, tag: "OTC" },
+    ],
+  },
+  airbnb: {
+    label: "Hospitality",
+    products: [
+      { id: 201, name: "Single Room 1 Night", price: 2500 },
+      { id: 202, name: "Double Room 1 Night", price: 4500 },
+      { id: 203, name: "Deluxe Room 1 Night", price: 6500 },
+      { id: 204, name: "Full House 1 Night", price: 8000 },
+      { id: 205, name: "Villa 1 Night", price: 15000 },
+      { id: 206, name: "Airport Pickup", price: 1500 },
+      { id: 207, name: "Airport Drop-off", price: 1500 },
+      { id: 208, name: "Breakfast x1", price: 800 },
+      { id: 209, name: "Full Board x1 Day", price: 2500 },
+      { id: 210, name: "Extra Towels", price: 200 },
+      { id: 211, name: "Late Checkout Fee", price: 1000 },
+      { id: 212, name: "Early Check-in Fee", price: 800 },
+      { id: 213, name: "Laundry Service", price: 500 },
+      { id: 214, name: "City Tour 4hrs", price: 3500 },
+      { id: 215, name: "City Tour Full Day", price: 6000 },
+      { id: 216, name: "Pool Access", price: 500 },
+      { id: 217, name: "Gym Access", price: 400 },
+      { id: 218, name: "Spa 1hr", price: 2500 },
+      { id: 219, name: "Babysitting 4hrs", price: 1200 },
+      { id: 220, name: "Room Decoration", price: 1500 },
+      { id: 221, name: "Catering Service", price: 5000 },
+      { id: 222, name: "BBQ Package", price: 3000 },
+      { id: 223, name: "Conference Room Half-Day", price: 5000 },
+      { id: 224, name: "Conference Room Full Day", price: 8000 },
+      { id: 225, name: "Projector Rental", price: 1000 },
+    ],
+  },
+  electronics: {
+    label: "Electronics",
+    products: [
+      { id: 301, name: "Smartphone Entry-level", price: 8500 },
+      { id: 302, name: "Smartphone Mid-range", price: 18500 },
+      { id: 303, name: "Smartphone Flagship", price: 45000 },
+      { id: 304, name: "Wireless Earbuds", price: 4200 },
+      { id: 305, name: "Wired Earphones", price: 650 },
+      { id: 306, name: "Bluetooth Speaker", price: 2800 },
+      { id: 307, name: "Portable Charger 10000mAh", price: 1600 },
+      { id: 308, name: "Portable Charger 20000mAh", price: 2800 },
+      { id: 309, name: "LED Desk Lamp", price: 1050 },
+      { id: 310, name: "Smartwatch", price: 6800 },
+      { id: 311, name: "Fitness Tracker", price: 3500 },
+      { id: 312, name: "USB-C Cable 1m", price: 280 },
+      { id: 313, name: "USB-C Cable 2m", price: 380 },
+      { id: 314, name: "Wall Charger 65W", price: 1200 },
+      { id: 315, name: "Wireless Charger Pad", price: 1800 },
+      { id: 316, name: "Phone Case Universal", price: 350 },
+      { id: 317, name: "Screen Protector", price: 200 },
+      { id: 318, name: "Memory Card 64GB", price: 900 },
+      { id: 319, name: "Memory Card 128GB", price: 1600 },
+      { id: 320, name: "Flash Drive 32GB", price: 650 },
+      { id: 321, name: "Flash Drive 64GB", price: 950 },
+      { id: 322, name: "Laptop Stand", price: 1800 },
+      { id: 323, name: "Wireless Mouse", price: 1200 },
+      { id: 324, name: "Keyboard Wireless", price: 2200 },
+      { id: 325, name: "HDMI Cable 2m", price: 550 },
+      { id: 326, name: "Extension Cable 4-way", price: 850 },
+      { id: 327, name: "Smart Plug", price: 1200 },
+      { id: 328, name: "LED Strip 5m", price: 1500 },
+      { id: 329, name: "Solar Lamp", price: 2200 },
+      { id: 330, name: "Digital Camera Basic", price: 12000 },
+    ],
+  },
+  salon: {
+    label: "Salon & Beauty",
+    products: [
+      { id: 401, name: "Haircut (Men)", price: 850 },
+      { id: 402, name: "Haircut (Women)", price: 1200 },
+      { id: 403, name: "Haircut (Kids)", price: 500 },
+      { id: 404, name: "Beard Trim", price: 450 },
+      { id: 405, name: "Beard Shape Up", price: 650 },
+      { id: 406, name: "Full Shave", price: 700 },
+      { id: 407, name: "Manicure", price: 1200 },
+      { id: 408, name: "Pedicure", price: 1500 },
+      { id: 409, name: "Manicure + Pedicure", price: 2500 },
+      { id: 410, name: "Gel Nails", price: 2200 },
+      { id: 411, name: "Acrylic Nails Full Set", price: 3500 },
+      { id: 412, name: "Facial Basic", price: 2200 },
+      { id: 413, name: "Facial Premium", price: 4500 },
+      { id: 414, name: "Blow Dry", price: 700 },
+      { id: 415, name: "Hair Wash & Blow Dry", price: 1200 },
+      { id: 416, name: "Hair Colour Single", price: 2500 },
+      { id: 417, name: "Hair Colour Full", price: 4500 },
+      { id: 418, name: "Highlights", price: 5500 },
+      { id: 419, name: "Braids Simple", price: 1500 },
+      { id: 420, name: "Braids Full Head", price: 4500 },
+      { id: 421, name: "Cornrows", price: 1200 },
+      { id: 422, name: "Relaxer Treatment", price: 2200 },
+      { id: 423, name: "Deep Conditioning", price: 1500 },
+      { id: 424, name: "Eyebrow Threading", price: 300 },
+      { id: 425, name: "Eyebrow Tinting", price: 500 },
+      { id: 426, name: "Eyelash Extensions", price: 3500 },
+      { id: 427, name: "Waxing (Legs)", price: 1800 },
+      { id: 428, name: "Waxing (Arms)", price: 1200 },
+      { id: 429, name: "Body Scrub", price: 3000 },
+      { id: 430, name: "Head Massage 30min", price: 1500 },
+    ],
+  },
+  cafe: {
+    label: "Cafe & Restaurant",
+    products: [
+      { id: 501, name: "Espresso Single", price: 180 },
+      { id: 502, name: "Espresso Double", price: 280 },
+      { id: 503, name: "Cappuccino", price: 280 },
+      { id: 504, name: "Latte", price: 320 },
+      { id: 505, name: "Flat White", price: 300 },
+      { id: 506, name: "Americano", price: 220 },
+      { id: 507, name: "Chai Tea", price: 150 },
+      { id: 508, name: "Masala Tea", price: 180 },
+      { id: 509, name: "Hot Chocolate", price: 350 },
+      { id: 510, name: "Smoothie Berry", price: 390 },
+      { id: 511, name: "Smoothie Tropical", price: 420 },
+      { id: 512, name: "Fresh Juice Orange", price: 250 },
+      { id: 513, name: "Fresh Juice Passion", price: 250 },
+      { id: 514, name: "Sandwich Club", price: 420 },
+      { id: 515, name: "Sandwich Chicken", price: 480 },
+      { id: 516, name: "Sandwich Tuna", price: 400 },
+      { id: 517, name: "Cake Slice", price: 320 },
+      { id: 518, name: "Muffin", price: 180 },
+      { id: 519, name: "Croissant", price: 220 },
+      { id: 520, name: "Breakfast Full", price: 850 },
+      { id: 521, name: "Breakfast Light", price: 480 },
+      { id: 522, name: "Avocado Toast", price: 550 },
+      { id: 523, name: "Pancakes x3", price: 380 },
+      { id: 524, name: "Waffles", price: 420 },
+      { id: 525, name: "Pasta Carbonara", price: 680 },
+      { id: 526, name: "Pizza Margherita", price: 850 },
+      { id: 527, name: "Pizza Pepperoni", price: 950 },
+      { id: 528, name: "Burger Classic", price: 650 },
+      { id: 529, name: "Burger Chicken", price: 700 },
+      { id: 530, name: "French Fries", price: 280 },
+      { id: 531, name: "Salad Garden", price: 420 },
+      { id: 532, name: "Salad Caesar", price: 520 },
+      { id: 533, name: "Soup of the Day", price: 350 },
+      { id: 534, name: "Mandazi x4", price: 120 },
+      { id: 535, name: "Samosa x3", price: 150 },
+      { id: 536, name: "Chips & Chicken", price: 580 },
+      { id: 537, name: "Ugali & Stew", price: 350 },
+      { id: 538, name: "Pilau (Plate)", price: 480 },
+      { id: 539, name: "Nyama Choma 200g", price: 850 },
+      { id: 540, name: "Tiramisu", price: 450 },
+    ],
+  },
+  laundry: {
+    label: "Laundry",
+    products: [
+      { id: 601, name: "Shirt Iron & Press", price: 80 },
+      { id: 602, name: "Trouser Iron & Press", price: 100 },
+      { id: 603, name: "Suit Dry Clean", price: 850 },
+      { id: 604, name: "Dress Dry Clean", price: 650 },
+      { id: 605, name: "Bedsheet Wash & Iron", price: 250 },
+      { id: 606, name: "Duvet Clean", price: 700 },
+      { id: 607, name: "Shoes Clean", price: 300 },
+      { id: 608, name: "Leather Jacket Clean", price: 1200 },
+      { id: 609, name: "Express Laundry 2kg", price: 450 },
+      { id: 610, name: "Standard Laundry 5kg", price: 800 },
+    ],
+  },
+  hardware: {
+    label: "Hardware",
+    products: [
+      { id: 701, name: "Hammer", price: 650 },
+      { id: 702, name: "Screwdriver Set", price: 850 },
+      { id: 703, name: "Measuring Tape 5m", price: 380 },
+      { id: 704, name: "Spirit Level", price: 550 },
+      { id: 705, name: "Paint Roller", price: 350 },
+      { id: 706, name: "Paint Brush Set", price: 280 },
+      { id: 707, name: "Wall Paint 4L White", price: 1800 },
+      { id: 708, name: "Gloss Paint 1L", price: 650 },
+      { id: 709, name: "Cement Bag 50kg", price: 950 },
+      { id: 710, name: "Nails 1kg Assorted", price: 280 },
+      { id: 711, name: "Wood Screws x50", price: 220 },
+      { id: 712, name: "PVC Pipe 2m", price: 320 },
+      { id: 713, name: "Electrical Wire 1m", price: 120 },
+      { id: 714, name: "Light Switch", price: 180 },
+      { id: 715, name: "Door Lock", price: 1200 },
+      { id: 716, name: "Padlock", price: 350 },
+      { id: 717, name: "Sandpaper Sheet x5", price: 150 },
+      { id: 718, name: "Glue Gun", price: 550 },
+      { id: 719, name: "Safety Gloves", price: 320 },
+      { id: 720, name: "Safety Goggles", price: 450 },
+    ],
+  },
+};
 
-export const TODAY = new Date().toISOString().slice(0, 10)
+export const TODAY = new Date().toISOString().slice(0, 10);
 
 export const defaultSales = (days = 7) => {
-  const d = []
+  const d = [];
   for (let i = days - 1; i >= 0; i--) {
-    const x = new Date()
-    x.setDate(x.getDate() - i)
-    d.push({ date: x.toISOString().slice(0, 10), revenue: 0 })
+    const x = new Date();
+    x.setDate(x.getDate() - i);
+    d.push({ date: x.toISOString().slice(0, 10), revenue: 0 });
   }
-  return d
-}
+  return d;
+};
 
 export const TIERS = [
-  { name: 'Bronze', min: 0, disc: 0, color: '#cd7f32' },
-  { name: 'Silver', min: 500, disc: 5, color: '#c0c0c0' },
-  { name: 'Gold', min: 1500, disc: 10, color: '#ffd700' },
-  { name: 'Platinum', min: 5000, disc: 15, color: '#e5e4e2' }
-]
-export const getTier = p => [...TIERS].reverse().find(t => p >= t.min)
+  { name: "Bronze", min: 0, disc: 0, color: "#cd7f32" },
+  { name: "Silver", min: 500, disc: 5, color: "#c0c0c0" },
+  { name: "Gold", min: 1500, disc: 10, color: "#ffd700" },
+  { name: "Platinum", min: 5000, disc: 15, color: "#e5e4e2" },
+];
+export const getTier = (p) => [...TIERS].reverse().find((t) => p >= t.min);
 
 export const NICHES = {
   all: Object.keys(categories),
-  retail: ['shop', 'laundry', 'hardware'],
-  food: ['cafe'],
-  health: ['pharmacy'],
-  services: ['airbnb', 'salon'],
-  tech: ['electronics']
-}
-const PAGE_SIZE    = 10
-const MPESA_TIMEOUT= 30 // seconds
+  retail: ["shop", "laundry", "hardware"],
+  food: ["cafe"],
+  health: ["pharmacy"],
+  services: ["airbnb", "salon"],
+  tech: ["electronics"],
+};
+const PAGE_SIZE = 10;
+const MPESA_TIMEOUT = 30; // seconds
+const OTP_RESEND_COOLDOWN = 60; // seconds
+const OTP_LENGTH = 6;
+
+// Basic Kenyan mobile number matcher — accepts 07xx/01xx, 254 7xx/1xx, or +254 7xx/1xx.
+const KE_PHONE_REGEX = /^(?:\+?254|0)?(7\d{8}|1\d{8})$/;
+
+// Normalizes any accepted input format to 254XXXXXXXXX (no leading +).
+const normalizeKePhone = (raw) => {
+  const digits = raw.replace(/\D/g, "");
+  if (digits.startsWith("254")) return digits;
+  if (digits.startsWith("0")) return "254" + digits.slice(1);
+  if (digits.length === 9) return "254" + digits;
+  return digits;
+};
 
 // ─── LOGIN PORTAL ─────────────────────────────────────────────────────────────
 function LoginPortal({ onLogin, darkMode, toggleDark }) {
-  const [step, setStep]         = useState('select')
-  const [selUser, setSelUser]   = useState(null)
-  const [pin, setPin]           = useState('')
-  const [tfaCode, setTfaCode]   = useState('')
-  const [entered2FA, set2FA]    = useState('')
-  const [error, setError]       = useState('')
-  const [loading, setLoading]   = useState(false)
-  const [failedAttempts, setFailedAttempts] = useState(0)
-  const [lockoutTime, setLockoutTime] = useState(null)
-  const [smsStatus, setSmsStatus] = useState(null)
-  const [email, setEmail]             = useState('')
-  const [password, setPassword]       = useState('')
-  const [showOAuthModal, setShowOAuthModal] = useState(false)
-  const [oauthProvider, setOauthProvider] = useState('')
-  const [oauthStep, setOauthStep] = useState(1) // 1: loading, 2: confirm, 3: finalizing
+  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
-  const role = selUser ? ROLES[selUser.role] : null
+  const [step, setStep] = useState("select");
+  const [selUser, setSelUser] = useState(null);
+  const [pin, setPin] = useState("");
+  const [entered2FA, set2FA] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockoutTime, setLockoutTime] = useState(null);
+  const [smsStatus, setSmsStatus] = useState(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showOAuthModal, setShowOAuthModal] = useState(false);
+  const [oauthProvider, setOauthProvider] = useState("");
+  const [oauthStep, setOauthStep] = useState(1); // 1: loading, 2: confirm, 3: finalizing
 
-  const selectUser = u => { 
+  // ── Phone / OTP sign-in state ──
+  const [phoneInput, setPhoneInput] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState(""); // normalized 254XXXXXXXXX
+  const [phoneOtp, setPhoneOtp] = useState("");
+  const [otpToken, setOtpToken] = useState(null); // opaque token backend returns to bind send→verify
+  const [otpDemoFallback, setOtpDemoFallback] = useState(false); // true if backend unreachable, using local demo mode
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const resendTimerRef = useRef(null);
+
+  const selectUser = (u) => {
     if (lockoutTime && Date.now() < lockoutTime) {
       setError(`Account locked. Try again later.`);
       return;
     }
-    setSelUser(u); setPin(''); setError(''); setStep('pin') 
-  }
+    setSelUser(u);
+    setPin("");
+    setError("");
+    setStep("pin");
+  };
 
   const handleEmailLogin = () => {
-    if (!email || !email.includes('@')) {
-      setError('Please enter a valid email address')
-      return
+    if (!email || !email.includes("@")) {
+      setError("Please enter a valid email address");
+      return;
     }
     if (!password) {
-      setError('Please enter your password')
-      return
+      setError("Please enter your password");
+      return;
     }
-    setLoading(true); setError('')
-    
+    setLoading(true);
+    setError("");
+
     // Simulate API call for login
     setTimeout(() => {
-      const user = SYSTEM_USERS.find(u => u.email.toLowerCase() === email.toLowerCase())
+      const user = SYSTEM_USERS.find(
+        (u) => u.email.toLowerCase() === email.toLowerCase(),
+      );
       if (user) {
-        setSelUser(user)
-        setStep('2fa')
+        setSelUser(user);
+        setStep("2fa");
       } else {
-        setError('Invalid email or password')
+        setError("Invalid email or password");
       }
-      setLoading(false)
-    }, 800)
-  }
+      setLoading(false);
+    }, 800);
+  };
 
   const verifyOTP = async () => {
     if (entered2FA.length !== 6) {
-      setError('Please enter a 6-digit code')
-      return
+      setError("Please enter a 6-digit code");
+      return;
     }
-    setLoading(true); setError('')
+    setLoading(true);
+    setError("");
     // Simulate 2FA verification
     setTimeout(() => {
-      if (entered2FA === '123456') {
-        doBiometric(selUser)
+      if (entered2FA === "123456") {
+        doBiometric(selUser);
       } else {
-        setError('Invalid OTP code. Try 123456 for demo.')
+        setError("Invalid OTP code. Try 123456 for demo.");
       }
-      setLoading(false)
-    }, 800)
-  }
+      setLoading(false);
+    }, 800);
+  };
 
   const handleOAuth = (provider) => {
-    setOauthProvider(provider)
-    setShowOAuthModal(true)
-    setOauthStep(1)
+    setOauthProvider(provider);
+    setShowOAuthModal(true);
+    setOauthStep(1);
     setTimeout(() => {
-      setOauthStep(2)
-    }, 1500)
-  }
+      setOauthStep(2);
+    }, 1500);
+  };
 
   const completeOAuth = () => {
-    setOauthStep(3)
+    setOauthStep(3);
     setTimeout(() => {
-      setShowOAuthModal(false)
-      onLogin(SYSTEM_USERS[0]) // Fallback to superadmin for demo
-    }, 1500)
-  }
+      setShowOAuthModal(false);
+      onLogin(SYSTEM_USERS[0]); // Fallback to superadmin for demo
+    }, 1500);
+  };
 
   const doBiometric = async (user) => {
-    setLoading(true); setError('')
+    setLoading(true);
+    setError("");
     try {
-      if(window.PublicKeyCredential) {
-        await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),timeout:60000,allowCredentials:[],userVerification:'required'}})
+      if (window.PublicKeyCredential) {
+        await navigator.credentials.get({
+          publicKey: {
+            challenge: crypto.getRandomValues(new Uint8Array(32)),
+            timeout: 60000,
+            allowCredentials: [],
+            userVerification: "required",
+          },
+        });
       }
-      onLogin(user)
-    } catch(e) {
-      if(e.name==='NotAllowedError') setError('Biometric cancelled or not enrolled.')
-      else onLogin(user) // fallback if not supported on desktop
+      onLogin(user);
+    } catch (e) {
+      if (e.name === "NotAllowedError")
+        setError("Biometric cancelled or not enrolled.");
+      else onLogin(user); // fallback if not supported on desktop
     }
-    setLoading(false)
-  }
+    setLoading(false);
+  };
 
-  const handlePin = d => {
-    setPin(prevPin => {
-      if(prevPin.length >= 4) return prevPin
-      const np = prevPin + d
-      if(np.length === 4) {
-        setTimeout(()=>{
-          if(np === selUser.pin){
-            setFailedAttempts(0)
+  const handlePin = (d) => {
+    setPin((prevPin) => {
+      if (prevPin.length >= 4) return prevPin;
+      const np = prevPin + d;
+      if (np.length === 4) {
+        setTimeout(() => {
+          if (np === selUser.pin) {
+            setFailedAttempts(0);
             // Enforce biometric after correct PIN
-            doBiometric(selUser)
-          } else { 
+            doBiometric(selUser);
+          } else {
             const newAttempts = failedAttempts + 1;
             setFailedAttempts(newAttempts);
             if (newAttempts >= 5) {
               setLockoutTime(Date.now() + 15 * 60 * 1000); // 15 mins
-              setError('Too many failed attempts. Locked for 15 minutes.');
-              setStep('select');
+              setError("Too many failed attempts. Locked for 15 minutes.");
+              setStep("select");
             } else {
-              setError(`Incorrect PIN. Try again. (${5 - newAttempts} attempts left)`); 
+              setError(
+                `Incorrect PIN. Try again. (${5 - newAttempts} attempts left)`,
+              );
             }
-            setPin('') 
+            setPin("");
           }
-        },200)
+        }, 200);
       }
-      return np
-    })
-  }
+      return np;
+    });
+  };
+
+  // ── Phone / OTP handlers ─────────────────────────────────────────────────
+  // Resend cooldown ticker
+  useEffect(() => {
+    if (resendCooldown <= 0) {
+      clearInterval(resendTimerRef.current);
+      return;
+    }
+    resendTimerRef.current = setInterval(() => {
+      setResendCooldown((t) => (t <= 1 ? 0 : t - 1));
+    }, 1000);
+    return () => clearInterval(resendTimerRef.current);
+  }, [resendCooldown]);
+
+  // Calls the backend to actually dispatch an SMS via your gateway (Africa's
+  // Talking / Twilio / etc — see server example provided alongside this file).
+  // If no backend is reachable (e.g. running this as a standalone demo), we
+  // fall back to a local demo OTP so the flow can still be tested end-to-end.
+  const sendPhoneOtp = async (isResend = false) => {
+    const normalized = normalizeKePhone(phoneInput);
+    if (!KE_PHONE_REGEX.test(phoneInput.replace(/\s/g, ""))) {
+      setError("Enter a valid phone number, e.g. 0712345678 or 254712345678");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch(`${API_URL}/api/auth/phone/send-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: normalized }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to send verification code.");
+      }
+      const data = await res.json();
+      setOtpToken(data.otpToken || null);
+      setOtpDemoFallback(false);
+      setPhoneNumber(normalized);
+      setPhoneOtp("");
+      setStep("phone_otp");
+      setResendCooldown(OTP_RESEND_COOLDOWN);
+      if (!isResend) setSmsStatus(`Code sent to ${normalized}`);
+    } catch (e) {
+      // Backend not configured/reachable — fall back to a local demo code so
+      // the UI flow remains testable. In production this branch should be
+      // removed once /api/auth/phone/send-otp is live.
+      setOtpDemoFallback(true);
+      setPhoneNumber(normalized);
+      setPhoneOtp("");
+      setStep("phone_otp");
+      setResendCooldown(OTP_RESEND_COOLDOWN);
+      setError("");
+      setSmsStatus("Demo mode: backend unreachable, use 123456 to continue.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verifyPhoneOtp = async () => {
+    if (phoneOtp.length !== OTP_LENGTH) {
+      setError(`Enter the ${OTP_LENGTH}-digit code sent to your phone`);
+      return;
+    }
+    setLoading(true);
+    setError("");
+
+    if (otpDemoFallback) {
+      setTimeout(() => {
+        if (phoneOtp === "123456") {
+          const user = SYSTEM_USERS.find((u) => u.phone === phoneNumber);
+          if (!user) {
+            setError("No account is registered to this phone number.");
+            setLoading(false);
+            return;
+          }
+          doBiometric(user);
+        } else {
+          setError("Invalid code. Try 123456 for demo.");
+        }
+        setLoading(false);
+      }, 700);
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/api/auth/phone/verify-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: phoneNumber, code: phoneOtp, otpToken }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Invalid or expired code.");
+      const user =
+        SYSTEM_USERS.find((u) => u.phone === phoneNumber) || data.user;
+      if (!user)
+        throw new Error("No account is registered to this phone number.");
+      doBiometric(user);
+    } catch (e) {
+      setError(e.message || "Could not verify code. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetPhoneFlow = () => {
+    setStep("select");
+    setPhoneInput("");
+    setPhoneNumber("");
+    setPhoneOtp("");
+    setOtpToken(null);
+    setOtpDemoFallback(false);
+    setResendCooldown(0);
+    setError("");
+    setSmsStatus(null);
+  };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: '#04060a',
-      backgroundImage: `radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.15), transparent 50%),
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#04060a",
+        backgroundImage: `radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.15), transparent 50%),
                         radial-gradient(circle at 100% 100%, rgba(5, 150, 105, 0.1), transparent 50%)`,
-      padding: '20px',
-      color: '#e2e8f0',
-      fontFamily: '"Inter", sans-serif'
-    }}>
-      <div className="glass-panel fade-in-up" style={{
-        width: '100%',
-        maxWidth: '440px',
-        padding: '40px',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.05)',
-        textAlign: 'center'
-      }}>
-        
-        <img src="/logo.jpg" alt="BerylBytes Logo" style={{ width: '64px', height: '64px', margin: '0 auto 24px', display: 'block', borderRadius: '16px', objectFit: 'cover', boxShadow: '0 0 20px rgba(16,185,129,0.3)' }} />
+        padding: "20px",
+        color: "#e2e8f0",
+        fontFamily: '"Inter", sans-serif',
+      }}
+    >
+      <div
+        className="glass-panel fade-in-up"
+        style={{
+          width: "100%",
+          maxWidth: "440px",
+          padding: "40px",
+          boxShadow:
+            "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.05)",
+          textAlign: "center",
+        }}
+      >
+        <img
+          src="/logo.jpg"
+          alt="BerylBytes Logo"
+          style={{
+            width: "64px",
+            height: "64px",
+            margin: "0 auto 24px",
+            display: "block",
+            borderRadius: "16px",
+            objectFit: "cover",
+            boxShadow: "0 0 20px rgba(16,185,129,0.3)",
+          }}
+        />
 
-        <h2 style={{ fontFamily: '"Syne", sans-serif', fontSize: '1.8rem', fontWeight: 700, margin: '0 0 8px 0', color: '#fff' }}>BerylBytes</h2>
-        <p style={{ color: '#94a3b8', margin: '0 0 32px 0', fontSize: '0.95rem' }}>Enterprise Point of Sale System</p>
+        <h2
+          style={{
+            fontFamily: '"Syne", sans-serif',
+            fontSize: "1.8rem",
+            fontWeight: 700,
+            margin: "0 0 8px 0",
+            color: "#fff",
+          }}
+        >
+          BerylBytes
+        </h2>
+        <p
+          style={{
+            color: "#94a3b8",
+            margin: "0 0 32px 0",
+            fontSize: "0.95rem",
+          }}
+        >
+          Enterprise Point of Sale System
+        </p>
 
-        {step==='select' && (<>
-          <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
-            <button className="hover-scale" onClick={() => handleOAuth('google')} style={{
-              flex: 1, padding: '12px', background: '#fff', border: 'none', borderRadius: '10px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer',
-              color: '#0f172a', fontWeight: 600, fontSize: '0.95rem', boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
-            }}>
-              <svg width={18} height={18} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-              </svg> Google
-            </button>
-            <button className="hover-scale" onClick={() => handleOAuth('apple')} style={{
-              flex: 1, padding: '12px', background: '#0a0a0a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer',
-              color: '#fff', fontWeight: 600, fontSize: '0.95rem'
-            }}>
-              <svg width={18} height={18} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path fill="currentColor" d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.05 2.26.7 2.94.7.7 0 1.81-.84 3.12-.76 1.41.07 2.66.57 3.5 1.49-3.03 1.83-2.55 5.56.32 6.74-.69 2-1.7 4.14-1.88 4.8zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.36 2.37-1.81 4.19-3.74 4.25z" />
-              </svg> Apple
-            </button>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-            <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
-            <span style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: 500 }}>OR EMAIL SIGN IN</span>
-            <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', textAlign: 'left' }}>
-            {error && <div style={{ color: '#ef4444', background: 'rgba(239,68,68,0.1)', padding: '12px', borderRadius: '8px', fontSize: '0.9rem', marginBottom: '8px' }} role="alert">{error}</div>}
-            
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '6px', fontWeight: 500 }}>Work Email</label>
-              <input type="email" placeholder="name@berylbytes.co.ke" value={email} onChange={e=>setEmail(e.target.value)} style={{
-                width: '100%', padding: '12px 16px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: '10px', color: '#fff', fontSize: '0.95rem', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box'
-              }} onFocus={e => e.target.style.borderColor = '#10b981'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '6px', fontWeight: 500 }}>Password</label>
-              <input type="password" placeholder="••••••••" value={password} onChange={e=>setPassword(e.target.value)} style={{
-                width: '100%', padding: '12px 16px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: '10px', color: '#fff', fontSize: '0.95rem', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box'
-              }} onFocus={e => e.target.style.borderColor = '#10b981'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} 
-              onKeyDown={e => e.key === 'Enter' && handleEmailLogin()} />
-            </div>
-
-            <button className="hover-scale" onClick={handleEmailLogin} disabled={loading} style={{
-              width: '100%', padding: '14px', marginTop: '8px',
-              background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff',
-              border: 'none', borderRadius: '10px', fontWeight: 600, fontSize: '1rem',
-              cursor: loading ? 'not-allowed' : 'pointer', boxShadow: '0 8px 20px rgba(16,185,129,0.3)', opacity: loading ? 0.7 : 1
-            }}>
-              {loading ? 'Authenticating...' : 'Sign In'}
-            </button>
-          </div>
-
-          <div style={{ marginTop: '32px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <button className="hover-scale" onClick={() => setStep('cashier_select')} style={{
-              width: '100%', padding: '12px', background: 'rgba(15,23,42,0.6)', color: '#94a3b8',
-              border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', fontWeight: 500, fontSize: '0.9rem',
-              cursor: 'pointer', transition: 'all 0.2s'
-            }}>
-              Staff / Cashier Terminal Login →
-            </button>
-          </div>
-        </>)}
-
-        {step==='2fa' && selUser && (<>
-          <button className="hover-scale" onClick={()=>{setStep('select');set2FA('');setError('')}} style={{
-            background: 'none', border: 'none', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px',
-            cursor: 'pointer', marginBottom: '24px', fontSize: '0.9rem', fontWeight: 500
-          }}>
-            <SvgIcon icon="arrow_l"/> Back to Login
-          </button>
-          
-          <h3 style={{ fontFamily: '"Syne", sans-serif', fontSize: '1.2rem', color: '#fff', marginBottom: '8px' }}>Two-Factor Authentication</h3>
-          <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '24px' }}>
-            We've sent a 6-digit code to the phone number ending in <strong>{selUser.phone.slice(-4)}</strong>.
-          </p>
-          
-          {error && <div style={{ color: '#ef4444', background: 'rgba(239,68,68,0.1)', padding: '12px', borderRadius: '8px', fontSize: '0.9rem', marginBottom: '16px' }} role="alert">{error}</div>}
-
-          <div style={{ marginBottom: '24px' }}>
-            <input type="text" placeholder="123456" maxLength={6} value={entered2FA} onChange={e=>set2FA(e.target.value.replace(/\D/g, ''))} style={{
-              width: '100%', padding: '16px', background: 'rgba(0,0,0,0.3)', border: '1px solid #10b981',
-              borderRadius: '12px', color: '#fff', fontSize: '1.5rem', outline: 'none', textAlign: 'center', letterSpacing: '8px'
-            }} onKeyDown={e => e.key === 'Enter' && verifyOTP()} />
-          </div>
-
-          <button className="hover-scale" onClick={verifyOTP} disabled={loading} style={{
-            width: '100%', padding: '14px',
-            background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff',
-            border: 'none', borderRadius: '10px', fontWeight: 600, fontSize: '1rem',
-            cursor: loading ? 'not-allowed' : 'pointer', boxShadow: '0 8px 20px rgba(16,185,129,0.3)', opacity: loading ? 0.7 : 1
-          }}>
-            {loading ? 'Verifying...' : 'Verify & Continue'}
-          </button>
-        </>)}
-
-        {step==='cashier_select' && (<>
-          <button onClick={()=>{setStep('select');setError('')}} style={{
-            background: 'none', border: 'none', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px',
-            cursor: 'pointer', marginBottom: '24px', fontSize: '0.9rem', fontWeight: 500
-          }}>
-            <SvgIcon icon="arrow_l"/> Back to Main Login
-          </button>
-          <h3 style={{ fontFamily: '"Syne", sans-serif', fontSize: '1.2rem', color: '#fff', marginBottom: '20px' }}>Select Account</h3>
-          <div className="user-sel-grid" role="listbox" aria-label="User accounts" style={{
-            display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px'
-          }}>
-            {SYSTEM_USERS.map(u=>(
-              <button key={u.id} onClick={()=>selectUser(u)} style={{
-                background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px',
-                padding: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
-                cursor: 'pointer', transition: 'all 0.2s', color: '#fff'
-              }} className="hover-scale">
-                <div style={{
-                  width: '40px', height: '40px', borderRadius: '50%', background: ROLES[u.role].color,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1rem'
-                }}>{u.initial}</div>
-                <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>{u.name}</div>
-                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{ROLES[u.role].label}</div>
-              </button>
-            ))}
-          </div>
-        </>)}
-
-        {step==='pin' && selUser && (<>
-          <button className="hover-scale" onClick={()=>{setStep('cashier_select');setPin('');setError('')}} style={{
-            background: 'none', border: 'none', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px',
-            cursor: 'pointer', marginBottom: '24px', fontSize: '0.9rem', fontWeight: 500
-          }}>
-            <SvgIcon icon="arrow_l"/> Back to Accounts
-          </button>
-          
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '16px', marginBottom: '24px' }}>
-            <div style={{
-              width: '44px', height: '44px', borderRadius: '50%', background: ROLES[selUser.role].color,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.2rem', color: '#fff'
-            }}>{selUser.initial}</div>
-            <div style={{ textAlign: 'left' }}>
-              <div style={{ color: '#fff', fontWeight: 700, fontSize: '1.05rem' }}>{selUser.name}</div>
-              <div style={{ color: '#94a3b8', fontSize: '0.85rem' }}>{ROLES[selUser.role].label}</div>
-            </div>
-          </div>
-
-          <h3 style={{ fontFamily: '"Syne", sans-serif', fontSize: '1.2rem', color: '#fff', marginBottom: '16px' }}>Enter PIN</h3>
-          
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }} role="status" aria-label={`${pin.length} of 4 digits entered`}>
-            {[0,1,2,3].map(i => (
-              <div key={i} style={{
-                width: '16px', height: '16px', borderRadius: '50%',
-                background: pin.length > i ? '#0ea5e9' : 'rgba(255,255,255,0.1)',
-                boxShadow: pin.length > i ? '0 0 10px rgba(14,165,233,0.5)' : 'none',
-                transition: 'all 0.2s'
-              }}/>
-            ))}
-          </div>
-
-          {error && <div style={{ color: '#ef4444', background: 'rgba(239,68,68,0.1)', padding: '12px', borderRadius: '8px', fontSize: '0.9rem', marginBottom: '16px' }} role="alert">{error}</div>}
-          
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', maxWidth: '280px', margin: '0 auto' }} role="group" aria-label="PIN keypad">
-            {['1','2','3','4','5','6','7','8','9','','0','⌫'].map((d,i)=>(
-              <button key={i} className={d ? 'hover-scale' : ''} aria-label={d==='⌫'?'Backspace':d||''}
+        {step === "select" && (
+          <>
+            <div style={{ display: "flex", gap: "10px", marginBottom: "24px" }}>
+              <button
+                className="hover-scale"
+                onClick={() => handleOAuth("google")}
                 style={{
-                  height: '60px', background: d ? 'rgba(15,23,42,0.6)' : 'transparent', border: d ? '1px solid rgba(255,255,255,0.05)' : 'none',
-                  borderRadius: '12px', color: '#fff', fontSize: '1.4rem', fontWeight: 600, cursor: d ? 'pointer' : 'default',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center'
+                  flex: 1,
+                  padding: "12px 8px",
+                  background: "#fff",
+                  border: "none",
+                  borderRadius: "10px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "6px",
+                  cursor: "pointer",
+                  color: "#0f172a",
+                  fontWeight: 600,
+                  fontSize: "0.85rem",
+                  boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
                 }}
-                onClick={()=>d==='⌫'?setPin(p=>p.slice(0,-1)):d&&handlePin(d)}>
-                {d}
+              >
+                <svg
+                  width={16}
+                  height={16}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fill="#4285F4"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                  />
+                </svg>{" "}
+                Google
               </button>
-            ))}
-          </div>
-          
-          <button className="hover-scale" onClick={doBiometric} disabled={loading} aria-label="Sign in with biometric or passkey" style={{
-            width: '100%', padding: '14px', marginTop: '24px', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer'
-          }}>
-            <SvgIcon icon="fingerprint" size={16}/>
-            {loading?'Authenticating…':'Biometric / Passkey Sign In'}
-          </button>
-        </>)}
+              <button
+                className="hover-scale"
+                onClick={() => handleOAuth("apple")}
+                style={{
+                  flex: 1,
+                  padding: "12px 8px",
+                  background: "#0a0a0a",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: "10px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "6px",
+                  cursor: "pointer",
+                  color: "#fff",
+                  fontWeight: 600,
+                  fontSize: "0.85rem",
+                }}
+              >
+                <svg
+                  width={16}
+                  height={16}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.05 2.26.7 2.94.7.7 0 1.81-.84 3.12-.76 1.41.07 2.66.57 3.5 1.49-3.03 1.83-2.55 5.56.32 6.74-.69 2-1.7 4.14-1.88 4.8zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.36 2.37-1.81 4.19-3.74 4.25z"
+                  />
+                </svg>{" "}
+                Apple
+              </button>
+              <button
+                className="hover-scale"
+                onClick={() => {
+                  setError("");
+                  setStep("phone_entry");
+                }}
+                style={{
+                  flex: 1,
+                  padding: "12px 8px",
+                  background: "linear-gradient(135deg, #10b981, #059669)",
+                  border: "none",
+                  borderRadius: "10px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "6px",
+                  cursor: "pointer",
+                  color: "#fff",
+                  fontWeight: 600,
+                  fontSize: "0.85rem",
+                  boxShadow: "0 2px 10px rgba(16,185,129,0.25)",
+                }}
+              >
+                <SvgIcon icon="phone" size={15} /> Phone
+              </button>
+            </div>
 
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                marginBottom: "24px",
+              }}
+            >
+              <div
+                style={{
+                  flex: 1,
+                  height: "1px",
+                  background: "rgba(255,255,255,0.1)",
+                }}
+              />
+              <span
+                style={{
+                  color: "#64748b",
+                  fontSize: "0.8rem",
+                  fontWeight: 500,
+                }}
+              >
+                OR EMAIL SIGN IN
+              </span>
+              <div
+                style={{
+                  flex: 1,
+                  height: "1px",
+                  background: "rgba(255,255,255,0.1)",
+                }}
+              />
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "16px",
+                textAlign: "left",
+              }}
+            >
+              {error && (
+                <div
+                  style={{
+                    color: "#ef4444",
+                    background: "rgba(239,68,68,0.1)",
+                    padding: "12px",
+                    borderRadius: "8px",
+                    fontSize: "0.9rem",
+                    marginBottom: "8px",
+                  }}
+                  role="alert"
+                >
+                  {error}
+                </div>
+              )}
+
+              <div>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "0.85rem",
+                    color: "#94a3b8",
+                    marginBottom: "6px",
+                    fontWeight: 500,
+                  }}
+                >
+                  Work Email
+                </label>
+                <input
+                  type="email"
+                  placeholder="name@berylbytes.co.ke"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "12px 16px",
+                    background: "rgba(0,0,0,0.2)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: "10px",
+                    color: "#fff",
+                    fontSize: "0.95rem",
+                    outline: "none",
+                    transition: "border-color 0.2s",
+                    boxSizing: "border-box",
+                  }}
+                  onFocus={(e) => (e.target.style.borderColor = "#10b981")}
+                  onBlur={(e) =>
+                    (e.target.style.borderColor = "rgba(255,255,255,0.1)")
+                  }
+                />
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "0.85rem",
+                    color: "#94a3b8",
+                    marginBottom: "6px",
+                    fontWeight: 500,
+                  }}
+                >
+                  Password
+                </label>
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "12px 16px",
+                    background: "rgba(0,0,0,0.2)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: "10px",
+                    color: "#fff",
+                    fontSize: "0.95rem",
+                    outline: "none",
+                    transition: "border-color 0.2s",
+                    boxSizing: "border-box",
+                  }}
+                  onFocus={(e) => (e.target.style.borderColor = "#10b981")}
+                  onBlur={(e) =>
+                    (e.target.style.borderColor = "rgba(255,255,255,0.1)")
+                  }
+                  onKeyDown={(e) => e.key === "Enter" && handleEmailLogin()}
+                />
+              </div>
+
+              <button
+                className="hover-scale"
+                onClick={handleEmailLogin}
+                disabled={loading}
+                style={{
+                  width: "100%",
+                  padding: "14px",
+                  marginTop: "8px",
+                  background: "linear-gradient(135deg, #10b981, #059669)",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "10px",
+                  fontWeight: 600,
+                  fontSize: "1rem",
+                  cursor: loading ? "not-allowed" : "pointer",
+                  boxShadow: "0 8px 20px rgba(16,185,129,0.3)",
+                  opacity: loading ? 0.7 : 1,
+                }}
+              >
+                {loading ? "Authenticating..." : "Sign In"}
+              </button>
+            </div>
+
+            <div
+              style={{
+                marginTop: "32px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "12px",
+              }}
+            >
+              <button
+                className="hover-scale"
+                onClick={() => setStep("cashier_select")}
+                style={{
+                  width: "100%",
+                  padding: "12px",
+                  background: "rgba(15,23,42,0.6)",
+                  color: "#94a3b8",
+                  border: "1px solid rgba(255,255,255,0.05)",
+                  borderRadius: "10px",
+                  fontWeight: 500,
+                  fontSize: "0.9rem",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                }}
+              >
+                Staff / Cashier Terminal Login →
+              </button>
+            </div>
+          </>
+        )}
+
+        {step === "phone_entry" && (
+          <>
+            <button
+              className="hover-scale"
+              onClick={resetPhoneFlow}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#94a3b8",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                cursor: "pointer",
+                marginBottom: "24px",
+                fontSize: "0.9rem",
+                fontWeight: 500,
+              }}
+            >
+              <SvgIcon icon="arrow_l" /> Back to Login
+            </button>
+
+            <div
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: "50%",
+                background: "rgba(16,185,129,0.12)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 16px",
+                color: "#10b981",
+              }}
+            >
+              <SvgIcon icon="phone" size={24} />
+            </div>
+
+            <h3
+              style={{
+                fontFamily: '"Syne", sans-serif',
+                fontSize: "1.2rem",
+                color: "#fff",
+                marginBottom: "8px",
+              }}
+            >
+              Sign in with Phone
+            </h3>
+            <p
+              style={{
+                color: "#94a3b8",
+                fontSize: "0.9rem",
+                marginBottom: "24px",
+              }}
+            >
+              We'll text a {OTP_LENGTH}-digit verification code to your phone.
+            </p>
+
+            {error && (
+              <div
+                style={{
+                  color: "#ef4444",
+                  background: "rgba(239,68,68,0.1)",
+                  padding: "12px",
+                  borderRadius: "8px",
+                  fontSize: "0.9rem",
+                  marginBottom: "16px",
+                  textAlign: "left",
+                }}
+                role="alert"
+              >
+                {error}
+              </div>
+            )}
+
+            <div style={{ textAlign: "left", marginBottom: "20px" }}>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "0.85rem",
+                  color: "#94a3b8",
+                  marginBottom: "6px",
+                  fontWeight: 500,
+                }}
+              >
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                inputMode="numeric"
+                placeholder="0712 345 678"
+                value={phoneInput}
+                onChange={(e) => setPhoneInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && sendPhoneOtp()}
+                autoFocus
+                style={{
+                  width: "100%",
+                  padding: "12px 16px",
+                  background: "rgba(0,0,0,0.2)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: "10px",
+                  color: "#fff",
+                  fontSize: "1rem",
+                  outline: "none",
+                  transition: "border-color 0.2s",
+                  boxSizing: "border-box",
+                }}
+                onFocus={(e) => (e.target.style.borderColor = "#10b981")}
+                onBlur={(e) =>
+                  (e.target.style.borderColor = "rgba(255,255,255,0.1)")
+                }
+                aria-label="Phone number"
+              />
+              <div
+                style={{
+                  fontSize: "0.75rem",
+                  color: "#64748b",
+                  marginTop: "6px",
+                }}
+              >
+                Accepts formats like 0712345678 or 254712345678
+              </div>
+            </div>
+
+            <button
+              className="hover-scale"
+              onClick={() => sendPhoneOtp(false)}
+              disabled={loading || !phoneInput}
+              style={{
+                width: "100%",
+                padding: "14px",
+                background: "linear-gradient(135deg, #10b981, #059669)",
+                color: "#fff",
+                border: "none",
+                borderRadius: "10px",
+                fontWeight: 600,
+                fontSize: "1rem",
+                cursor: loading || !phoneInput ? "not-allowed" : "pointer",
+                boxShadow: "0 8px 20px rgba(16,185,129,0.3)",
+                opacity: loading || !phoneInput ? 0.6 : 1,
+              }}
+            >
+              {loading ? "Sending code…" : "Send Verification Code"}
+            </button>
+          </>
+        )}
+
+        {step === "phone_otp" && (
+          <>
+            <button
+              className="hover-scale"
+              onClick={() => {
+                setStep("phone_entry");
+                setError("");
+                setSmsStatus(null);
+              }}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#94a3b8",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                cursor: "pointer",
+                marginBottom: "24px",
+                fontSize: "0.9rem",
+                fontWeight: 500,
+              }}
+            >
+              <SvgIcon icon="arrow_l" /> Change Number
+            </button>
+
+            <h3
+              style={{
+                fontFamily: '"Syne", sans-serif',
+                fontSize: "1.2rem",
+                color: "#fff",
+                marginBottom: "8px",
+              }}
+            >
+              Enter Verification Code
+            </h3>
+            <p
+              style={{
+                color: "#94a3b8",
+                fontSize: "0.9rem",
+                marginBottom: "16px",
+              }}
+            >
+              Code sent via SMS to <strong>{phoneNumber}</strong>
+            </p>
+
+            {smsStatus && (
+              <div
+                style={{
+                  color: "#10b981",
+                  background: "rgba(16,185,129,0.1)",
+                  padding: "10px 12px",
+                  borderRadius: "8px",
+                  fontSize: "0.82rem",
+                  marginBottom: "16px",
+                  textAlign: "left",
+                }}
+                role="status"
+              >
+                {smsStatus}
+              </div>
+            )}
+            {error && (
+              <div
+                style={{
+                  color: "#ef4444",
+                  background: "rgba(239,68,68,0.1)",
+                  padding: "12px",
+                  borderRadius: "8px",
+                  fontSize: "0.9rem",
+                  marginBottom: "16px",
+                }}
+                role="alert"
+              >
+                {error}
+              </div>
+            )}
+
+            <div style={{ marginBottom: "20px" }}>
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder={"•".repeat(OTP_LENGTH)}
+                maxLength={OTP_LENGTH}
+                value={phoneOtp}
+                onChange={(e) => setPhoneOtp(e.target.value.replace(/\D/g, ""))}
+                onKeyDown={(e) => e.key === "Enter" && verifyPhoneOtp()}
+                autoFocus
+                style={{
+                  width: "100%",
+                  padding: "16px",
+                  background: "rgba(0,0,0,0.3)",
+                  border: "1px solid #10b981",
+                  borderRadius: "12px",
+                  color: "#fff",
+                  fontSize: "1.5rem",
+                  outline: "none",
+                  textAlign: "center",
+                  letterSpacing: "8px",
+                }}
+                aria-label="One-time verification code"
+              />
+            </div>
+
+            <button
+              className="hover-scale"
+              onClick={verifyPhoneOtp}
+              disabled={loading || phoneOtp.length !== OTP_LENGTH}
+              style={{
+                width: "100%",
+                padding: "14px",
+                background: "linear-gradient(135deg, #10b981, #059669)",
+                color: "#fff",
+                border: "none",
+                borderRadius: "10px",
+                fontWeight: 600,
+                fontSize: "1rem",
+                cursor:
+                  loading || phoneOtp.length !== OTP_LENGTH
+                    ? "not-allowed"
+                    : "pointer",
+                boxShadow: "0 8px 20px rgba(16,185,129,0.3)",
+                opacity: loading || phoneOtp.length !== OTP_LENGTH ? 0.6 : 1,
+              }}
+            >
+              {loading ? "Verifying…" : "Verify & Continue"}
+            </button>
+
+            <button
+              onClick={() => sendPhoneOtp(true)}
+              disabled={resendCooldown > 0 || loading}
+              style={{
+                marginTop: "16px",
+                background: "none",
+                border: "none",
+                color: resendCooldown > 0 ? "#475569" : "#10b981",
+                fontWeight: 500,
+                fontSize: "0.85rem",
+                cursor: resendCooldown > 0 ? "default" : "pointer",
+              }}
+            >
+              {resendCooldown > 0
+                ? `Resend code in ${resendCooldown}s`
+                : "Resend code"}
+            </button>
+          </>
+        )}
+
+        {step === "2fa" && selUser && (
+          <>
+            <button
+              className="hover-scale"
+              onClick={() => {
+                setStep("select");
+                set2FA("");
+                setError("");
+              }}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#94a3b8",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                cursor: "pointer",
+                marginBottom: "24px",
+                fontSize: "0.9rem",
+                fontWeight: 500,
+              }}
+            >
+              <SvgIcon icon="arrow_l" /> Back to Login
+            </button>
+
+            <h3
+              style={{
+                fontFamily: '"Syne", sans-serif',
+                fontSize: "1.2rem",
+                color: "#fff",
+                marginBottom: "8px",
+              }}
+            >
+              Two-Factor Authentication
+            </h3>
+            <p
+              style={{
+                color: "#94a3b8",
+                fontSize: "0.9rem",
+                marginBottom: "24px",
+              }}
+            >
+              We've sent a 6-digit code to the phone number ending in{" "}
+              <strong>{selUser.phone.slice(-4)}</strong>.
+            </p>
+
+            {error && (
+              <div
+                style={{
+                  color: "#ef4444",
+                  background: "rgba(239,68,68,0.1)",
+                  padding: "12px",
+                  borderRadius: "8px",
+                  fontSize: "0.9rem",
+                  marginBottom: "16px",
+                }}
+                role="alert"
+              >
+                {error}
+              </div>
+            )}
+
+            <div style={{ marginBottom: "24px" }}>
+              <input
+                type="text"
+                placeholder="123456"
+                maxLength={6}
+                value={entered2FA}
+                onChange={(e) => set2FA(e.target.value.replace(/\D/g, ""))}
+                style={{
+                  width: "100%",
+                  padding: "16px",
+                  background: "rgba(0,0,0,0.3)",
+                  border: "1px solid #10b981",
+                  borderRadius: "12px",
+                  color: "#fff",
+                  fontSize: "1.5rem",
+                  outline: "none",
+                  textAlign: "center",
+                  letterSpacing: "8px",
+                }}
+                onKeyDown={(e) => e.key === "Enter" && verifyOTP()}
+              />
+            </div>
+
+            <button
+              className="hover-scale"
+              onClick={verifyOTP}
+              disabled={loading}
+              style={{
+                width: "100%",
+                padding: "14px",
+                background: "linear-gradient(135deg, #10b981, #059669)",
+                color: "#fff",
+                border: "none",
+                borderRadius: "10px",
+                fontWeight: 600,
+                fontSize: "1rem",
+                cursor: loading ? "not-allowed" : "pointer",
+                boxShadow: "0 8px 20px rgba(16,185,129,0.3)",
+                opacity: loading ? 0.7 : 1,
+              }}
+            >
+              {loading ? "Verifying..." : "Verify & Continue"}
+            </button>
+          </>
+        )}
+
+        {step === "cashier_select" && (
+          <>
+            <button
+              onClick={() => {
+                setStep("select");
+                setError("");
+              }}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#94a3b8",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                cursor: "pointer",
+                marginBottom: "24px",
+                fontSize: "0.9rem",
+                fontWeight: 500,
+              }}
+            >
+              <SvgIcon icon="arrow_l" /> Back to Main Login
+            </button>
+            <h3
+              style={{
+                fontFamily: '"Syne", sans-serif',
+                fontSize: "1.2rem",
+                color: "#fff",
+                marginBottom: "20px",
+              }}
+            >
+              Select Account
+            </h3>
+            <div
+              className="user-sel-grid"
+              role="listbox"
+              aria-label="User accounts"
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "12px",
+              }}
+            >
+              {SYSTEM_USERS.map((u) => (
+                <button
+                  key={u.id}
+                  onClick={() => selectUser(u)}
+                  style={{
+                    background: "rgba(15,23,42,0.6)",
+                    border: "1px solid rgba(255,255,255,0.05)",
+                    borderRadius: "10px",
+                    padding: "12px",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: "8px",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                    color: "#fff",
+                  }}
+                  className="hover-scale"
+                >
+                  <div
+                    style={{
+                      width: "40px",
+                      height: "40px",
+                      borderRadius: "50%",
+                      background: ROLES[u.role].color,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: "bold",
+                      fontSize: "1rem",
+                    }}
+                  >
+                    {u.initial}
+                  </div>
+                  <div style={{ fontSize: "0.9rem", fontWeight: 600 }}>
+                    {u.name}
+                  </div>
+                  <div style={{ fontSize: "0.75rem", color: "#64748b" }}>
+                    {ROLES[u.role].label}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
+        {step === "pin" && selUser && (
+          <>
+            <button
+              className="hover-scale"
+              onClick={() => {
+                setStep("cashier_select");
+                setPin("");
+                setError("");
+              }}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#94a3b8",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                cursor: "pointer",
+                marginBottom: "24px",
+                fontSize: "0.9rem",
+                fontWeight: 500,
+              }}
+            >
+              <SvgIcon icon="arrow_l" /> Back to Accounts
+            </button>
+
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                background: "rgba(15,23,42,0.6)",
+                border: "1px solid rgba(255,255,255,0.05)",
+                borderRadius: "12px",
+                padding: "16px",
+                marginBottom: "24px",
+              }}
+            >
+              <div
+                style={{
+                  width: "44px",
+                  height: "44px",
+                  borderRadius: "50%",
+                  background: ROLES[selUser.role].color,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: "bold",
+                  fontSize: "1.2rem",
+                  color: "#fff",
+                }}
+              >
+                {selUser.initial}
+              </div>
+              <div style={{ textAlign: "left" }}>
+                <div
+                  style={{
+                    color: "#fff",
+                    fontWeight: 700,
+                    fontSize: "1.05rem",
+                  }}
+                >
+                  {selUser.name}
+                </div>
+                <div style={{ color: "#94a3b8", fontSize: "0.85rem" }}>
+                  {ROLES[selUser.role].label}
+                </div>
+              </div>
+            </div>
+
+            <h3
+              style={{
+                fontFamily: '"Syne", sans-serif',
+                fontSize: "1.2rem",
+                color: "#fff",
+                marginBottom: "16px",
+              }}
+            >
+              Enter PIN
+            </h3>
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                gap: "16px",
+                marginBottom: "24px",
+              }}
+              role="status"
+              aria-label={`${pin.length} of 4 digits entered`}
+            >
+              {[0, 1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  style={{
+                    width: "16px",
+                    height: "16px",
+                    borderRadius: "50%",
+                    background:
+                      pin.length > i ? "#0ea5e9" : "rgba(255,255,255,0.1)",
+                    boxShadow:
+                      pin.length > i ? "0 0 10px rgba(14,165,233,0.5)" : "none",
+                    transition: "all 0.2s",
+                  }}
+                />
+              ))}
+            </div>
+
+            {error && (
+              <div
+                style={{
+                  color: "#ef4444",
+                  background: "rgba(239,68,68,0.1)",
+                  padding: "12px",
+                  borderRadius: "8px",
+                  fontSize: "0.9rem",
+                  marginBottom: "16px",
+                }}
+                role="alert"
+              >
+                {error}
+              </div>
+            )}
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(3, 1fr)",
+                gap: "12px",
+                maxWidth: "280px",
+                margin: "0 auto",
+              }}
+              role="group"
+              aria-label="PIN keypad"
+            >
+              {["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "⌫"].map(
+                (d, i) => (
+                  <button
+                    key={i}
+                    className={d ? "hover-scale" : ""}
+                    aria-label={d === "⌫" ? "Backspace" : d || ""}
+                    style={{
+                      height: "60px",
+                      background: d ? "rgba(15,23,42,0.6)" : "transparent",
+                      border: d ? "1px solid rgba(255,255,255,0.05)" : "none",
+                      borderRadius: "12px",
+                      color: "#fff",
+                      fontSize: "1.4rem",
+                      fontWeight: 600,
+                      cursor: d ? "pointer" : "default",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                    onClick={() =>
+                      d === "⌫"
+                        ? setPin((p) => p.slice(0, -1))
+                        : d && handlePin(d)
+                    }
+                  >
+                    {d}
+                  </button>
+                ),
+              )}
+            </div>
+
+            <button
+              className="hover-scale"
+              onClick={doBiometric}
+              disabled={loading}
+              aria-label="Sign in with biometric or passkey"
+              style={{
+                width: "100%",
+                padding: "14px",
+                marginTop: "24px",
+                background: "rgba(255,255,255,0.05)",
+                color: "#fff",
+                border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: "10px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
+                cursor: "pointer",
+              }}
+            >
+              <SvgIcon icon="fingerprint" size={16} />
+              {loading ? "Authenticating…" : "Biometric / Passkey Sign In"}
+            </button>
+          </>
+        )}
       </div>
 
       {/* Simulated OAuth Modal */}
       {showOAuthModal && (
-        <div className="overlay" style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
-          <div className="glass-panel" style={{ width: '100%', maxWidth: '380px', padding: '32px', background: '#fff', color: '#202124', borderRadius: '8px', textAlign: 'center', boxShadow: '0 10px 40px rgba(0,0,0,0.5)' }}>
-            
+        <div
+          className="overlay"
+          style={{
+            background: "rgba(0,0,0,0.8)",
+            backdropFilter: "blur(4px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+          }}
+        >
+          <div
+            className="glass-panel"
+            style={{
+              width: "100%",
+              maxWidth: "380px",
+              padding: "32px",
+              background: "#fff",
+              color: "#202124",
+              borderRadius: "8px",
+              textAlign: "center",
+              boxShadow: "0 10px 40px rgba(0,0,0,0.5)",
+            }}
+          >
             {oauthStep === 1 && (
-              <div style={{ padding: '40px 0' }}>
-                <div style={{ width: '30px', height: '30px', border: '3px solid #f3f3f3', borderTop: `3px solid ${oauthProvider === 'google' ? '#4285F4' : '#000'}`, borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 20px' }}></div>
+              <div style={{ padding: "40px 0" }}>
+                <div
+                  style={{
+                    width: "30px",
+                    height: "30px",
+                    border: "3px solid #f3f3f3",
+                    borderTop: `3px solid ${oauthProvider === "google" ? "#4285F4" : "#000"}`,
+                    borderRadius: "50%",
+                    animation: "spin 1s linear infinite",
+                    margin: "0 auto 20px",
+                  }}
+                ></div>
                 <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 500 }}>Connecting to {oauthProvider === 'google' ? 'Google' : 'Apple'}...</h3>
+                <h3 style={{ fontSize: "1.2rem", fontWeight: 500 }}>
+                  Connecting to{" "}
+                  {oauthProvider === "google" ? "Google" : "Apple"}...
+                </h3>
               </div>
             )}
 
             {oauthStep === 2 && (
               <div className="fade-in-up">
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-                  {oauthProvider === 'google' ? (
-                    <svg width={32} height={32} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    marginBottom: "16px",
+                  }}
+                >
+                  {oauthProvider === "google" ? (
+                    <svg
+                      width={32}
+                      height={32}
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        fill="#4285F4"
+                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                      />
+                      <path
+                        fill="#34A853"
+                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                      />
+                      <path
+                        fill="#FBBC05"
+                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                      />
+                      <path
+                        fill="#EA4335"
+                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                      />
                     </svg>
                   ) : (
-                    <svg width={32} height={32} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path fill="#000" d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.05 2.26.7 2.94.7.7 0 1.81-.84 3.12-.76 1.41.07 2.66.57 3.5 1.49-3.03 1.83-2.55 5.56.32 6.74-.69 2-1.7 4.14-1.88 4.8zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.36 2.37-1.81 4.19-3.74 4.25z" />
+                    <svg
+                      width={32}
+                      height={32}
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        fill="#000"
+                        d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.05 2.26.7 2.94.7.7 0 1.81-.84 3.12-.76 1.41.07 2.66.57 3.5 1.49-3.03 1.83-2.55 5.56.32 6.74-.69 2-1.7 4.14-1.88 4.8zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.36 2.37-1.81 4.19-3.74 4.25z"
+                      />
                     </svg>
                   )}
                 </div>
-                <h2 style={{ fontSize: '1.4rem', fontWeight: 500, marginBottom: '8px' }}>Sign in</h2>
-                <p style={{ color: '#5f6368', fontSize: '1rem', marginBottom: '24px' }}>to continue to BerylBytes</p>
-                
-                <div style={{ textAlign: 'left', border: '1px solid #dadce0', borderRadius: '8px', padding: '12px 16px', marginBottom: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', transition: 'background 0.2s' }} onClick={completeOAuth} onMouseOver={e => e.currentTarget.style.background='#f8f9fa'} onMouseOut={e => e.currentTarget.style.background='transparent'}>
-                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#10b981', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>B</div>
+                <h2
+                  style={{
+                    fontSize: "1.4rem",
+                    fontWeight: 500,
+                    marginBottom: "8px",
+                  }}
+                >
+                  Sign in
+                </h2>
+                <p
+                  style={{
+                    color: "#5f6368",
+                    fontSize: "1rem",
+                    marginBottom: "24px",
+                  }}
+                >
+                  to continue to BerylBytes
+                </p>
+
+                <div
+                  style={{
+                    textAlign: "left",
+                    border: "1px solid #dadce0",
+                    borderRadius: "8px",
+                    padding: "12px 16px",
+                    marginBottom: "24px",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    transition: "background 0.2s",
+                  }}
+                  onClick={completeOAuth}
+                  onMouseOver={(e) =>
+                    (e.currentTarget.style.background = "#f8f9fa")
+                  }
+                  onMouseOut={(e) =>
+                    (e.currentTarget.style.background = "transparent")
+                  }
+                >
+                  <div
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      borderRadius: "50%",
+                      background: "#10b981",
+                      color: "#fff",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    B
+                  </div>
                   <div>
-                    <div style={{ fontWeight: 500, fontSize: '0.95rem' }}>Beryl Munyao</div>
-                    <div style={{ color: '#5f6368', fontSize: '0.85rem' }}>beryl@berylbytes.co.ke</div>
+                    <div style={{ fontWeight: 500, fontSize: "0.95rem" }}>
+                      Beryl Munyao
+                    </div>
+                    <div style={{ color: "#5f6368", fontSize: "0.85rem" }}>
+                      beryl@berylbytes.co.ke
+                    </div>
                   </div>
                 </div>
 
-                <div style={{ textAlign: 'left', color: '#5f6368', fontSize: '0.85rem' }}>
-                  To continue, {oauthProvider === 'google' ? 'Google' : 'Apple'} will share your name, email address, and profile picture with BerylBytes.
+                <div
+                  style={{
+                    textAlign: "left",
+                    color: "#5f6368",
+                    fontSize: "0.85rem",
+                  }}
+                >
+                  To continue, {oauthProvider === "google" ? "Google" : "Apple"}{" "}
+                  will share your name, email address, and profile picture with
+                  BerylBytes.
                 </div>
-                
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '32px' }}>
-                  <button onClick={() => setShowOAuthModal(false)} style={{ background: 'none', border: 'none', color: '#1a73e8', fontWeight: 500, fontSize: '0.95rem', cursor: 'pointer' }}>Cancel</button>
+
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    marginTop: "32px",
+                  }}
+                >
+                  <button
+                    onClick={() => setShowOAuthModal(false)}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "#1a73e8",
+                      fontWeight: 500,
+                      fontSize: "0.95rem",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Cancel
+                  </button>
                 </div>
               </div>
             )}
 
             {oauthStep === 3 && (
-              <div style={{ padding: '40px 0' }}>
-                <div style={{ width: '30px', height: '30px', border: '3px solid #f3f3f3', borderTop: `3px solid ${oauthProvider === 'google' ? '#4285F4' : '#000'}`, borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 20px' }}></div>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 500 }}>Authenticating...</h3>
+              <div style={{ padding: "40px 0" }}>
+                <div
+                  style={{
+                    width: "30px",
+                    height: "30px",
+                    border: "3px solid #f3f3f3",
+                    borderTop: `3px solid ${oauthProvider === "google" ? "#4285F4" : "#000"}`,
+                    borderRadius: "50%",
+                    animation: "spin 1s linear infinite",
+                    margin: "0 auto 20px",
+                  }}
+                ></div>
+                <h3 style={{ fontSize: "1.2rem", fontWeight: 500 }}>
+                  Authenticating...
+                </h3>
               </div>
             )}
           </div>
         </div>
       )}
     </div>
-  )
+  );
 }
 
 // ─── SECURITY DASHBOARD ────────────────────────────────────────────────────────
 function SecurityDashboard({ darkMode }) {
-  const [view, setView] = useState('list') // list, detail, firewall
-  
+  const [view, setView] = useState("list"); // list, detail, firewall
+
   const mockEvents = [
-    { id: 'SEC-000001', type: 'Web Discovery Attack', desc: 'Automated directory enumeration detected on admin endpoints', src: '32.122.195.63', time: '2 minutes ago', status: 'UNASSIGNED', severity: 'MEDIUM' },
-    { id: 'SEC-000002', type: 'Suspicious Port Scanning', desc: 'Sequential port scan detected from external IP', src: '203.0.113.5', time: '5 minutes ago', status: 'ASSIGNED', severity: 'HIGH', assignedTo: 'John Smith' },
-    { id: 'SEC-000003', type: 'Unusual Database Query Pattern', desc: 'Enumeration attempt on customer database', src: 'Internal-DB-01', time: '12 minutes ago', status: 'INVESTIGATING', severity: 'MEDIUM', assignedTo: 'Sarah Johnson' },
-    { id: 'SEC-000004', type: 'SQL Injection Attack', desc: 'Automated SQL injection detected on payment form', src: '198.51.100.45', time: '25 minutes ago', status: 'UNASSIGNED', severity: 'CRITICAL' },
-  ]
+    {
+      id: "SEC-000001",
+      type: "Web Discovery Attack",
+      desc: "Automated directory enumeration detected on admin endpoints",
+      src: "32.122.195.63",
+      time: "2 minutes ago",
+      status: "UNASSIGNED",
+      severity: "MEDIUM",
+    },
+    {
+      id: "SEC-000002",
+      type: "Suspicious Port Scanning",
+      desc: "Sequential port scan detected from external IP",
+      src: "203.0.113.5",
+      time: "5 minutes ago",
+      status: "ASSIGNED",
+      severity: "HIGH",
+      assignedTo: "John Smith",
+    },
+    {
+      id: "SEC-000003",
+      type: "Unusual Database Query Pattern",
+      desc: "Enumeration attempt on customer database",
+      src: "Internal-DB-01",
+      time: "12 minutes ago",
+      status: "INVESTIGATING",
+      severity: "MEDIUM",
+      assignedTo: "Sarah Johnson",
+    },
+    {
+      id: "SEC-000004",
+      type: "SQL Injection Attack",
+      desc: "Automated SQL injection detected on payment form",
+      src: "198.51.100.45",
+      time: "25 minutes ago",
+      status: "UNASSIGNED",
+      severity: "CRITICAL",
+    },
+  ];
 
   const mockLiveLog = [
-    { time: '22:49:20', ip: '10.0.0.4', proto: 'HTTPS', action: 'ALLOW' },
-    { time: '22:49:19', ip: '32.122.195.63', proto: 'HTTPS', action: 'ALLOW' },
-    { time: '22:49:18', ip: '10.0.1.12', proto: 'HTTPS', action: 'ALLOW' },
-    { time: '22:49:17', ip: '32.122.195.63', proto: 'HTTPS', action: 'ALLOW' },
-    { time: '22:49:16', ip: '32.122.195.63', proto: 'HTTP', action: 'ALLOW' },
-    { time: '22:49:15', ip: '192.168.1.198', proto: 'TCP', action: 'ALLOW' },
-    { time: '22:49:14', ip: '10.0.0.4', proto: 'HTTP', action: 'ALLOW' },
-    { time: '22:49:13', ip: '10.0.0.4', proto: 'ICMP', action: 'ALLOW' },
-  ]
+    { time: "22:49:20", ip: "10.0.0.4", proto: "HTTPS", action: "ALLOW" },
+    { time: "22:49:19", ip: "32.122.195.63", proto: "HTTPS", action: "ALLOW" },
+    { time: "22:49:18", ip: "10.0.1.12", proto: "HTTPS", action: "ALLOW" },
+    { time: "22:49:17", ip: "32.122.195.63", proto: "HTTPS", action: "ALLOW" },
+    { time: "22:49:16", ip: "32.122.195.63", proto: "HTTP", action: "ALLOW" },
+    { time: "22:49:15", ip: "192.168.1.198", proto: "TCP", action: "ALLOW" },
+    { time: "22:49:14", ip: "10.0.0.4", proto: "HTTP", action: "ALLOW" },
+    { time: "22:49:13", ip: "10.0.0.4", proto: "ICMP", action: "ALLOW" },
+  ];
 
   const [rules, setRules] = useState([
-    { ip: '192.168.0.0/16', action: 'ALLOW' },
-    { ip: '10.0.0.0/8', action: 'ALLOW' },
-    { ip: '0.0.0.0/0', action: 'ALLOW' },
-    { ip: '185.117.88.255', action: 'BLOCK' }
-  ])
+    { ip: "192.168.0.0/16", action: "ALLOW" },
+    { ip: "10.0.0.0/8", action: "ALLOW" },
+    { ip: "0.0.0.0/0", action: "ALLOW" },
+    { ip: "185.117.88.255", action: "BLOCK" },
+  ]);
 
-  const [newRuleIp, setNewRuleIp] = useState('0.0.0.0')
-  const [newRuleAct, setNewRuleAct] = useState('ALLOW')
+  const [newRuleIp, setNewRuleIp] = useState("0.0.0.0");
+  const [newRuleAct, setNewRuleAct] = useState("ALLOW");
 
   const getSevColor = (sev) => {
-    if(sev === 'CRITICAL') return '#ef4444'
-    if(sev === 'HIGH') return '#f97316'
-    if(sev === 'MEDIUM') return '#eab308'
-    return '#10b981'
-  }
+    if (sev === "CRITICAL") return "#ef4444";
+    if (sev === "HIGH") return "#f97316";
+    if (sev === "MEDIUM") return "#eab308";
+    return "#10b981";
+  };
 
   const handleAddRule = () => {
-    if(newRuleIp) {
-      setRules([{ ip: newRuleIp, action: newRuleAct }, ...rules])
-      setNewRuleIp('')
+    if (newRuleIp) {
+      setRules([{ ip: newRuleIp, action: newRuleAct }, ...rules]);
+      setNewRuleIp("");
     }
-  }
+  };
 
   return (
     <div className="sec-dashboard">
@@ -701,28 +2325,60 @@ function SecurityDashboard({ darkMode }) {
         <div>
           <h2>Security Ops</h2>
           <div className="sec-nav">
-            <button className={view === 'list' ? 'act' : ''} onClick={() => setView('list')}>Event Management</button>
-            <button className={view === 'firewall' ? 'act' : ''} onClick={() => setView('firewall')}>Firewall Manager</button>
+            <button
+              className={view === "list" ? "act" : ""}
+              onClick={() => setView("list")}
+            >
+              Event Management
+            </button>
+            <button
+              className={view === "firewall" ? "act" : ""}
+              onClick={() => setView("firewall")}
+            >
+              Firewall Manager
+            </button>
           </div>
         </div>
       </div>
 
       <div className="sec-content">
-        {view === 'list' && (
+        {view === "list" && (
           <div className="sec-list-view">
             <div className="sec-events-grid">
-              {mockEvents.map(ev => (
-                <div key={ev.id} className="sec-event-card" onClick={() => setView(ev.id)}>
+              {mockEvents.map((ev) => (
+                <div
+                  key={ev.id}
+                  className="sec-event-card"
+                  onClick={() => setView(ev.id)}
+                >
                   <div className="sec-card-hd">
-                    <span className="sec-sev" style={{ background: getSevColor(ev.severity) + '22', color: getSevColor(ev.severity), border: `1px solid ${getSevColor(ev.severity)}` }}>{ev.severity}</span>
+                    <span
+                      className="sec-sev"
+                      style={{
+                        background: getSevColor(ev.severity) + "22",
+                        color: getSevColor(ev.severity),
+                        border: `1px solid ${getSevColor(ev.severity)}`,
+                      }}
+                    >
+                      {ev.severity}
+                    </span>
                     <span className="sec-status">{ev.status}</span>
                   </div>
                   <h3>{ev.type}</h3>
                   <p>{ev.desc}</p>
                   <div className="sec-card-meta">
-                    <div><SvgIcon icon="search" size={12}/> Source: {ev.src}</div>
-                    <div><SvgIcon icon="refresh" size={12}/> {ev.time}</div>
-                    {ev.assignedTo && <div><SvgIcon icon="check" size={12}/> Assigned to: {ev.assignedTo}</div>}
+                    <div>
+                      <SvgIcon icon="search" size={12} /> Source: {ev.src}
+                    </div>
+                    <div>
+                      <SvgIcon icon="refresh" size={12} /> {ev.time}
+                    </div>
+                    {ev.assignedTo && (
+                      <div>
+                        <SvgIcon icon="check" size={12} /> Assigned to:{" "}
+                        {ev.assignedTo}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -730,42 +2386,125 @@ function SecurityDashboard({ darkMode }) {
           </div>
         )}
 
-        {view === 'SEC-000001' && (
+        {view === "SEC-000001" && (
           <div className="sec-detail-view">
-            <button className="sec-back" onClick={() => setView('list')}><SvgIcon icon="arrow_l"/> Back to Events</button>
-            
+            <button className="sec-back" onClick={() => setView("list")}>
+              <SvgIcon icon="arrow_l" /> Back to Events
+            </button>
+
             <div className="sec-det-grid">
               <div className="sec-det-main">
                 <div className="sec-det-header">
                   <div className="sdh-top">
-                    <span className="sec-sev" style={{ background: getSevColor('MEDIUM') + '22', color: getSevColor('MEDIUM'), border: `1px solid ${getSevColor('MEDIUM')}` }}>MEDIUM</span>
+                    <span
+                      className="sec-sev"
+                      style={{
+                        background: getSevColor("MEDIUM") + "22",
+                        color: getSevColor("MEDIUM"),
+                        border: `1px solid ${getSevColor("MEDIUM")}`,
+                      }}
+                    >
+                      MEDIUM
+                    </span>
                     <span className="sec-status">UNASSIGNED</span>
                     <span className="sec-id">Event ID: SEC-000001</span>
                   </div>
                   <h1>Web Discovery Attack</h1>
-                  <p>Automated directory enumeration detected on admin endpoints</p>
+                  <p>
+                    Automated directory enumeration detected on admin endpoints
+                  </p>
                 </div>
 
                 <div className="sec-panel">
                   <h3>Attack Summary</h3>
                   <div className="sec-stats">
-                    <div><span>Attack Started</span><strong>14/07/2025, 10:21:39</strong></div>
-                    <div><span>Duration</span><strong>16m 32s</strong></div>
-                    <div><span>URLs Attempted</span><strong>31</strong></div>
-                    <div><span>Blocked Requests</span><strong>10</strong></div>
+                    <div>
+                      <span>Attack Started</span>
+                      <strong>14/07/2025, 10:21:39</strong>
+                    </div>
+                    <div>
+                      <span>Duration</span>
+                      <strong>16m 32s</strong>
+                    </div>
+                    <div>
+                      <span>URLs Attempted</span>
+                      <strong>31</strong>
+                    </div>
+                    <div>
+                      <span>Blocked Requests</span>
+                      <strong>10</strong>
+                    </div>
                   </div>
                 </div>
 
                 <div className="sec-panel">
                   <h3>URL Discovery Attempts</h3>
                   <table className="sec-table">
-                    <thead><tr><th>Method</th><th>Status</th><th>Time</th><th>URL</th><th>Action</th></tr></thead>
+                    <thead>
+                      <tr>
+                        <th>Method</th>
+                        <th>Status</th>
+                        <th>Time</th>
+                        <th>URL</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
                     <tbody>
-                      <tr><td>GET</td><td><span className="http-404">404</span></td><td>10:39:07</td><td>https://fakebank.com/admin</td><td><button className="sec-btn-small">Copy</button></td></tr>
-                      <tr><td>GET</td><td><span className="http-403">403</span></td><td>10:35:05</td><td>https://fakebank.com/administrator</td><td><button className="sec-btn-small">Copy</button></td></tr>
-                      <tr><td>GET</td><td><span className="http-404">404</span></td><td>10:37:44</td><td>https://fakebank.com/wp-admin</td><td><button className="sec-btn-small">Copy</button></td></tr>
-                      <tr><td>GET</td><td><span className="http-404">404</span></td><td>10:37:04</td><td>https://fakebank.com/login</td><td><button className="sec-btn-small">Copy</button></td></tr>
-                      <tr><td>GET</td><td><span className="http-200">200</span></td><td>10:37:23</td><td>https://fakebank.com/</td><td><button className="sec-btn-small">Copy</button></td></tr>
+                      <tr>
+                        <td>GET</td>
+                        <td>
+                          <span className="http-404">404</span>
+                        </td>
+                        <td>10:39:07</td>
+                        <td>https://fakebank.com/admin</td>
+                        <td>
+                          <button className="sec-btn-small">Copy</button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>GET</td>
+                        <td>
+                          <span className="http-403">403</span>
+                        </td>
+                        <td>10:35:05</td>
+                        <td>https://fakebank.com/administrator</td>
+                        <td>
+                          <button className="sec-btn-small">Copy</button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>GET</td>
+                        <td>
+                          <span className="http-404">404</span>
+                        </td>
+                        <td>10:37:44</td>
+                        <td>https://fakebank.com/wp-admin</td>
+                        <td>
+                          <button className="sec-btn-small">Copy</button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>GET</td>
+                        <td>
+                          <span className="http-404">404</span>
+                        </td>
+                        <td>10:37:04</td>
+                        <td>https://fakebank.com/login</td>
+                        <td>
+                          <button className="sec-btn-small">Copy</button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>GET</td>
+                        <td>
+                          <span className="http-200">200</span>
+                        </td>
+                        <td>10:37:23</td>
+                        <td>https://fakebank.com/</td>
+                        <td>
+                          <button className="sec-btn-small">Copy</button>
+                        </td>
+                      </tr>
                     </tbody>
                   </table>
                 </div>
@@ -774,43 +2513,84 @@ function SecurityDashboard({ darkMode }) {
               <div className="sec-det-side">
                 <div className="sec-panel">
                   <h3>Threat Intelligence</h3>
-                  <div className="ti-row"><span>Source IP</span><strong>32.122.195.63</strong></div>
-                  <div className="ti-row"><span>IP Reputation</span><strong className="text-red">Malicious</strong></div>
-                  <div className="ti-row"><span>Geolocation</span><strong>Russia, Moscow</strong></div>
-                  <div className="ti-row"><span>ASN</span><strong>AS12345</strong></div>
-                  <div className="ti-row"><span>Previous Attacks</span><strong>47 incidents</strong></div>
+                  <div className="ti-row">
+                    <span>Source IP</span>
+                    <strong>32.122.195.63</strong>
+                  </div>
+                  <div className="ti-row">
+                    <span>IP Reputation</span>
+                    <strong className="text-red">Malicious</strong>
+                  </div>
+                  <div className="ti-row">
+                    <span>Geolocation</span>
+                    <strong>Russia, Moscow</strong>
+                  </div>
+                  <div className="ti-row">
+                    <span>ASN</span>
+                    <strong>AS12345</strong>
+                  </div>
+                  <div className="ti-row">
+                    <span>Previous Attacks</span>
+                    <strong>47 incidents</strong>
+                  </div>
                 </div>
-                
+
                 <div className="sec-panel">
                   <h3>Recommended Actions</h3>
                   <ul className="sec-actions-list">
-                    <li><SvgIcon icon="check" size={14}/> Block source IP address</li>
-                    <li><SvgIcon icon="check" size={14}/> Review admin panel access logs</li>
-                    <li><SvgIcon icon="check" size={14}/> Implement rate limiting</li>
-                    <li><SvgIcon icon="check" size={14}/> Update WAF rules</li>
+                    <li>
+                      <SvgIcon icon="check" size={14} /> Block source IP address
+                    </li>
+                    <li>
+                      <SvgIcon icon="check" size={14} /> Review admin panel
+                      access logs
+                    </li>
+                    <li>
+                      <SvgIcon icon="check" size={14} /> Implement rate limiting
+                    </li>
+                    <li>
+                      <SvgIcon icon="check" size={14} /> Update WAF rules
+                    </li>
                   </ul>
-                  <button className="sec-btn-primary" onClick={() => setView('firewall')}>Implement Security Actions</button>
+                  <button
+                    className="sec-btn-primary"
+                    onClick={() => setView("firewall")}
+                  >
+                    Implement Security Actions
+                  </button>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {view === 'firewall' && (
+        {view === "firewall" && (
           <div className="sec-firewall-view">
             <div className="sec-fw-header">
               <div className="fw-title">
-                <SvgIcon icon="firewall" size={24}/>
+                <SvgIcon icon="firewall" size={24} />
                 <div>
                   <h2>fw-01.acmecorp.internal</h2>
                   <span className="fw-status">Active</span>
                 </div>
               </div>
               <div className="fw-stats">
-                <div><span>PACKETS/S</span><strong>1,709</strong></div>
-                <div><span>BLOCKED TODAY</span><strong>15</strong></div>
-                <div><span>ACTIVE RULES</span><strong>4</strong></div>
-                <div><span>UPTIME</span><strong>47d 12h</strong></div>
+                <div>
+                  <span>PACKETS/S</span>
+                  <strong>1,709</strong>
+                </div>
+                <div>
+                  <span>BLOCKED TODAY</span>
+                  <strong>15</strong>
+                </div>
+                <div>
+                  <span>ACTIVE RULES</span>
+                  <strong>4</strong>
+                </div>
+                <div>
+                  <span>UPTIME</span>
+                  <strong>47d 12h</strong>
+                </div>
               </div>
             </div>
 
@@ -821,28 +2601,46 @@ function SecurityDashboard({ darkMode }) {
                   <div className="fw-add-rule">
                     <div className="fw-input-group">
                       <label>Source IP</label>
-                      <input value={newRuleIp} onChange={e=>setNewRuleIp(e.target.value)} placeholder="0.0.0.0"/>
+                      <input
+                        value={newRuleIp}
+                        onChange={(e) => setNewRuleIp(e.target.value)}
+                        placeholder="0.0.0.0"
+                      />
                     </div>
                     <div className="fw-input-group">
                       <label>Action</label>
-                      <select value={newRuleAct} onChange={e=>setNewRuleAct(e.target.value)}>
+                      <select
+                        value={newRuleAct}
+                        onChange={(e) => setNewRuleAct(e.target.value)}
+                      >
                         <option>ALLOW</option>
                         <option>BLOCK</option>
                       </select>
                     </div>
-                    <button className="sec-btn-primary" onClick={handleAddRule}>Apply Rule</button>
+                    <button className="sec-btn-primary" onClick={handleAddRule}>
+                      Apply Rule
+                    </button>
                   </div>
                 </div>
 
                 <div className="sec-panel">
                   <h3>Active Rules</h3>
                   <table className="sec-table">
-                    <thead><tr><th>Rule / CIDR</th><th>Action</th></tr></thead>
+                    <thead>
+                      <tr>
+                        <th>Rule / CIDR</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
                     <tbody>
-                      {rules.map((r,i) => (
+                      {rules.map((r, i) => (
                         <tr key={i}>
-                          <td style={{fontFamily:'monospace'}}>{r.ip}</td>
-                          <td><span className={`fw-act ${r.action}`}>{r.action}</span></td>
+                          <td style={{ fontFamily: "monospace" }}>{r.ip}</td>
+                          <td>
+                            <span className={`fw-act ${r.action}`}>
+                              {r.action}
+                            </span>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -852,12 +2650,20 @@ function SecurityDashboard({ darkMode }) {
 
               <div className="fw-col">
                 <div className="sec-panel fw-live-panel">
-                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
                     <h3>Live Log</h3>
-                    <span className="live-badge"><span className="pulse"></span> Live</span>
+                    <span className="live-badge">
+                      <span className="pulse"></span> Live
+                    </span>
                   </div>
                   <div className="fw-live-log">
-                    {mockLiveLog.map((l,i) => (
+                    {mockLiveLog.map((l, i) => (
                       <div key={i} className="log-line">
                         <span className="log-time">{l.time}</span>
                         <span className="log-ip">{l.ip}</span>
@@ -873,424 +2679,778 @@ function SecurityDashboard({ darkMode }) {
         )}
       </div>
     </div>
-  )
+  );
 }
 
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function App() {
-  const PAYSTACK_KEY = process.env.REACT_APP_PAYSTACK_PUBLIC_KEY || ''
-  const PAYPAL_ID    = process.env.REACT_APP_PAYPAL_CLIENT_ID || 'sb'
-  const API_URL      = process.env.REACT_APP_API_URL || 'http://localhost:3000'
+  const PAYSTACK_KEY = process.env.REACT_APP_PAYSTACK_PUBLIC_KEY || "";
+  const PAYPAL_ID = process.env.REACT_APP_PAYPAL_CLIENT_ID || "sb";
+  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
   // Auth
-  const [loggedIn,setLoggedIn]         = useState(false)
-  const [currentUser,setCurrentUser]   = useState(null)
-  const [showUserMenu,setShowUserMenu] = useState(false)
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   // App state
-  const [darkMode,setDarkMode]         = useState(true)
-  const [loaded,setLoaded]             = useState(false)
-  const [view,setView]                 = useState('pos')
-  const [niche,setNiche]               = useState('all')
-  const [activeCat,setActiveCat]       = useState('shop')
-  const [search,setSearch]             = useState('')
-  const [cartOpen,setCartOpen]         = useState(false)
-  const [schemaBanner,setSchemaBanner] = useState(false)
+  const [darkMode, setDarkMode] = useState(true);
+  const [loaded, setLoaded] = useState(false);
+  const [view, setView] = useState("pos");
+  const [niche, setNiche] = useState("all");
+  const [activeCat, setActiveCat] = useState("shop");
+  const [search, setSearch] = useState("");
+  const [cartOpen, setCartOpen] = useState(false);
+  const [schemaBanner, setSchemaBanner] = useState(false);
 
   // Cart (persisted)
-  const [cart,setCart]                 = useState(()=>{try{return JSON.parse(localStorage.getItem('bb_cart')||'[]')}catch{return[]}})
-  const [selCust,setSelCust]           = useState(null)
-  const [customPrices,setCustomPrices] = useState({})
-  const [customItems,setCustomItems]   = useState([])
-const [newItem,setNewItem]           = useState({name:'',price:'',category:'shop',minAlert:'',batch:'',expiry:'',serialNo:''})
-const [customCats,setCustomCats]     = useState({})
-const [showAddCat,setShowAddCat]     = useState(false)
-const [newCatName,setNewCatName]     = useState('')
+  const [cart, setCart] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("bb_cart") || "[]");
+    } catch {
+      return [];
+    }
+  });
+  const [selCust, setSelCust] = useState(null);
+  const [customPrices, setCustomPrices] = useState({});
+  const [customItems, setCustomItems] = useState([]);
+  const [newItem, setNewItem] = useState({
+    name: "",
+    price: "",
+    category: "shop",
+    minAlert: "",
+    batch: "",
+    expiry: "",
+    serialNo: "",
+  });
+  const [customCats, setCustomCats] = useState({});
+  const [showAddCat, setShowAddCat] = useState(false);
+  const [newCatName, setNewCatName] = useState("");
 
-  const [outOfStockIds,setOutOfStockIds] = useState(()=>{try{return JSON.parse(localStorage.getItem('bb_oos')||'[]')}catch{return[]}})
-  const [showOutOfStock,setShowOutOfStock] = useState(false)
+  const [outOfStockIds] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("bb_oos") || "[]");
+    } catch {
+      return [];
+    }
+  });
+  const [showOutOfStock, setShowOutOfStock] = useState(false);
 
   // Payment
-  const [showPay,setShowPay]           = useState(false)
-  const [payMethod,setPayMethod]       = useState('mpesa')
-  const [phone,setPhone]               = useState('')
-  const [phoneConfirmed,setPhoneConfirmed] = useState(false)
-  const [cashIn,setCashIn]             = useState('')
-  const [custEmail,setCustEmail]       = useState('')
-  const [msg,setMsg]                   = useState('')
-  const [msgType,setMsgType]           = useState('info')
+  const [showPay, setShowPay] = useState(false);
+  const [payMethod, setPayMethod] = useState("mpesa");
+  const [phone, setPhone] = useState("");
+  const [phoneConfirmed, setPhoneConfirmed] = useState(false);
+  const [cashIn, setCashIn] = useState("");
+  const [custEmail, setCustEmail] = useState("");
+  const [msg, setMsg] = useState("");
+  const [msgType, setMsgType] = useState("info");
 
   // M-Pesa
-  const [mpesaStatus,setMpesaStatus]   = useState(null)
-  const [lastCheckoutId,setLastCheckoutId] = useState(null)
-  const [mpesaTimer,setMpesaTimer]     = useState(MPESA_TIMEOUT)
-  const [attempts,setAttempts]         = useState([])
-  const timerRef                       = useRef(null)
-  const pollRef                        = useRef(null)
+  const [mpesaStatus, setMpesaStatus] = useState(null);
+  const [lastCheckoutId, setLastCheckoutId] = useState(null);
+  const [mpesaTimer, setMpesaTimer] = useState(MPESA_TIMEOUT);
+  const [attempts, setAttempts] = useState([]);
+  const timerRef = useRef(null);
+  const pollRef = useRef(null);
 
   // Data (all start at zero)
-  const [salesData,setSalesData]       = useState(defaultSales())
-  const [totalRev,setTotalRev]         = useState(0)
-  const [totalOrders,setTotalOrders]   = useState(0)
-  const [ledger,setLedger]             = useState([])
-  const [expenses,setExpenses]         = useState([])
-  const [newExp,setNewExp]             = useState({desc:'',amount:'',category:''})
-  const [showAddExp,setShowAddExp]     = useState(false)
-  const [inventory,setInventory]       = useState([])
-  const [newInv,setNewInv]             = useState({name:'',sku:'',category:'General',retailPrice:'',buyingPrice:'',stockLevel:'',minAlert:'',expiry:'',batch:''})
-  const [showAddInv,setShowAddInv]     = useState(false)
-  const [customers,setCustomers]       = useState([])
-  const [newCust,setNewCust]           = useState({name:'',email:'',phone:''})
-  const [showAddCust,setShowAddCust]   = useState(false)
-  const [crmQ,setCrmQ]                 = useState('')
+  const [salesData, setSalesData] = useState(defaultSales());
+  const [totalRev, setTotalRev] = useState(0);
+  const [totalOrders, setTotalOrders] = useState(0);
+  const [ledger, setLedger] = useState([]);
+  const [expenses, setExpenses] = useState([]);
+  const [newExp, setNewExp] = useState({ desc: "", amount: "", category: "" });
+  const [showAddExp, setShowAddExp] = useState(false);
+  const [inventory, setInventory] = useState([]);
+  const [newInv, setNewInv] = useState({
+    name: "",
+    sku: "",
+    category: "General",
+    retailPrice: "",
+    buyingPrice: "",
+    stockLevel: "",
+    minAlert: "",
+    expiry: "",
+    batch: "",
+  });
+  const [showAddInv, setShowAddInv] = useState(false);
+  const [customers, setCustomers] = useState([]);
+  const [newCust, setNewCust] = useState({ name: "", email: "", phone: "" });
+  const [showAddCust, setShowAddCust] = useState(false);
+  const [crmQ, setCrmQ] = useState("");
 
   // Transactions list features
-  const [txnSearch,setTxnSearch]       = useState('')
-  const [txnStatus,setTxnStatus]       = useState('all')
-  const [txnPage,setTxnPage]           = useState(1)
-  const [selTxns,setSelTxns]           = useState([])
-  const [detailTxn,setDetailTxn]       = useState(null)
-  const [expandedCard,setExpandedCard] = useState(null)
+  const [txnSearch, setTxnSearch] = useState("");
+  const [txnStatus, setTxnStatus] = useState("all");
+  const [txnPage, setTxnPage] = useState(1);
+  const [selTxns, setSelTxns] = useState([]);
+  const [detailTxn, setDetailTxn] = useState(null);
+  const [expandedCard, setExpandedCard] = useState(null);
 
   // Receipt
-  const [showReceipt,setShowReceipt]   = useState(false)
-  const [receiptData,setReceiptData]   = useState(null)
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [receiptData, setReceiptData] = useState(null);
 
   // Edit product price
-  const [editProd,setEditProd]         = useState('')
-  const [editPrice,setEditPrice]       = useState('')
+  const [editProd, setEditProd] = useState("");
+  const [editPrice, setEditPrice] = useState("");
 
   // Bug reports
-  const [showReport,setShowReport]     = useState(false)
-  const [reportText,setReportText]     = useState('')
-  const [reportCats,setReportCats]     = useState([])
-  const [reportScreenshot,setReportScreenshot] = useState(null)
-  const [bugReports,setBugReports]     = useState([])
-  const [managerFilters,setManagerFilters] = useState({status:'all',role:'all',cat:'all',search:''})
+  const [showReport, setShowReport] = useState(false);
+  const [bugReports, setBugReports] = useState([]);
+  const [managerFilters, setManagerFilters] = useState({
+    status: "all",
+    role: "all",
+    cat: "all",
+    search: "",
+  });
 
   // Settings payment keys
-  const [paystackKeyState,setPaystackKeyState] = useState(PAYSTACK_KEY)
-  const [mpesaShortcode,setMpesaShortcode]     = useState(process.env.REACT_APP_MPESA_SHORTCODE||'174379')
+  const [paystackKeyState, setPaystackKeyState] = useState(PAYSTACK_KEY);
+  const [mpesaShortcode, setMpesaShortcode] = useState(
+    process.env.REACT_APP_MPESA_SHORTCODE || "174379",
+  );
 
-  const langState   = useState('English (Kenya)')
-  const [lang,setLang] = langState
-  const [syncOn,setSyncOn]     = useState(true)
-  const [bioOn,setBioOn]       = useState(false)
-  const [alertsOn,setAlertsOn] = useState(true)
+  const langState = useState("English (Kenya)");
+  const [lang, setLang] = langState;
+  const [syncOn, setSyncOn] = useState(true);
+  const [bioOn, setBioOn] = useState(false);
+  const [alertsOn, setAlertsOn] = useState(true);
 
   // Init
-  useEffect(()=>{ setTimeout(()=>setLoaded(true),100) },[])
-  useEffect(()=>{ document.documentElement.className=darkMode?'':'light' },[darkMode])
+  useEffect(() => {
+    setTimeout(() => setLoaded(true), 100);
+  }, []);
+  useEffect(() => {
+    document.documentElement.className = darkMode ? "" : "light";
+  }, [darkMode]);
 
   // Persist cart
-  useEffect(()=>{ try{localStorage.setItem('bb_cart',JSON.stringify(cart))}catch{} },[cart])
-  useEffect(()=>{ try{localStorage.setItem('bb_oos',JSON.stringify(outOfStockIds))}catch{} },[outOfStockIds])
+  useEffect(() => {
+    try {
+      localStorage.setItem("bb_cart", JSON.stringify(cart));
+    } catch {}
+  }, [cart]);
+  useEffect(() => {
+    try {
+      localStorage.setItem("bb_oos", JSON.stringify(outOfStockIds));
+    } catch {}
+  }, [outOfStockIds]);
 
   // Close user menu
-  useEffect(()=>{
-    if(!showUserMenu) return
-    const h=()=>setShowUserMenu(false)
-    setTimeout(()=>document.addEventListener('click',h),0)
-    return()=>document.removeEventListener('click',h)
-  },[showUserMenu])
+  useEffect(() => {
+    if (!showUserMenu) return;
+    const h = () => setShowUserMenu(false);
+    setTimeout(() => document.addEventListener("click", h), 0);
+    return () => document.removeEventListener("click", h);
+  }, [showUserMenu]);
 
   // M-Pesa countdown timer
-  useEffect(()=>{
-    if(mpesaStatus!=='pending') { clearInterval(timerRef.current); return }
-    setMpesaTimer(MPESA_TIMEOUT)
-    timerRef.current = setInterval(()=>{
-      setMpesaTimer(t=>{
-        if(t<=1){
-          clearInterval(timerRef.current)
-          setMpesaStatus('timeout')
-          clearInterval(pollRef.current)
-          return 0
+  useEffect(() => {
+    if (mpesaStatus !== "pending") {
+      clearInterval(timerRef.current);
+      return;
+    }
+    setMpesaTimer(MPESA_TIMEOUT);
+    timerRef.current = setInterval(() => {
+      setMpesaTimer((t) => {
+        if (t <= 1) {
+          clearInterval(timerRef.current);
+          setMpesaStatus("timeout");
+          clearInterval(pollRef.current);
+          return 0;
         }
-        return t-1
-      })
-    },1000)
-    return()=>clearInterval(timerRef.current)
-  },[mpesaStatus])
+        return t - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timerRef.current);
+  }, [mpesaStatus]);
 
   // M-Pesa poll
-  const loyaltyDisc = selCust ? getTier(selCust.points).disc/100 : 0
-  const subtotal = cart.reduce((s,i)=>s+i.price*i.qty,0)
-  const discount = Math.round(subtotal*loyaltyDisc)
-  const afterDisc = subtotal-discount
-  const tax = Math.round(afterDisc*0.16)
-  const grand = afterDisc+tax
-  const change = cashIn ? parseInt(cashIn)-grand : 0
+  const loyaltyDisc = selCust ? getTier(selCust.points).disc / 100 : 0;
+  const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  const discount = Math.round(subtotal * loyaltyDisc);
+  const afterDisc = subtotal - discount;
+  const tax = Math.round(afterDisc * 0.16);
+  const grand = afterDisc + tax;
+  const change = cashIn ? parseInt(cashIn) - grand : 0;
 
-  const completeSale = useCallback((method,extra={})=>{
-    const invId=`INV-${String(ledger.length+1001).padStart(4,'0')}`
-    const entry={
-      id:invId,
-      date:new Date().toLocaleDateString('en-KE',{day:'2-digit',month:'short',year:'numeric'}),
-      timestamp: new Date().toISOString(),
-      customer:selCust?.name||'Walk-in',
-      total:grand,method,status:'Paid',
-      items:[...cart],
-      auditTrail:[
-        {status:'initiated',time:new Date().toISOString(),desc:'Sale initiated'},
-        {status:'success',time:new Date().toISOString(),desc:`Payment via ${method} confirmed`},
-      ],
-      reviewed:false,
-      ...extra,
-    }
-    setLedger(p=>[entry,...p])
-    setSalesData(p=>p.map(d=>d.date===TODAY?{...d,revenue:d.revenue+grand}:d))
-    setTotalRev(p=>p+grand); setTotalOrders(p=>p+1)
-    if(selCust){
-      const pts=Math.floor(grand/100)
-      setCustomers(p=>p.map(c=>c.id===selCust.id?{...c,points:c.points+pts,visits:c.visits+1,totalSpent:(c.totalSpent||0)+grand}:c))
-    }
-    setReceiptData({method,amount:grand,items:[...cart],invoiceId:invId,change:extra.change,customer:selCust?.name})
-    setShowReceipt(true)
-    setCart([]); setShowPay(false); setPhone(''); setPhoneConfirmed(false); setCashIn(''); setSelCust(null)
-    setMpesaStatus(null); setLastCheckoutId(null); setAttempts([]); setMpesaTimer(MPESA_TIMEOUT)
-    localStorage.removeItem('bb_cart')
-  },[cart,grand,ledger,selCust])
+  const completeSale = useCallback(
+    (method, extra = {}) => {
+      const invId = `INV-${String(ledger.length + 1001).padStart(4, "0")}`;
+      const entry = {
+        id: invId,
+        date: new Date().toLocaleDateString("en-KE", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        }),
+        timestamp: new Date().toISOString(),
+        customer: selCust?.name || "Walk-in",
+        total: grand,
+        method,
+        status: "Paid",
+        items: [...cart],
+        auditTrail: [
+          {
+            status: "initiated",
+            time: new Date().toISOString(),
+            desc: "Sale initiated",
+          },
+          {
+            status: "success",
+            time: new Date().toISOString(),
+            desc: `Payment via ${method} confirmed`,
+          },
+        ],
+        reviewed: false,
+        ...extra,
+      };
+      setLedger((p) => [entry, ...p]);
+      setSalesData((p) =>
+        p.map((d) =>
+          d.date === TODAY ? { ...d, revenue: d.revenue + grand } : d,
+        ),
+      );
+      setTotalRev((p) => p + grand);
+      setTotalOrders((p) => p + 1);
+      if (selCust) {
+        const pts = Math.floor(grand / 100);
+        setCustomers((p) =>
+          p.map((c) =>
+            c.id === selCust.id
+              ? {
+                  ...c,
+                  points: c.points + pts,
+                  visits: c.visits + 1,
+                  totalSpent: (c.totalSpent || 0) + grand,
+                }
+              : c,
+          ),
+        );
+      }
+      setReceiptData({
+        method,
+        amount: grand,
+        items: [...cart],
+        invoiceId: invId,
+        change: extra.change,
+        customer: selCust?.name,
+      });
+      setShowReceipt(true);
+      setCart([]);
+      setShowPay(false);
+      setPhone("");
+      setPhoneConfirmed(false);
+      setCashIn("");
+      setSelCust(null);
+      setMpesaStatus(null);
+      setLastCheckoutId(null);
+      setAttempts([]);
+      setMpesaTimer(MPESA_TIMEOUT);
+      localStorage.removeItem("bb_cart");
+    },
+    [cart, grand, ledger, selCust],
+  );
 
-
-  useEffect(()=>{
-    if(!lastCheckoutId || mpesaStatus!=='pending') return
-    pollRef.current = setInterval(async()=>{
-      try{
-        const res = await fetch(`${API_URL}/api/mpesa/status/${lastCheckoutId}`)
-        const data = await res.json()
-        if(data.status==='success'){
-          clearInterval(pollRef.current); clearInterval(timerRef.current)
-          setMpesaStatus('success')
-          setAttempts(a=>a.map(x=>x.id===lastCheckoutId?{...x,status:'success'}:x))
-          setTimeout(()=>completeSale('M-Pesa'),800)
-        } else if(data.status==='failed'){
-          clearInterval(pollRef.current); clearInterval(timerRef.current)
-          setMpesaStatus('failed')
-          setAttempts(a=>a.map(x=>x.id===lastCheckoutId?{...x,status:'failed'}:x))
-          flash('M-Pesa payment failed. Retry?','error')
+  useEffect(() => {
+    if (!lastCheckoutId || mpesaStatus !== "pending") return;
+    pollRef.current = setInterval(async () => {
+      try {
+        const res = await fetch(
+          `${API_URL}/api/mpesa/status/${lastCheckoutId}`,
+        );
+        const data = await res.json();
+        if (data.status === "success") {
+          clearInterval(pollRef.current);
+          clearInterval(timerRef.current);
+          setMpesaStatus("success");
+          setAttempts((a) =>
+            a.map((x) =>
+              x.id === lastCheckoutId ? { ...x, status: "success" } : x,
+            ),
+          );
+          setTimeout(() => completeSale("M-Pesa"), 800);
+        } else if (data.status === "failed") {
+          clearInterval(pollRef.current);
+          clearInterval(timerRef.current);
+          setMpesaStatus("failed");
+          setAttempts((a) =>
+            a.map((x) =>
+              x.id === lastCheckoutId ? { ...x, status: "failed" } : x,
+            ),
+          );
+          flash("M-Pesa payment failed. Retry?", "error");
         }
-      }catch{}
-    },3000)
-    return()=>clearInterval(pollRef.current)
-  },[lastCheckoutId,mpesaStatus,API_URL,completeSale])
+      } catch {}
+    }, 3000);
+    return () => clearInterval(pollRef.current);
+  }, [lastCheckoutId, mpesaStatus, API_URL, completeSale]);
 
-  const canAccess = s => ROLES[currentUser?.role]?.access?.includes(s)
-  const canEdit   = () => ROLES[currentUser?.role]?.canEdit
-  const flash     = (m,t='success')=>{ setMsg(m);setMsgType(t);setTimeout(()=>setMsg(''),5000) }
+  const canAccess = (s) => ROLES[currentUser?.role]?.access?.includes(s);
+  const canEdit = () => ROLES[currentUser?.role]?.canEdit;
+  const flash = (m, t = "success") => {
+    setMsg(m);
+    setMsgType(t);
+    setTimeout(() => setMsg(""), 5000);
+  };
 
-  const handleLogin = u => {
-    setCurrentUser(u); setLoggedIn(true)
-    setView(ROLES[u.role].access[0])
-  }
-  const handleLogout = ()=>{ setLoggedIn(false);setCurrentUser(null);setCart([]);setShowUserMenu(false);localStorage.removeItem('bb_cart') }
+  const handleLogin = (u) => {
+    setCurrentUser(u);
+    setLoggedIn(true);
+    setView(ROLES[u.role].access[0]);
+  };
+  const handleLogout = () => {
+    setLoggedIn(false);
+    setCurrentUser(null);
+    setCart([]);
+    setShowUserMenu(false);
+    localStorage.removeItem("bb_cart");
+  };
 
   // Cart
-  const getPrice = p => customPrices[p.id]||p.price
-  const addToCart = p => {
-    if(outOfStockIds.includes(p.id)){
-      flash(`${p.name} is marked out of stock.`, 'error')
-      return
+  const getPrice = (p) => customPrices[p.id] || p.price;
+  const addToCart = (p) => {
+    if (outOfStockIds.includes(p.id)) {
+      flash(`${p.name} is marked out of stock.`, "error");
+      return;
     }
-    setCart(prev=>{
-      const ex=prev.find(i=>i.id===p.id)
-      return ex?prev.map(i=>i.id===p.id?{...i,qty:i.qty+1}:i):[...prev,{...p,price:getPrice(p),qty:1}]
-    })
-    if(window.innerWidth<900) setCartOpen(true)
-  }
-  const remFromCart = id=>setCart(c=>c.filter(i=>i.id!==id))
-  const updQty = (id,d)=>setCart(c=>c.map(i=>i.id===id?{...i,qty:Math.max(1,i.qty+d)}:i))
-
-
+    setCart((prev) => {
+      const ex = prev.find((i) => i.id === p.id);
+      return ex
+        ? prev.map((i) => (i.id === p.id ? { ...i, qty: i.qty + 1 } : i))
+        : [...prev, { ...p, price: getPrice(p), qty: 1 }];
+    });
+    if (window.innerWidth < 900) setCartOpen(true);
+  };
+  const remFromCart = (id) => setCart((c) => c.filter((i) => i.id !== id));
+  const updQty = (id, d) =>
+    setCart((c) =>
+      c.map((i) => (i.id === id ? { ...i, qty: Math.max(1, i.qty + d) } : i)),
+    );
 
   const handleMpesa = async () => {
-    if(!phone){ flash('Enter customer phone number','error'); return }
-    setPhoneConfirmed(true)
-    flash('Sending prompt to customer phone…','loading')
-    const attemptId = 'TX-'+Date.now()
-    const newAttempt = {id:attemptId, status:'pending', time:new Date().toLocaleTimeString('en-KE'), desc:'STK Push sent'}
-    setAttempts(a=>[...a,newAttempt])
-    setMpesaStatus('pending')
-    try {
-      const res = await fetch(`${API_URL}/api/mpesa/stkpush`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone,amount:grand})})
-      const data = await res.json()
-      if(data.ResponseCode==='0'){
-        setLastCheckoutId(data.CheckoutRequestID||attemptId)
-        setAttempts(a=>a.map(x=>x.id===attemptId?{...x,id:data.CheckoutRequestID||attemptId}:x))
-      } else {
-        setMpesaStatus('failed')
-        setAttempts(a=>a.map(x=>x.id===attemptId?{...x,status:'failed',desc:data.errorMessage||'Request rejected'}:x))
-        flash('Payment request failed. Retry?','error')
-      }
-    } catch {
-      // Demo: simulate success after 4s
-      setLastCheckoutId(attemptId)
-      setTimeout(()=>{
-        setMpesaStatus('success')
-        setAttempts(a=>a.map(x=>x.id===attemptId?{...x,status:'success',desc:'Payment confirmed'}:x))
-        completeSale('M-Pesa')
-      },4000)
+    if (!phone) {
+      flash("Enter customer phone number", "error");
+      return;
     }
-  }
+
+    setPhoneConfirmed(true);
+
+    flash("Sending M-Pesa prompt...", "loading");
+
+    const attemptId = "TX-" + Date.now();
+
+    const newAttempt = {
+      id: attemptId,
+      status: "pending",
+      time: new Date().toLocaleTimeString("en-KE"),
+      desc: "Sending STK Push...",
+    };
+
+    setAttempts((a) => [...a, newAttempt]);
+
+    setMpesaStatus("pending");
+
+    try {
+      const response = await fetch(`${API_URL}/api/mpesa/stkpush`, {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          phone,
+          amount: grand,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error || data.CustomerMessage || "Unable to send STK Push.",
+        );
+      }
+
+      if (data.ResponseCode === "0") {
+        const checkoutId = data.CheckoutRequestID || attemptId;
+
+        setLastCheckoutId(checkoutId);
+
+        setAttempts((a) =>
+          a.map((x) =>
+            x.id === attemptId
+              ? {
+                  ...x,
+                  id: checkoutId,
+                  desc: "Waiting for customer approval...",
+                }
+              : x,
+          ),
+        );
+
+        flash(
+          "STK Push sent. Ask the customer to enter their M-Pesa PIN.",
+          "success",
+        );
+
+        // Do NOT call completeSale() here.
+        // Your polling useEffect will complete the sale
+        // only after the backend reports success.
+      } else {
+        setMpesaStatus("failed");
+
+        setAttempts((a) =>
+          a.map((x) =>
+            x.id === attemptId
+              ? {
+                  ...x,
+                  status: "failed",
+                  desc:
+                    data.CustomerMessage ||
+                    data.errorMessage ||
+                    "STK request rejected.",
+                }
+              : x,
+          ),
+        );
+
+        flash(data.CustomerMessage || "STK Push request failed.", "error");
+      }
+    } catch (error) {
+      console.error("M-Pesa Error:", error);
+
+      setMpesaStatus("failed");
+
+      setAttempts((a) =>
+        a.map((x) =>
+          x.id === attemptId
+            ? {
+                ...x,
+                status: "failed",
+                desc: error.message,
+              }
+            : x,
+        ),
+      );
+
+      flash(error.message, "error");
+    }
+  };
 
   const retryMpesa = () => {
-    setMpesaStatus(null); setLastCheckoutId(null)
-    clearInterval(timerRef.current); clearInterval(pollRef.current)
-    setMpesaTimer(MPESA_TIMEOUT)
-    handleMpesa()
-  }
+    setMpesaStatus(null);
+    setLastCheckoutId(null);
+    clearInterval(timerRef.current);
+    clearInterval(pollRef.current);
+    setMpesaTimer(MPESA_TIMEOUT);
+    handleMpesa();
+  };
 
-  const handleCash = () => { if(!cashIn||change<0){flash('Insufficient cash','error');return}; completeSale('Cash',{change}) }
+  const handleCash = () => {
+    if (!cashIn || change < 0) {
+      flash("Insufficient cash", "error");
+      return;
+    }
+    completeSale("Cash", { change });
+  };
   const handlePaystack = () => {
-    if(typeof window.PaystackPop==='undefined'){flash('Paystack not loaded','error');return}
-    const h=window.PaystackPop.setup({
-      key:paystackKeyState||PAYSTACK_KEY,
-      email:custEmail||'customer@berylbytes.co.ke',
-      amount:grand*100,currency:'KES',ref:'POS-'+Date.now(),
-      callback:r=>completeSale('Paystack',{ref:r.reference}),
-      onClose:()=>flash('Payment cancelled','error'),
-    })
-    h.openIframe()
-  }
+    if (typeof window.PaystackPop === "undefined") {
+      flash("Paystack not loaded", "error");
+      return;
+    }
+    const h = window.PaystackPop.setup({
+      key: paystackKeyState || PAYSTACK_KEY,
+      email: custEmail || "customer@berylbytes.co.ke",
+      amount: grand * 100,
+      currency: "KES",
+      ref: "POS-" + Date.now(),
+      callback: (r) => completeSale("Paystack", { ref: r.reference }),
+      onClose: () => flash("Payment cancelled", "error"),
+    });
+    h.openIframe();
+  };
 
   // PDF
   const generatePDF = () => {
-    if(!receiptData) return
-    const doc=new jsPDF(); let y=20
-    doc.setFontSize(20);doc.setFont('helvetica','bold');doc.text('BERYLBYTES POS',20,y);y+=9
-    doc.setFontSize(9);doc.setFont('helvetica','normal');doc.text('berylbytes.co.ke | berylmunyao8@gmail.com',20,y);y+=6
-    doc.line(20,y,190,y);y+=6
-    doc.text(`Invoice: ${receiptData.invoiceId}`,20,y);doc.text(`Date: ${new Date().toLocaleString('en-KE')}`,110,y);y+=6
-    doc.text(`Customer: ${receiptData.customer||'Walk-in'}`,20,y);doc.text(`Method: ${receiptData.method}`,110,y);y+=8
-    doc.line(20,y,190,y);y+=5
-    doc.setFont('helvetica','bold');doc.text('ITEM',20,y);doc.text('QTY',120,y);doc.text('UNIT',140,y);doc.text('TOTAL',165,y);y+=5
-    doc.line(20,y,190,y);y+=5;doc.setFont('helvetica','normal')
-    receiptData.items.forEach(item=>{doc.text(item.name.substring(0,32),20,y);doc.text(String(item.qty),122,y);doc.text(`KES ${item.price.toLocaleString()}`,135,y);doc.text(`KES ${(item.price*item.qty).toLocaleString()}`,162,y);y+=6})
-    y+=2;doc.line(20,y,190,y);y+=6
-    const sub=receiptData.items.reduce((s,i)=>s+i.price*i.qty,0)
-    doc.text('Subtotal:',130,y);doc.text(`KES ${sub.toLocaleString()}`,162,y);y+=6
-    doc.text('VAT 16%:',130,y);doc.text(`KES ${Math.round(sub*0.16).toLocaleString()}`,162,y);y+=6
-    doc.setFont('helvetica','bold');doc.text('TOTAL:',130,y);doc.text(`KES ${receiptData.amount.toLocaleString()}`,162,y);y+=6
-    if(receiptData.change){doc.setFont('helvetica','normal');doc.text('Change:',130,y);doc.text(`KES ${receiptData.change.toLocaleString()}`,162,y);y+=6}
-    y+=4;doc.line(20,y,190,y);y+=6;doc.setFontSize(8);doc.text('Thank you for shopping at BerylBytes.',20,y)
-    doc.save(`${receiptData.invoiceId}.pdf`)
-  }
+    if (!receiptData) return;
+    const doc = new jsPDF();
+    let y = 20;
+    doc.setFontSize(20);
+    doc.setFont("helvetica", "bold");
+    doc.text("BERYLBYTES POS", 20, y);
+    y += 9;
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.text("berylbytes.co.ke | berylmunyao8@gmail.com", 20, y);
+    y += 6;
+    doc.line(20, y, 190, y);
+    y += 6;
+    doc.text(`Invoice: ${receiptData.invoiceId}`, 20, y);
+    doc.text(`Date: ${new Date().toLocaleString("en-KE")}`, 110, y);
+    y += 6;
+    doc.text(`Customer: ${receiptData.customer || "Walk-in"}`, 20, y);
+    doc.text(`Method: ${receiptData.method}`, 110, y);
+    y += 8;
+    doc.line(20, y, 190, y);
+    y += 5;
+    doc.setFont("helvetica", "bold");
+    doc.text("ITEM", 20, y);
+    doc.text("QTY", 120, y);
+    doc.text("UNIT", 140, y);
+    doc.text("TOTAL", 165, y);
+    y += 5;
+    doc.line(20, y, 190, y);
+    y += 5;
+    doc.setFont("helvetica", "normal");
+    receiptData.items.forEach((item) => {
+      doc.text(item.name.substring(0, 32), 20, y);
+      doc.text(String(item.qty), 122, y);
+      doc.text(`KES ${item.price.toLocaleString()}`, 135, y);
+      doc.text(`KES ${(item.price * item.qty).toLocaleString()}`, 162, y);
+      y += 6;
+    });
+    y += 2;
+    doc.line(20, y, 190, y);
+    y += 6;
+    const sub = receiptData.items.reduce((s, i) => s + i.price * i.qty, 0);
+    doc.text("Subtotal:", 130, y);
+    doc.text(`KES ${sub.toLocaleString()}`, 162, y);
+    y += 6;
+    doc.text("VAT 16%:", 130, y);
+    doc.text(`KES ${Math.round(sub * 0.16).toLocaleString()}`, 162, y);
+    y += 6;
+    doc.setFont("helvetica", "bold");
+    doc.text("TOTAL:", 130, y);
+    doc.text(`KES ${receiptData.amount.toLocaleString()}`, 162, y);
+    y += 6;
+    if (receiptData.change) {
+      doc.setFont("helvetica", "normal");
+      doc.text("Change:", 130, y);
+      doc.text(`KES ${receiptData.change.toLocaleString()}`, 162, y);
+      y += 6;
+    }
+    y += 4;
+    doc.line(20, y, 190, y);
+    y += 6;
+    doc.setFontSize(8);
+    doc.text("Thank you for shopping at BerylBytes.", 20, y);
+    doc.save(`${receiptData.invoiceId}.pdf`);
+  };
 
   // Export transactions
-  const exportTxns = (selected) => {
-    const rows = selected.length ? selected : filteredLedger
-    const csv = ['Invoice,Date,Customer,Amount,Method,Status',
-      ...rows.map(r=>`${r.id},${r.date},${r.customer},${r.total},${r.method},${r.status}`)
-    ].join('\n')
-    const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download='transactions.csv'; a.click()
-  }
+  const exportTxns = (selected = []) => {
+    const rows = selected.length ? selected : filteredLedger;
+    const csv = [
+      "Invoice,Date,Customer,Amount,Method,Status",
+      ...rows.map(
+        (r) =>
+          `${r.id},${r.date},${r.customer},${r.total},${r.method},${r.status}`,
+      ),
+    ].join("\n");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+    a.download = "transactions.csv";
+    a.click();
+  };
 
-  const markReviewed = ids => {
-    setLedger(p=>p.map(r=>ids.includes(r.id)?{...r,reviewed:true,status:'Reviewed'}:r))
-    setSelTxns([])
-    flash(`${ids.length} transaction(s) marked as reviewed`)
-  }
-
-  // Bug report
-  const submitReport = () => {
-    if(!reportText) return
-    const sig = `${currentUser.role}:${view}:${reportText.slice(0,40)}`
-    const dup = bugReports.find(r=>r.sig===sig)
-    const entry = {
-      id:'BR-'+Date.now(), sig, role:currentUser.role, user:currentUser.name,
-      page:view, categories:reportCats, text:reportText,
-      screenshot:reportScreenshot, time:new Date().toISOString(),
-      status:'open', dupOf: dup?.id||null, dupCount: dup ? (dup.dupCount||1)+1 : 1,
-    }
-    if(dup) {
-      setBugReports(p=>p.map(r=>r.id===dup.id?{...r,dupCount:(r.dupCount||1)+1}:r))
-      flash('Similar report already exists — linked to master report.')
-    } else {
-      setBugReports(p=>[entry,...p])
-      flash('Report submitted. Thank you.')
-    }
-    navigator.clipboard?.writeText(`BerylBytes Bug Report\nUser: ${currentUser.name} (${ROLES[currentUser.role].label})\nPage: ${view}\nCategories: ${reportCats.join(', ')}\n\nIssue:\n${reportText}`)
-    setShowReport(false); setReportText(''); setReportCats([]); setReportScreenshot(null)
-  }
+  const markReviewed = (ids) => {
+    setLedger((p) =>
+      p.map((r) =>
+        ids.includes(r.id) ? { ...r, reviewed: true, status: "Reviewed" } : r,
+      ),
+    );
+    setSelTxns([]);
+    flash(`${ids.length} transaction(s) marked as reviewed`);
+  };
 
   // Computed
-  const fKES=v=>`KES ${(v||0).toLocaleString()}`
-  const totalExp=expenses.reduce((s,e)=>s+e.amount,0)
-  const netProfit=totalRev-totalExp
-  const maxBar=Math.max(...salesData.map(d=>d.revenue),1)
-  const visCats=NICHES[niche]||Object.keys(categories)
-  const allProds=[...(categories[activeCat]?.products??[]),...customItems.filter(i=>i.category===activeCat)]
-  const products=allProds.filter(p=>p.name.toLowerCase().includes(search.toLowerCase())&&visCats.includes(activeCat)&&(showOutOfStock||!outOfStockIds.includes(p.id)))
-  const totalProds=Object.values(categories).reduce((s,c)=>s+c.products.length,0)+customItems.length
+  const fKES = (v) => `KES ${(v || 0).toLocaleString()}`;
+  const totalExp = expenses.reduce((s, e) => s + e.amount, 0);
+  const netProfit = totalRev - totalExp;
+  const maxBar = Math.max(...salesData.map((d) => d.revenue), 1);
+  const visCats = NICHES[niche] || Object.keys(categories);
+  const allProds = [
+    ...(categories[activeCat]?.products ?? []),
+    ...customItems.filter((i) => i.category === activeCat),
+  ];
+  const products = allProds.filter(
+    (p) =>
+      p.name.toLowerCase().includes(search.toLowerCase()) &&
+      visCats.includes(activeCat) &&
+      (showOutOfStock || !outOfStockIds.includes(p.id)),
+  );
+  const totalProds =
+    Object.values(categories).reduce((s, c) => s + c.products.length, 0) +
+    customItems.length;
 
   // Filtered ledger
-  const filteredLedger = ledger.filter(r=>{
-    const q=txnSearch.toLowerCase()
-    const matchQ=!q||(r.id.toLowerCase().includes(q)||r.customer.toLowerCase().includes(q)||r.method.toLowerCase().includes(q))
-    const matchS=txnStatus==='all'||(txnStatus==='paid'&&r.status==='Paid')||(txnStatus==='reviewed'&&r.status==='Reviewed')
-    return matchQ&&matchS
-  })
-  const totalPages=Math.max(1,Math.ceil(filteredLedger.length/PAGE_SIZE))
-  const pagedLedger=filteredLedger.slice((txnPage-1)*PAGE_SIZE,txnPage*PAGE_SIZE)
+  const filteredLedger = ledger.filter((r) => {
+    const q = txnSearch.toLowerCase();
+    const id = (r.id || "").toLowerCase();
+    const customer = (r.customer || "").toLowerCase();
+    const method = (r.method || "").toLowerCase();
+    const matchQ =
+      !q || id.includes(q) || customer.includes(q) || method.includes(q);
+    const matchS =
+      txnStatus === "all" ||
+      (txnStatus === "paid" && r.status === "Paid") ||
+      (txnStatus === "reviewed" && r.status === "Reviewed");
+    return matchQ && matchS;
+  });
+  const totalPages = Math.max(1, Math.ceil(filteredLedger.length / PAGE_SIZE));
+  const pagedLedger = filteredLedger.slice(
+    (txnPage - 1) * PAGE_SIZE,
+    txnPage * PAGE_SIZE,
+  );
 
   // Nav
   const NAV_ITEMS = [
-    {id:'pos',icon:'pos',label:'Point of Sale'},
-    {id:'dashboard',icon:'dashboard',label:'Dashboard'},
-    {id:'crm',icon:'crm',label:'CRM & Loyalty',badge:customers.length||null},
-    {id:'orders',icon:'inventory',label:'Inventory'},
-    {id:'add',icon:'add',label:'Add Item'},
-    {id:'payments',icon:'payments',label:'Payment Settings'},
-    {id:'manager',icon:'reports',label:'Bug Reports',badge:bugReports.filter(r=>r.status==='open').length||null},
-    {id:'settings',icon:'settings',label:'Settings'},
-    {id:'security',icon:'security',label:'Security Ops'},
-    {id:'support',icon:'support',label:'Support'},
+    { id: "pos", icon: "pos", label: "Point of Sale" },
+    { id: "dashboard", icon: "dashboard", label: "Dashboard" },
+    {
+      id: "crm",
+      icon: "crm",
+      label: "CRM & Loyalty",
+      badge: customers.length || null,
+    },
+    { id: "orders", icon: "inventory", label: "Inventory" },
+    { id: "add", icon: "add", label: "Add Item" },
+    { id: "payments", icon: "payments", label: "Payment Settings" },
+    {
+      id: "manager",
+      icon: "reports",
+      label: "Bug Reports",
+      badge: bugReports.filter((r) => r.status === "open").length || null,
+    },
+    { id: "settings", icon: "settings", label: "Settings" },
+    { id: "security", icon: "security", label: "Security Ops" },
+    { id: "support", icon: "support", label: "Support" },
+  ].filter((item) => canAccess(item.id));
 
-  ].filter(item=>canAccess(item.id))
-
-  if(!loggedIn) return <LoginPortal onLogin={handleLogin} darkMode={darkMode} toggleDark={()=>setDarkMode(!darkMode)}/>
+  if (!loggedIn)
+    return (
+      <LoginPortal
+        onLogin={handleLogin}
+        darkMode={darkMode}
+        toggleDark={() => setDarkMode(!darkMode)}
+      />
+    );
 
   return (
-    <PayPalScriptProvider options={{'client-id':PAYPAL_ID}}>
-      <div className="bg-canvas"><div className="orb orb1"/><div className="orb orb2"/><div className="orb orb3"/></div>
+    <PayPalScriptProvider options={{ "client-id": PAYPAL_ID }}>
+      <div className="bg-canvas">
+        <div className="orb orb1" />
+        <div className="orb orb2" />
+        <div className="orb orb3" />
+      </div>
 
       {schemaBanner && (
         <div className="schema-banner" role="alert" aria-live="polite">
-          <SvgIcon icon="alert" size={13}/>
-          <div style={{flex:1}}>Schema cache retry in progress — some features may be slower.</div>
-          <button className="sb-action" onClick={()=>window.location.reload()}>Retry Now</button>
-          <button className="sb-close" onClick={()=>setSchemaBanner(false)} aria-label="Dismiss">×</button>
+          <SvgIcon icon="alert" size={13} />
+          <div style={{ flex: 1 }}>
+            Schema cache retry in progress — some features may be slower.
+          </div>
+          <button
+            className="sb-action"
+            onClick={() => window.location.reload()}
+          >
+            Retry Now
+          </button>
+          <button
+            className="sb-close"
+            onClick={() => setSchemaBanner(false)}
+            aria-label="Dismiss"
+          >
+            ×
+          </button>
         </div>
       )}
 
-      <div className={`shell ${loaded?'in':''}`} style={{paddingTop:schemaBanner?36:0, display: 'grid', gridTemplateColumns: 'var(--sw) minmax(0, 1fr)', gridTemplateRows: 'var(--th) 1fr', height: '100vh', overflow: 'hidden'}}>
-
+      <div
+        className={`shell ${loaded ? "in" : ""}`}
+        style={{
+          paddingTop: schemaBanner ? 36 : 0,
+          display: "grid",
+          gridTemplateColumns: "var(--sw) minmax(0, 1fr)",
+          gridTemplateRows: "var(--th) 1fr",
+          height: "100vh",
+          overflow: "hidden",
+        }}
+      >
         {/* TOPBAR */}
         <header className="topbar" role="banner">
-          <div className="brand" onClick={()=>canAccess('dashboard')&&setView('dashboard')} role="link" aria-label="BerylBytes — Go to dashboard" tabIndex={0} onKeyDown={e=>e.key==='Enter'&&canAccess('dashboard')&&setView('dashboard')}>
-            <div className="brand-logo-fb" style={{ display: 'flex' }}>B</div>
+          <div
+            className="brand"
+            onClick={() => canAccess("dashboard") && setView("dashboard")}
+            role="link"
+            aria-label="BerylBytes — Go to dashboard"
+            tabIndex={0}
+            onKeyDown={(e) =>
+              e.key === "Enter" &&
+              canAccess("dashboard") &&
+              setView("dashboard")
+            }
+          >
+            <div className="brand-logo-fb" style={{ display: "flex" }}>
+              B
+            </div>
             <div className="brand-text">
-              <span className="brand-name">Beryl<em>Bytes</em></span>
+              <span className="brand-name">
+                Beryl<em>Bytes</em>
+              </span>
               <span className="brand-sub">POS System</span>
             </div>
           </div>
 
           <nav className="niche-bar" aria-label="Business niche filter">
-            {[{id:'all',label:'All'},{id:'retail',label:'Retail'},{id:'food',label:'Food & Cafe'},{id:'health',label:'Health'},{id:'services',label:'Services'},{id:'tech',label:'Electronics'}]
-              .map(n=>(
-                <button key={n.id} className={`niche-pill ${niche===n.id?'act':''}`} aria-pressed={niche===n.id}
-                  onClick={()=>{setNiche(n.id);const c=NICHES[n.id];if(!c.includes(activeCat))setActiveCat(c[0])}}>
-                  {n.label}
-                </button>
-              ))}
+            {[
+              { id: "all", label: "All" },
+              { id: "retail", label: "Retail" },
+              { id: "food", label: "Food & Cafe" },
+              { id: "health", label: "Health" },
+              { id: "services", label: "Services" },
+              { id: "tech", label: "Electronics" },
+            ].map((n) => (
+              <button
+                key={n.id}
+                className={`niche-pill ${niche === n.id ? "act" : ""}`}
+                aria-pressed={niche === n.id}
+                onClick={() => {
+                  setNiche(n.id);
+                  const c = NICHES[n.id];
+                  if (!c.includes(activeCat)) setActiveCat(c[0]);
+                }}
+              >
+                {n.label}
+              </button>
+            ))}
           </nav>
 
           <div className="topbar-right">
             <div className="search-box" role="search">
-              <span className="si" aria-hidden="true"><SvgIcon icon="search" size={13}/></span>
-              <input placeholder="Search products…" value={search} onChange={e=>setSearch(e.target.value)} aria-label="Search products"/>
+              <span className="si" aria-hidden="true">
+                <SvgIcon icon="search" size={13} />
+              </span>
+              <input
+                placeholder="Search products…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                aria-label="Search products"
+              />
             </div>
-            <div className="live-dot" title="System live" aria-label="System is live"/>
-            <div className="topbar-stat" aria-label={`Revenue ${fKES(totalRev)}`}>
+            <div
+              className="live-dot"
+              title="System live"
+              aria-label="System is live"
+            />
+            <div
+              className="topbar-stat"
+              aria-label={`Revenue ${fKES(totalRev)}`}
+            >
               <span className="topbar-stat-val">{fKES(totalRev)}</span>
               <span className="topbar-stat-lbl">Revenue</span>
             </div>
@@ -1298,35 +3458,94 @@ const [newCatName,setNewCatName]     = useState('')
               <span className="topbar-stat-val">{totalOrders}</span>
               <span className="topbar-stat-lbl">Orders</span>
             </div>
-            <button className="icon-btn" onClick={()=>setDarkMode(!darkMode)} aria-label={darkMode?'Switch to light mode':'Switch to dark mode'}>
-              <SvgIcon icon={darkMode?'sun':'moon'} size={14}/>
+            <button
+              className="icon-btn"
+              onClick={() => setDarkMode(!darkMode)}
+              aria-label={
+                darkMode ? "Switch to light mode" : "Switch to dark mode"
+              }
+            >
+              <SvgIcon icon={darkMode ? "sun" : "moon"} size={14} />
             </button>
 
             {/* USER SWITCHER */}
-            <div className="user-sw" onClick={e=>e.stopPropagation()}>
-              <button className="user-btn" onClick={()=>setShowUserMenu(!showUserMenu)} aria-label="User menu" aria-expanded={showUserMenu} aria-haspopup="listbox">
-                <div className="u-av" style={{background:ROLES[currentUser.role].color}}>{currentUser.initial}</div>
-                <div style={{display:'flex',flexDirection:'column',alignItems:'flex-start'}}>
-                  <span className="u-name">{currentUser.name}</span>
-                  <span className="u-role">{ROLES[currentUser.role].label}</span>
+            <div className="user-sw" onClick={(e) => e.stopPropagation()}>
+              <button
+                className="user-btn"
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                aria-label="User menu"
+                aria-expanded={showUserMenu}
+                aria-haspopup="listbox"
+              >
+                <div
+                  className="u-av"
+                  style={{ background: ROLES[currentUser.role].color }}
+                >
+                  {currentUser.initial}
                 </div>
-                <span className="u-chev" aria-hidden="true">{showUserMenu?'▲':'▼'}</span>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "flex-start",
+                  }}
+                >
+                  <span className="u-name">{currentUser.name}</span>
+                  <span className="u-role">
+                    {ROLES[currentUser.role].label}
+                  </span>
+                </div>
+                <span className="u-chev" aria-hidden="true">
+                  {showUserMenu ? "▲" : "▼"}
+                </span>
               </button>
               {showUserMenu && (
-                <div className="user-dd" role="listbox" aria-label="Switch user">
+                <div
+                  className="user-dd"
+                  role="listbox"
+                  aria-label="Switch user"
+                >
                   <div className="user-dd-hd">Switch Account</div>
-                  {SYSTEM_USERS.map(u=>(
-                    <div key={u.id} className={`u-opt ${currentUser.id===u.id?'act-u':''}`} role="option" aria-selected={currentUser.id===u.id} onClick={()=>{handleLogin(u);setShowUserMenu(false)}} tabIndex={0} onKeyDown={e=>e.key==='Enter'&&handleLogin(u)}>
-                      <div className="u-opt-av" style={{background:ROLES[u.role].color}}>{u.initial}</div>
+                  {SYSTEM_USERS.map((u) => (
+                    <div
+                      key={u.id}
+                      className={`u-opt ${currentUser.id === u.id ? "act-u" : ""}`}
+                      role="option"
+                      aria-selected={currentUser.id === u.id}
+                      onClick={() => {
+                        handleLogin(u);
+                        setShowUserMenu(false);
+                      }}
+                      tabIndex={0}
+                      onKeyDown={(e) => e.key === "Enter" && handleLogin(u)}
+                    >
+                      <div
+                        className="u-opt-av"
+                        style={{ background: ROLES[u.role].color }}
+                      >
+                        {u.initial}
+                      </div>
                       <div className="u-opt-info">
                         <span className="u-opt-name">{u.name}</span>
-                        <span className="u-opt-role">{ROLES[u.role].label}</span>
+                        <span className="u-opt-role">
+                          {ROLES[u.role].label}
+                        </span>
                       </div>
-                      {currentUser.id===u.id && <div className="u-act-dot" aria-label="Current user"/>}
+                      {currentUser.id === u.id && (
+                        <div className="u-act-dot" aria-label="Current user" />
+                      )}
                     </div>
                   ))}
-                  <div className="logout-opt" onClick={handleLogout} role="button" tabIndex={0} onKeyDown={e=>e.key==='Enter'&&handleLogout()} aria-label="Sign out">
-                    <SvgIcon icon="logout" size={14}/>Sign Out
+                  <div
+                    className="logout-opt"
+                    onClick={handleLogout}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => e.key === "Enter" && handleLogout()}
+                    aria-label="Sign out"
+                  >
+                    <SvgIcon icon="logout" size={14} />
+                    Sign Out
                   </div>
                 </div>
               )}
@@ -1335,363 +3554,1589 @@ const [newCatName,setNewCatName]     = useState('')
         </header>
 
         {/* SIDEBAR */}
-        <aside className="sidebar" role="navigation" aria-label="Main navigation">
+        <aside
+          className="sidebar"
+          role="navigation"
+          aria-label="Main navigation"
+        >
           <div className="sb-sec">
             <span className="sb-lbl">Navigation</span>
-            {NAV_ITEMS.map(item=>(
-              <button key={item.id} className={`nav-btn ${view===item.id?'act':''}`} onClick={()=>setView(item.id)} aria-current={view===item.id?'page':undefined} aria-label={item.label}>
-                <SvgIcon icon={item.icon} size={14}/>
+            {NAV_ITEMS.map((item) => (
+              <button
+                key={item.id}
+                className={`nav-btn ${view === item.id ? "act" : ""}`}
+                onClick={() => setView(item.id)}
+                aria-current={view === item.id ? "page" : undefined}
+                aria-label={item.label}
+              >
+                <SvgIcon icon={item.icon} size={14} />
                 {item.label}
-                {item.badge>0 && <span className="nb-badge" aria-label={`${item.badge} items`}>{item.badge}</span>}
+                {item.badge > 0 && (
+                  <span className="nb-badge" aria-label={`${item.badge} items`}>
+                    {item.badge}
+                  </span>
+                )}
               </button>
             ))}
           </div>
-          {view==='pos' && (<>
-            <div className="sb-div"/>
-            <div className="sb-sec">
-              <span className="sb-lbl">Categories</span>
-              {Object.entries(categories).filter(([k])=>visCats.includes(k)).map(([k,v])=>(
-                <button key={k} className={`cat-btn ${activeCat===k?'act':''}`} onClick={()=>{setActiveCat(k);setSearch('')}} aria-pressed={activeCat===k}>
-                  <div className="cat-dot"/>
-                  {v.label}
-                </button>
-              ))}
-            </div>
-          </>)}
+          {view === "pos" && (
+            <>
+              <div className="sb-div" />
+              <div className="sb-sec">
+                <span className="sb-lbl">Categories</span>
+                {Object.entries(categories)
+                  .filter(([k]) => visCats.includes(k))
+                  .map(([k, v]) => (
+                    <button
+                      key={k}
+                      className={`cat-btn ${activeCat === k ? "act" : ""}`}
+                      onClick={() => {
+                        setActiveCat(k);
+                        setSearch("");
+                      }}
+                      aria-pressed={activeCat === k}
+                    >
+                      <div className="cat-dot" />
+                      {v.label}
+                    </button>
+                  ))}
+              </div>
+            </>
+          )}
           <div className="sb-foot">
-            <div className="sb-stat"><span>Products</span><strong>{totalProds}</strong></div>
-            <div className="sb-stat"><span>Customers</span><strong>{customers.length}</strong></div>
-            <div className="sb-stat"><span>Transactions</span><strong>{ledger.length}</strong></div>
+            <div className="sb-stat">
+              <span>Products</span>
+              <strong>{totalProds}</strong>
+            </div>
+            <div className="sb-stat">
+              <span>Customers</span>
+              <strong>{customers.length}</strong>
+            </div>
+            <div className="sb-stat">
+              <span>Transactions</span>
+              <strong>{ledger.length}</strong>
+            </div>
           </div>
         </aside>
 
         {/* MAIN */}
-        <div className="main" style={{ display: 'flex', flexDirection: 'row', overflow: 'hidden', minWidth: 0, height: '100%', minHeight: 0 }}>
-          <main className="content" id="main-content" aria-label="Main content" style={{ flex: 1, minWidth: 0, overflowY: 'auto' }}>
-
+        <div
+          className="main"
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            overflow: "hidden",
+            minWidth: 0,
+            height: "100%",
+            minHeight: 0,
+          }}
+        >
+          <main
+            className="content"
+            id="main-content"
+            aria-label="Main content"
+            style={{ flex: 1, minWidth: 0, overflowY: "auto" }}
+          >
             {/* POS */}
-            {view==='pos' && (<>
-              {activeCat==='pharmacy' && <div className="ph-warn" role="alert"><SvgIcon icon="alert" size={13}/>POM items require a valid prescription before dispensing. {canEdit()&&' Click the edit icon to update prices.'}</div>}
-              {canEdit() && outOfStockIds.length>0 && (
-                <div className="stock-filter-bar">
-                  <span>{outOfStockIds.length} product{outOfStockIds.length===1?'':'s'} hidden as out of stock</span>
-                  <button className={`stock-filter-toggle ${showOutOfStock?'on':''}`} onClick={()=>setShowOutOfStock(v=>!v)} aria-pressed={showOutOfStock}>
-                    {showOutOfStock?'Hide out-of-stock':'Show out-of-stock'}
-                  </button>
+            {view === "pos" && (
+              <>
+                {activeCat === "pharmacy" && (
+                  <div className="ph-warn" role="alert">
+                    <SvgIcon icon="alert" size={13} />
+                    POM items require a valid prescription before dispensing.{" "}
+                    {canEdit() && " Click the edit icon to update prices."}
+                  </div>
+                )}
+                {canEdit() && outOfStockIds.length > 0 && (
+                  <div className="stock-filter-bar">
+                    <span>
+                      {outOfStockIds.length} product
+                      {outOfStockIds.length === 1 ? "" : "s"} hidden as out of
+                      stock
+                    </span>
+                    <button
+                      className={`stock-filter-toggle ${showOutOfStock ? "on" : ""}`}
+                      onClick={() => setShowOutOfStock((v) => !v)}
+                      aria-pressed={showOutOfStock}
+                    >
+                      {showOutOfStock
+                        ? "Hide out-of-stock"
+                        : "Show out-of-stock"}
+                    </button>
+                  </div>
+                )}
+                <div className="pg" role="list" aria-label="Products">
+                  {products.length === 0 ? (
+                    <div className="no-results" role="status">
+                      <SvgIcon
+                        icon="search"
+                        size={36}
+                        style={{
+                          margin: "0 auto 12px",
+                          display: "block",
+                          opacity: 0.2,
+                        }}
+                      />
+                      <p>
+                        No products found{search ? ` for "${search}"` : ""}.
+                      </p>
+                    </div>
+                  ) : (
+                    products.map((p, i) => {
+                      const dp = customPrices[p.id] || p.price;
+                      return (
+                        <article
+                          key={p.id}
+                          className="pc"
+                          style={{ animationDelay: `${i * 0.025}s` }}
+                          onClick={() => addToCart({ ...p, price: dp })}
+                          role="listitem button"
+                          tabIndex={0}
+                          aria-label={`Add ${p.name} — ${fKES(dp)}`}
+                          onKeyDown={(e) =>
+                            e.key === "Enter" && addToCart({ ...p, price: dp })
+                          }
+                        >
+                          {canEdit() && (
+                            <button
+                              className="pc-edit"
+                              title="Edit price"
+                              aria-label={`Edit price for ${p.name}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditProd(p);
+                                setEditPrice(String(dp));
+                              }}
+                            >
+                              <SvgIcon icon="edit" />
+                            </button>
+                          )}
+                          <div className="pc-icon" aria-hidden="true">
+                            {(p.name || "?").trim().slice(0, 1).toUpperCase()}
+                          </div>
+                          <div className="pc-nm">{p.name}</div>
+                          <div className="pc-pr">{fKES(dp)}</div>
+                          {p.tag && (
+                            <span
+                              className={`pc-tag ${p.tag === "POM" ? "pom" : "otc"}`}
+                            >
+                              {p.tag}
+                            </span>
+                          )}
+                          <div className="pc-add" aria-hidden="true">
+                            +
+                          </div>
+                        </article>
+                      );
+                    })
+                  )}
                 </div>
-              )}
-              <div className="pg" role="list" aria-label="Products">
-                {products.length===0
-                  ?<div className="no-results" role="status"><SvgIcon icon="search" size={36} style={{margin:'0 auto 12px',display:'block',opacity:.2}}/><p>No products found{search?` for "${search}"`:''}.</p></div>
-                  :products.map((p,i)=>{
-                    const dp=customPrices[p.id]||p.price
-                    return(
-                      <article key={p.id} className="pc" style={{animationDelay:`${i*0.025}s`}} onClick={()=>addToCart({...p,price:dp})} role="listitem button" tabIndex={0} aria-label={`Add ${p.name} — ${fKES(dp)}`} onKeyDown={e=>e.key==='Enter'&&addToCart({...p,price:dp})}>
-                        {canEdit()&&<button className="pc-edit" title="Edit price" aria-label={`Edit price for ${p.name}`} onClick={e=>{e.stopPropagation();setEditProd(p);setEditPrice(String(dp))}}><SvgIcon icon="edit"/></button>}
-                        <div className="pc-icon" aria-hidden="true">{(p.name||'?').trim().slice(0,1).toUpperCase()}</div>
-                        <div className="pc-nm">{p.name}</div>
-                        <div className="pc-pr">{fKES(dp)}</div>
-                        {p.tag&&<span className={`pc-tag ${p.tag==='POM'?'pom':'otc'}`}>{p.tag}</span>}
-                        <div className="pc-add" aria-hidden="true">+</div>
-                      </article>
-                    )
-                  })
-                }
-              </div>
-            </>)}
+              </>
+            )}
 
             {/* DASHBOARD */}
-            {view==='dashboard' && canAccess('dashboard') && (
+            {view === "dashboard" && canAccess("dashboard") && (
               <div className="dash-grid">
                 <div className="panel full-col">
-                  <div className="panel-hd"><h2>Performance Overview</h2></div>
+                  <div className="panel-hd">
+                    <h2>Performance Overview</h2>
+                  </div>
                   <div className="kpi-row">
-                    {[{l:'Total Revenue',v:fKES(totalRev),c:'c1'},{l:'Orders',v:totalOrders,c:'c2'},{l:'Net Profit',v:fKES(netProfit),c:'c3'},{l:'Expenses',v:fKES(totalExp),c:'c4'},{l:'Customers',v:customers.length,c:'c5'},{l:'Transactions',v:ledger.length,c:'c6'}]
-                      .map(k=><div key={k.l} className={`kpi-card ${k.c}`} role="figure" aria-label={`${k.l}: ${k.v}`}><div className="kpi-val">{k.v}</div><div className="kpi-lbl">{k.l}</div></div>)}
+                    {[
+                      { l: "Total Revenue", v: fKES(totalRev), c: "c1" },
+                      { l: "Orders", v: totalOrders, c: "c2" },
+                      { l: "Net Profit", v: fKES(netProfit), c: "c3" },
+                      { l: "Expenses", v: fKES(totalExp), c: "c4" },
+                      { l: "Customers", v: customers.length, c: "c5" },
+                      { l: "Transactions", v: ledger.length, c: "c6" },
+                    ].map((k) => (
+                      <div
+                        key={k.l}
+                        className={`kpi-card ${k.c}`}
+                        role="figure"
+                        aria-label={`${k.l}: ${k.v}`}
+                      >
+                        <div className="kpi-val">{k.v}</div>
+                        <div className="kpi-lbl">{k.l}</div>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
                 <div className="panel">
-                  <div className="panel-hd"><h2>Revenue — Last 7 Days</h2></div>
-                  {totalRev===0
-                    ?<div className="empty-state"><div className="empty-icon"><SvgIcon icon="dashboard" size={22}/></div><p>No sales recorded yet</p><span>Complete your first sale to see revenue data.</span></div>
-                    :<div className="bar-chart" role="img" aria-label="Revenue bar chart">{salesData.map((d,i)=><div key={i} className="bar-item"><div className="bar" style={{height:`${(d.revenue/maxBar)*100}%`}} role="img" aria-label={`${d.date}: ${fKES(d.revenue)}`}><span className="bar-tip">{fKES(d.revenue)}</span></div><span className="bar-lbl">{d.date.slice(-5)}</span></div>)}</div>
-                  }
+                  <div className="panel-hd">
+                    <h2>Revenue — Last 7 Days</h2>
+                  </div>
+                  {totalRev === 0 ? (
+                    <div className="empty-state">
+                      <div className="empty-icon">
+                        <SvgIcon icon="dashboard" size={22} />
+                      </div>
+                      <p>No sales recorded yet</p>
+                      <span>Complete your first sale to see revenue data.</span>
+                    </div>
+                  ) : (
+                    <div
+                      className="bar-chart"
+                      role="img"
+                      aria-label="Revenue bar chart"
+                    >
+                      {salesData.map((d, i) => (
+                        <div key={i} className="bar-item">
+                          <div
+                            className="bar"
+                            style={{ height: `${(d.revenue / maxBar) * 100}%` }}
+                            role="img"
+                            aria-label={`${d.date}: ${fKES(d.revenue)}`}
+                          >
+                            <span className="bar-tip">{fKES(d.revenue)}</span>
+                          </div>
+                          <span className="bar-lbl">{d.date.slice(-5)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="panel">
-                  <div className="panel-hd"><h2>Expense Tracker</h2><button className="btn-p btn-sm" onClick={()=>setShowAddExp(true)}>+ Add</button></div>
-                  {showAddExp&&(
+                  <div className="panel-hd">
+                    <h2>Expense Tracker</h2>
+                    <button
+                      className="btn-p btn-sm"
+                      onClick={() => setShowAddExp(true)}
+                    >
+                      + Add
+                    </button>
+                  </div>
+                  {showAddExp && (
                     <div className="inline-form">
                       <div className="form-grid">
-                        <div className="sf full"><label>Description</label><input placeholder="e.g. Stock restock" value={newExp.desc} onChange={e=>setNewExp({...newExp,desc:e.target.value})}/></div>
-                        <div className="sf"><label>Amount (KES)</label><input type="number" value={newExp.amount} onChange={e=>setNewExp({...newExp,amount:e.target.value})}/></div>
-                        <div className="sf"><label>Category</label>
-                          <select value={newExp.category} onChange={e=>setNewExp({...newExp,category:e.target.value})}>
+                        <div className="sf full">
+                          <label>Description</label>
+                          <input
+                            placeholder="e.g. Stock restock"
+                            value={newExp.desc}
+                            onChange={(e) =>
+                              setNewExp({ ...newExp, desc: e.target.value })
+                            }
+                          />
+                        </div>
+                        <div className="sf">
+                          <label>Amount (KES)</label>
+                          <input
+                            type="number"
+                            value={newExp.amount}
+                            onChange={(e) =>
+                              setNewExp({ ...newExp, amount: e.target.value })
+                            }
+                          />
+                        </div>
+                        <div className="sf">
+                          <label>Category</label>
+                          <select
+                            value={newExp.category}
+                            onChange={(e) =>
+                              setNewExp({ ...newExp, category: e.target.value })
+                            }
+                          >
                             <option value="">Select category</option>
-                            {['Inventory','Rent','Staff','Utilities','Marketing','Maintenance','Other'].map(c=><option key={c}>{c}</option>)}
+                            {[
+                              "Inventory",
+                              "Rent",
+                              "Staff",
+                              "Utilities",
+                              "Marketing",
+                              "Maintenance",
+                              "Other",
+                            ].map((c) => (
+                              <option key={c}>{c}</option>
+                            ))}
                           </select>
                         </div>
                       </div>
-                      <div className="btn-row" style={{marginTop:10}}>
-                        <button className="btn-p" onClick={()=>{if(!newExp.desc||!newExp.amount)return;setExpenses(p=>[{id:Date.now(),desc:newExp.desc,category:newExp.category||'Other',amount:parseInt(newExp.amount),date:TODAY},...p]);setNewExp({desc:'',amount:'',category:''});setShowAddExp(false);flash('Expense logged.')}}>Save</button>
-                        <button className="btn-g" onClick={()=>setShowAddExp(false)}>Cancel</button>
+                      <div className="btn-row" style={{ marginTop: 10 }}>
+                        <button
+                          className="btn-p"
+                          onClick={() => {
+                            if (!newExp.desc || !newExp.amount) return;
+                            setExpenses((p) => [
+                              {
+                                id: Date.now(),
+                                desc: newExp.desc,
+                                category: newExp.category || "Other",
+                                amount: parseInt(newExp.amount),
+                                date: TODAY,
+                              },
+                              ...p,
+                            ]);
+                            setNewExp({ desc: "", amount: "", category: "" });
+                            setShowAddExp(false);
+                            flash("Expense logged.");
+                          }}
+                        >
+                          Save
+                        </button>
+                        <button
+                          className="btn-g"
+                          onClick={() => setShowAddExp(false)}
+                        >
+                          Cancel
+                        </button>
                       </div>
                     </div>
                   )}
-                  {expenses.length===0
-                    ?<div className="empty-state"><div className="empty-icon"><SvgIcon icon="payments" size={22}/></div><p>No expenses logged</p></div>
-                    :<><div className="table-wrap"><table className="data-table"><thead><tr><th>Description</th><th>Category</th><th>Amount</th><th>Date</th></tr></thead><tbody>{expenses.map(e=><tr key={e.id}><td>{e.desc}</td><td>{e.category}</td><td>{fKES(e.amount)}</td><td>{e.date}</td></tr>)}</tbody></table></div><div className="card-list">{expenses.map(e=><div key={e.id} className="m-card"><div className="m-card-hd"><span className="m-card-id">{e.desc}</span><span className="m-tag"><strong>{fKES(e.amount)}</strong></span></div></div>)}</div><div style={{padding:'9px 0',fontSize:12,color:'var(--text2)',borderTop:'1px solid var(--border)',marginTop:8}}>Total Expenses: <strong style={{color:'var(--red)'}}>{fKES(totalExp)}</strong></div></>
-                  }
+                  {expenses.length === 0 ? (
+                    <div className="empty-state">
+                      <div className="empty-icon">
+                        <SvgIcon icon="payments" size={22} />
+                      </div>
+                      <p>No expenses logged</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="table-wrap">
+                        <table className="data-table">
+                          <thead>
+                            <tr>
+                              <th>Description</th>
+                              <th>Category</th>
+                              <th>Amount</th>
+                              <th>Date</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {expenses.map((e) => (
+                              <tr key={e.id}>
+                                <td>{e.desc}</td>
+                                <td>{e.category}</td>
+                                <td>{fKES(e.amount)}</td>
+                                <td>{e.date}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <div className="card-list">
+                        {expenses.map((e) => (
+                          <div key={e.id} className="m-card">
+                            <div className="m-card-hd">
+                              <span className="m-card-id">{e.desc}</span>
+                              <span className="m-tag">
+                                <strong>{fKES(e.amount)}</strong>
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div
+                        style={{
+                          padding: "9px 0",
+                          fontSize: 12,
+                          color: "var(--text2)",
+                          borderTop: "1px solid var(--border)",
+                          marginTop: 8,
+                        }}
+                      >
+                        Total Expenses:{" "}
+                        <strong style={{ color: "var(--red)" }}>
+                          {fKES(totalExp)}
+                        </strong>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 {/* LEDGER with filters */}
                 <div className="panel full-col">
-                  <div className="panel-hd"><h2>Digital Ledger</h2>
-                    <div style={{display:'flex',gap:8}}>
-                      {selTxns.length>0&&<><button className="btn-p btn-sm green" onClick={()=>markReviewed(selTxns)}>Mark Reviewed</button><button className="btn-p btn-sm" onClick={()=>exportTxns(ledger.filter(r=>selTxns.includes(r.id)))}><SvgIcon icon="export"/>Export</button></>}
-                      <button className="btn-g btn-sm" onClick={()=>exportTxns([])}><SvgIcon icon="export"/>Export All</button>
+                  <div className="panel-hd">
+                    <h2>Digital Ledger</h2>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      {selTxns.length > 0 && (
+                        <>
+                          <button
+                            className="btn-p btn-sm green"
+                            onClick={() => markReviewed(selTxns)}
+                          >
+                            Mark Reviewed
+                          </button>
+                          <button
+                            className="btn-p btn-sm"
+                            onClick={() =>
+                              exportTxns(
+                                ledger.filter((r) => selTxns.includes(r.id)),
+                              )
+                            }
+                          >
+                            <SvgIcon icon="export" />
+                            Export
+                          </button>
+                        </>
+                      )}
+                      <button
+                        className="btn-g btn-sm"
+                        onClick={() => exportTxns([])}
+                      >
+                        <SvgIcon icon="export" />
+                        Export All
+                      </button>
                     </div>
                   </div>
                   <div className="txn-filters">
-                    <div className="filter-search" role="search"><SvgIcon icon="search" size={12} style={{color:'var(--text3)',flexShrink:0}}/><input placeholder="Search transactions…" value={txnSearch} onChange={e=>{setTxnSearch(e.target.value);setTxnPage(1)}} aria-label="Search transactions"/></div>
-                    <select className="filter-select" value={txnStatus} onChange={e=>{setTxnStatus(e.target.value);setTxnPage(1)}} aria-label="Filter by status"><option value="all">All Status</option><option value="paid">Paid</option><option value="reviewed">Reviewed</option></select>
+                    <div className="filter-search" role="search">
+                      <SvgIcon
+                        icon="search"
+                        size={12}
+                        style={{ color: "var(--text3)", flexShrink: 0 }}
+                      />
+                      <input
+                        placeholder="Search transactions…"
+                        value={txnSearch}
+                        onChange={(e) => {
+                          setTxnSearch(e.target.value);
+                          setTxnPage(1);
+                        }}
+                        aria-label="Search transactions"
+                      />
+                    </div>
+                    <select
+                      className="filter-select"
+                      value={txnStatus}
+                      onChange={(e) => {
+                        setTxnStatus(e.target.value);
+                        setTxnPage(1);
+                      }}
+                      aria-label="Filter by status"
+                    >
+                      <option value="all">All Status</option>
+                      <option value="paid">Paid</option>
+                      <option value="reviewed">Reviewed</option>
+                    </select>
                   </div>
-                  {selTxns.length>0&&<div className="bulk-bar"><span className="bulk-info">{selTxns.length} selected</span><button className="btn-xs btn-g" onClick={()=>setSelTxns([])}>Clear</button></div>}
-                  {ledger.length===0
-                    ?<div className="empty-state"><div className="empty-icon"><SvgIcon icon="inventory" size={22}/></div><p>No transactions yet</p><span>Every completed sale appears here automatically.</span></div>
-                    :<>
+                  {selTxns.length > 0 && (
+                    <div className="bulk-bar">
+                      <span className="bulk-info">
+                        {selTxns.length} selected
+                      </span>
+                      <button
+                        className="btn-xs btn-g"
+                        onClick={() => setSelTxns([])}
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  )}
+                  {ledger.length === 0 ? (
+                    <div className="empty-state">
+                      <div className="empty-icon">
+                        <SvgIcon icon="inventory" size={22} />
+                      </div>
+                      <p>No transactions yet</p>
+                      <span>
+                        Every completed sale appears here automatically.
+                      </span>
+                    </div>
+                  ) : (
+                    <>
                       <div className="table-wrap">
-                        <table className="data-table" role="grid" aria-label="Transactions">
-                          <thead><tr><th scope="col"><input type="checkbox" className="cb" aria-label="Select all" checked={selTxns.length===pagedLedger.length&&pagedLedger.length>0} onChange={e=>setSelTxns(e.target.checked?pagedLedger.map(r=>r.id):[])}/></th><th>Invoice</th><th>Date</th><th>Customer</th><th>Amount</th><th>Method</th><th>Status</th><th></th></tr></thead>
-                          <tbody>{pagedLedger.map(r=>(
-                            <tr key={r.id} className={selTxns.includes(r.id)?'sel-row':''} onClick={()=>setDetailTxn(r)} tabIndex={0} onKeyDown={e=>e.key==='Enter'&&setDetailTxn(r)} aria-label={`Transaction ${r.id}`} role="row">
-                              <td className="cb-cell" onClick={e=>e.stopPropagation()}><input type="checkbox" className="cb" checked={selTxns.includes(r.id)} onChange={e=>{e.stopPropagation();setSelTxns(p=>e.target.checked?[...p,r.id]:p.filter(x=>x!==r.id))}} aria-label={`Select transaction ${r.id}`}/></td>
-                              <td style={{color:'var(--accent)',fontWeight:700,fontFamily:'monospace'}}>{r.id}</td>
-                              <td style={{color:'var(--text2)'}}>{r.date}</td>
-                              <td>{r.customer}</td>
-                              <td><strong>{fKES(r.total)}</strong></td>
-                              <td style={{color:'var(--text2)'}}>{r.method}</td>
-                              <td><span className={`pill ${r.status==='Reviewed'?'reviewed':'paid'}`}>{r.status}</span></td>
-                              <td><button className="btn-g btn-xs" onClick={e=>{e.stopPropagation();setDetailTxn(r)}} aria-label={`View details for ${r.id}`}><SvgIcon icon="eye"/>View</button></td>
+                        <table
+                          className="data-table"
+                          role="grid"
+                          aria-label="Transactions"
+                        >
+                          <thead>
+                            <tr>
+                              <th scope="col">
+                                <input
+                                  type="checkbox"
+                                  className="cb"
+                                  aria-label="Select all"
+                                  checked={
+                                    selTxns.length === pagedLedger.length &&
+                                    pagedLedger.length > 0
+                                  }
+                                  onChange={(e) =>
+                                    setSelTxns(
+                                      e.target.checked
+                                        ? pagedLedger.map((r) => r.id)
+                                        : [],
+                                    )
+                                  }
+                                />
+                              </th>
+                              <th>Invoice</th>
+                              <th>Date</th>
+                              <th>Customer</th>
+                              <th>Amount</th>
+                              <th>Method</th>
+                              <th>Status</th>
+                              <th></th>
                             </tr>
-                          ))}</tbody>
+                          </thead>
+                          <tbody>
+                            {pagedLedger.map((r) => (
+                              <tr
+                                key={r.id}
+                                className={
+                                  selTxns.includes(r.id) ? "sel-row" : ""
+                                }
+                                onClick={() => setDetailTxn(r)}
+                                tabIndex={0}
+                                onKeyDown={(e) =>
+                                  e.key === "Enter" && setDetailTxn(r)
+                                }
+                                aria-label={`Transaction ${r.id}`}
+                                role="row"
+                              >
+                                <td
+                                  className="cb-cell"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    className="cb"
+                                    checked={selTxns.includes(r.id)}
+                                    onChange={(e) => {
+                                      e.stopPropagation();
+                                      setSelTxns((p) =>
+                                        e.target.checked
+                                          ? [...p, r.id]
+                                          : p.filter((x) => x !== r.id),
+                                      );
+                                    }}
+                                    aria-label={`Select transaction ${r.id}`}
+                                  />
+                                </td>
+                                <td
+                                  style={{
+                                    color: "var(--accent)",
+                                    fontWeight: 700,
+                                    fontFamily: "monospace",
+                                  }}
+                                >
+                                  {r.id}
+                                </td>
+                                <td style={{ color: "var(--text2)" }}>
+                                  {r.date}
+                                </td>
+                                <td>{r.customer}</td>
+                                <td>
+                                  <strong>{fKES(r.total)}</strong>
+                                </td>
+                                <td style={{ color: "var(--text2)" }}>
+                                  {r.method}
+                                </td>
+                                <td>
+                                  <span
+                                    className={`pill ${r.status === "Reviewed" ? "reviewed" : "paid"}`}
+                                  >
+                                    {r.status}
+                                  </span>
+                                </td>
+                                <td>
+                                  <button
+                                    className="btn-g btn-xs"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setDetailTxn(r);
+                                    }}
+                                    aria-label={`View details for ${r.id}`}
+                                  >
+                                    <SvgIcon icon="eye" />
+                                    View
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
                         </table>
                       </div>
                       {/* Mobile cards */}
                       <div className="card-list" aria-label="Transactions list">
-                        {pagedLedger.map(r=>(
-                          <article key={r.id} className={`m-card ${expandedCard===r.id?'expanded':''}`} tabIndex={0} aria-label={`Transaction ${r.id}, ${r.customer}, ${fKES(r.total)}`} onKeyDown={e=>e.key==='Enter'&&setDetailTxn(r)}>
-                            <div className="m-card-hd" onClick={()=>setExpandedCard(expandedCard===r.id?null:r.id)}>
-                              <input type="checkbox" className="m-card-sel" checked={selTxns.includes(r.id)} onChange={e=>{e.stopPropagation();setSelTxns(p=>e.target.checked?[...p,r.id]:p.filter(x=>x!==r.id))}} onClick={e=>e.stopPropagation()} aria-label={`Select ${r.id}`}/>
+                        {pagedLedger.map((r) => (
+                          <article
+                            key={r.id}
+                            className={`m-card ${expandedCard === r.id ? "expanded" : ""}`}
+                            tabIndex={0}
+                            aria-label={`Transaction ${r.id}, ${r.customer}, ${fKES(r.total)}`}
+                            onKeyDown={(e) =>
+                              e.key === "Enter" && setDetailTxn(r)
+                            }
+                          >
+                            <div
+                              className="m-card-hd"
+                              onClick={() =>
+                                setExpandedCard(
+                                  expandedCard === r.id ? null : r.id,
+                                )
+                              }
+                            >
+                              <input
+                                type="checkbox"
+                                className="m-card-sel"
+                                checked={selTxns.includes(r.id)}
+                                onChange={(e) => {
+                                  e.stopPropagation();
+                                  setSelTxns((p) =>
+                                    e.target.checked
+                                      ? [...p, r.id]
+                                      : p.filter((x) => x !== r.id),
+                                  );
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                aria-label={`Select ${r.id}`}
+                              />
                               <span className="m-card-id">{r.id}</span>
-                              <span className={`pill m-card-status ${r.status==='Reviewed'?'reviewed':'paid'}`}>{r.status}</span>
+                              <span
+                                className={`pill m-card-status ${r.status === "Reviewed" ? "reviewed" : "paid"}`}
+                              >
+                                {r.status}
+                              </span>
                             </div>
                             <div className="m-card-body">
                               <span className="m-tag">{r.customer}</span>
-                              <span className="m-tag"><strong>{fKES(r.total)}</strong></span>
+                              <span className="m-tag">
+                                <strong>{fKES(r.total)}</strong>
+                              </span>
                               <span className="m-tag">{r.method}</span>
                               <span className="m-tag">{r.date}</span>
                             </div>
                             <div className="m-card-expand">
-                              {r.items?.map(item=><div key={item.id} className="m-detail-item"><span>{item.name} ×{item.qty}</span><strong>{fKES(item.price*item.qty)}</strong></div>)}
-                              <button className="btn-g btn-sm" style={{marginTop:8,width:'100%'}} onClick={()=>setDetailTxn(r)}>Full Details</button>
+                              {r.items?.map((item) => (
+                                <div key={item.id} className="m-detail-item">
+                                  <span>
+                                    {item.name} ×{item.qty}
+                                  </span>
+                                  <strong>{fKES(item.price * item.qty)}</strong>
+                                </div>
+                              ))}
+                              <button
+                                className="btn-g btn-sm"
+                                style={{ marginTop: 8, width: "100%" }}
+                                onClick={() => setDetailTxn(r)}
+                              >
+                                Full Details
+                              </button>
                             </div>
                           </article>
                         ))}
                       </div>
                       {/* Pagination */}
-                      {totalPages>1&&<div className="pagination" role="navigation" aria-label="Transaction pages">
-                        <button className="pg-btn" onClick={()=>setTxnPage(p=>Math.max(1,p-1))} disabled={txnPage===1} aria-label="Previous page"><SvgIcon icon="arrow_l" size={12}/></button>
-                        {Array.from({length:Math.min(5,totalPages)},(_,i)=>{
-                          let p = txnPage<=3 ? i+1 : txnPage+i-2
-                          if(p>totalPages) return null
-                          return <button key={p} className={`pg-btn ${txnPage===p?'act':''}`} onClick={()=>setTxnPage(p)} aria-current={txnPage===p?'page':undefined}>{p}</button>
-                        })}
-                        <button className="pg-btn" onClick={()=>setTxnPage(p=>Math.min(totalPages,p+1))} disabled={txnPage===totalPages} aria-label="Next page"><SvgIcon icon="arrow_r" size={12}/></button>
-                      </div>}
+                      {totalPages > 1 && (
+                        <div
+                          className="pagination"
+                          role="navigation"
+                          aria-label="Transaction pages"
+                        >
+                          <button
+                            className="pg-btn"
+                            onClick={() =>
+                              setTxnPage((p) => Math.max(1, p - 1))
+                            }
+                            disabled={txnPage === 1}
+                            aria-label="Previous page"
+                          >
+                            <SvgIcon icon="arrow_l" size={12} />
+                          </button>
+                          {Array.from(
+                            { length: Math.min(5, totalPages) },
+                            (_, i) => {
+                              let p = txnPage <= 3 ? i + 1 : txnPage + i - 2;
+                              if (p > totalPages) return null;
+                              return (
+                                <button
+                                  key={p}
+                                  className={`pg-btn ${txnPage === p ? "act" : ""}`}
+                                  onClick={() => setTxnPage(p)}
+                                  aria-current={
+                                    txnPage === p ? "page" : undefined
+                                  }
+                                >
+                                  {p}
+                                </button>
+                              );
+                            },
+                          )}
+                          <button
+                            className="pg-btn"
+                            onClick={() =>
+                              setTxnPage((p) => Math.min(totalPages, p + 1))
+                            }
+                            disabled={txnPage === totalPages}
+                            aria-label="Next page"
+                          >
+                            <SvgIcon icon="arrow_r" size={12} />
+                          </button>
+                        </div>
+                      )}
                     </>
-                  }
+                  )}
                 </div>
               </div>
             )}
 
             {/* CRM */}
-            {view==='crm' && canAccess('crm') && (
+            {view === "crm" && canAccess("crm") && (
               <div className="dash-grid">
                 <div className="panel full-col">
-                  <div className="panel-hd"><h2>Customer Management</h2><button className="btn-p btn-sm" onClick={()=>setShowAddCust(true)}>+ Add Customer</button></div>
-                  {showAddCust&&(
+                  <div className="panel-hd">
+                    <h2>Customer Management</h2>
+                    <button
+                      className="btn-p btn-sm"
+                      onClick={() => setShowAddCust(true)}
+                    >
+                      + Add Customer
+                    </button>
+                  </div>
+                  {showAddCust && (
                     <div className="inline-form">
                       <div className="form-grid">
-                        <div className="sf"><label>Full Name</label><input value={newCust.name} onChange={e=>setNewCust({...newCust,name:e.target.value})} placeholder="Jane Doe"/></div>
-                        <div className="sf"><label>Email</label><input value={newCust.email} onChange={e=>setNewCust({...newCust,email:e.target.value})} placeholder="jane@email.com"/></div>
-                        <div className="sf"><label>Phone</label><input value={newCust.phone} onChange={e=>setNewCust({...newCust,phone:e.target.value})} placeholder="0712345678"/></div>
+                        <div className="sf">
+                          <label>Full Name</label>
+                          <input
+                            value={newCust.name}
+                            onChange={(e) =>
+                              setNewCust({ ...newCust, name: e.target.value })
+                            }
+                            placeholder="Jane Doe"
+                          />
+                        </div>
+                        <div className="sf">
+                          <label>Email</label>
+                          <input
+                            value={newCust.email}
+                            onChange={(e) =>
+                              setNewCust({ ...newCust, email: e.target.value })
+                            }
+                            placeholder="jane@email.com"
+                          />
+                        </div>
+                        <div className="sf">
+                          <label>Phone</label>
+                          <input
+                            value={newCust.phone}
+                            onChange={(e) =>
+                              setNewCust({ ...newCust, phone: e.target.value })
+                            }
+                            placeholder="0712345678"
+                          />
+                        </div>
                       </div>
-                      <div className="btn-row" style={{marginTop:10}}>
-                        <button className="btn-p" onClick={()=>{if(!newCust.name)return;setCustomers(p=>[...p,{id:Date.now(),...newCust,points:0,visits:0,totalSpent:0,joined:TODAY}]);flash(`${newCust.name} added!`);setNewCust({name:'',email:'',phone:''});setShowAddCust(false)}}>Save</button>
-                        <button className="btn-g" onClick={()=>setShowAddCust(false)}>Cancel</button>
+                      <div className="btn-row" style={{ marginTop: 10 }}>
+                        <button
+                          className="btn-p"
+                          onClick={() => {
+                            if (!newCust.name) return;
+                            setCustomers((p) => [
+                              ...p,
+                              {
+                                id: Date.now(),
+                                ...newCust,
+                                points: 0,
+                                visits: 0,
+                                totalSpent: 0,
+                                joined: TODAY,
+                              },
+                            ]);
+                            flash(`${newCust.name} added!`);
+                            setNewCust({ name: "", email: "", phone: "" });
+                            setShowAddCust(false);
+                          }}
+                        >
+                          Save
+                        </button>
+                        <button
+                          className="btn-g"
+                          onClick={() => setShowAddCust(false)}
+                        >
+                          Cancel
+                        </button>
                       </div>
                     </div>
                   )}
-                  <div className="search-box" style={{margin:'10px 0',width:'100%'}} role="search">
-                    <span className="si"><SvgIcon icon="search" size={13}/></span>
-                    <input placeholder="Search customers…" value={crmQ} onChange={e=>setCrmQ(e.target.value)} aria-label="Search customers"/>
+                  <div
+                    className="search-box"
+                    style={{ margin: "10px 0", width: "100%" }}
+                    role="search"
+                  >
+                    <span className="si">
+                      <SvgIcon icon="search" size={13} />
+                    </span>
+                    <input
+                      placeholder="Search customers…"
+                      value={crmQ}
+                      onChange={(e) => setCrmQ(e.target.value)}
+                      aria-label="Search customers"
+                    />
                   </div>
-                  {customers.length===0
-                    ?<div className="empty-state"><div className="empty-icon"><SvgIcon icon="crm" size={22}/></div><p>No customers yet</p><span>Add customers to earn loyalty points at checkout.</span></div>
-                    :<div className="crm-grid">{customers.filter(c=>c.name.toLowerCase().includes(crmQ.toLowerCase())).map(c=>{const tier=getTier(c.points);return(
-                      <article key={c.id} className="crm-card" style={{borderTopColor:tier.color}} aria-label={`Customer ${c.name}`}>
-                        <div className="crm-av" style={{background:tier.color}}>{c.name[0]}</div>
-                        <div className="crm-name">{c.name}</div>
-                        {c.email&&<div className="crm-meta">{c.email}</div>}
-                        {c.phone&&<div className="crm-meta">{c.phone}</div>}
-                        <div className="crm-tier" style={{color:tier.color}}>{tier.name} — {tier.disc}% off</div>
-                        <div className="crm-row"><span>Points</span><strong>{c.points}</strong></div>
-                        <div className="crm-row"><span>Visits</span><strong>{c.visits}</strong></div>
-                        <div className="crm-row"><span>Total Spent</span><strong>{fKES(c.totalSpent||0)}</strong></div>
-                        {canEdit()&&<button className="btn-g btn-sm danger" style={{marginTop:10,width:'100%'}} onClick={()=>setCustomers(p=>p.filter(x=>x.id!==c.id))} aria-label={`Remove ${c.name}`}>Remove</button>}
-                      </article>
-                    )})}</div>
-                  }
+                  {customers.length === 0 ? (
+                    <div className="empty-state">
+                      <div className="empty-icon">
+                        <SvgIcon icon="crm" size={22} />
+                      </div>
+                      <p>No customers yet</p>
+                      <span>
+                        Add customers to earn loyalty points at checkout.
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="crm-grid">
+                      {customers
+                        .filter((c) =>
+                          c.name.toLowerCase().includes(crmQ.toLowerCase()),
+                        )
+                        .map((c) => {
+                          const tier = getTier(c.points);
+                          return (
+                            <article
+                              key={c.id}
+                              className="crm-card"
+                              style={{ borderTopColor: tier.color }}
+                              aria-label={`Customer ${c.name}`}
+                            >
+                              <div
+                                className="crm-av"
+                                style={{ background: tier.color }}
+                              >
+                                {c.name[0]}
+                              </div>
+                              <div className="crm-name">{c.name}</div>
+                              {c.email && (
+                                <div className="crm-meta">{c.email}</div>
+                              )}
+                              {c.phone && (
+                                <div className="crm-meta">{c.phone}</div>
+                              )}
+                              <div
+                                className="crm-tier"
+                                style={{ color: tier.color }}
+                              >
+                                {tier.name} — {tier.disc}% off
+                              </div>
+                              <div className="crm-row">
+                                <span>Points</span>
+                                <strong>{c.points}</strong>
+                              </div>
+                              <div className="crm-row">
+                                <span>Visits</span>
+                                <strong>{c.visits}</strong>
+                              </div>
+                              <div className="crm-row">
+                                <span>Total Spent</span>
+                                <strong>{fKES(c.totalSpent || 0)}</strong>
+                              </div>
+                              {canEdit() && (
+                                <button
+                                  className="btn-g btn-sm danger"
+                                  style={{ marginTop: 10, width: "100%" }}
+                                  onClick={() =>
+                                    setCustomers((p) =>
+                                      p.filter((x) => x.id !== c.id),
+                                    )
+                                  }
+                                  aria-label={`Remove ${c.name}`}
+                                >
+                                  Remove
+                                </button>
+                              )}
+                            </article>
+                          );
+                        })}
+                    </div>
+                  )}
                 </div>
                 <div className="panel full-col">
-                  <div className="panel-hd"><h2>Loyalty Tiers</h2></div>
-                  <div className="tier-grid">{TIERS.map(t=><div key={t.name} className="tier-card" style={{borderTop:`3px solid ${t.color}`}}><div className="tier-name" style={{color:t.color}}>{t.name}</div><div className="tier-row">Min Points: <strong>{t.min.toLocaleString()}</strong></div><div className="tier-row">Discount: <strong>{t.disc}%</strong></div><div className="tier-row" style={{fontSize:10,color:'var(--text3)',marginTop:6}}>1 point per KES 100 spent</div></div>)}</div>
+                  <div className="panel-hd">
+                    <h2>Loyalty Tiers</h2>
+                  </div>
+                  <div className="tier-grid">
+                    {TIERS.map((t) => (
+                      <div
+                        key={t.name}
+                        className="tier-card"
+                        style={{ borderTop: `3px solid ${t.color}` }}
+                      >
+                        <div className="tier-name" style={{ color: t.color }}>
+                          {t.name}
+                        </div>
+                        <div className="tier-row">
+                          Min Points: <strong>{t.min.toLocaleString()}</strong>
+                        </div>
+                        <div className="tier-row">
+                          Discount: <strong>{t.disc}%</strong>
+                        </div>
+                        <div
+                          className="tier-row"
+                          style={{
+                            fontSize: 10,
+                            color: "var(--text3)",
+                            marginTop: 6,
+                          }}
+                        >
+                          1 point per KES 100 spent
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
 
             {/* INVENTORY */}
-            {view==='orders' && canAccess('orders') && (
+            {view === "orders" && canAccess("orders") && (
               <div className="dash-grid">
                 <div className="panel full-col">
-                  <div className="panel-hd"><h2>Inventory Management</h2>{canEdit()&&<button className="btn-p btn-sm" onClick={()=>setShowAddInv(true)}>+ Add Item</button>}</div>
-                  {showAddInv&&(
+                  <div className="panel-hd">
+                    <h2>Inventory Management</h2>
+                    {canEdit() && (
+                      <button
+                        className="btn-p btn-sm"
+                        onClick={() => setShowAddInv(true)}
+                      >
+                        + Add Item
+                      </button>
+                    )}
+                  </div>
+                  {showAddInv && (
                     <div className="inline-form">
                       <div className="form-grid">
-                        <div className="sf"><label>Product Name</label><input value={newInv.name} onChange={e=>setNewInv({...newInv,name:e.target.value})}/></div>
-                        <div className="sf"><label>SKU / Code</label><input value={newInv.sku} onChange={e=>setNewInv({...newInv,sku:e.target.value})}/></div>
-                        <div className="sf"><label>Retail Price (KES)</label><input type="number" value={newInv.retailPrice} onChange={e=>setNewInv({...newInv,retailPrice:e.target.value})}/></div>
-                        <div className="sf"><label>Buying Price</label><input type="number" value={newInv.buyingPrice} onChange={e=>setNewInv({...newInv,buyingPrice:e.target.value})}/></div>
-                        <div className="sf"><label>Stock Level</label><input type="number" value={newInv.stockLevel} onChange={e=>setNewInv({...newInv,stockLevel:e.target.value})}/></div>
-                        <div className="sf"><label>Min Alert Level</label><input type="number" value={newInv.minAlert} onChange={e=>setNewInv({...newInv,minAlert:e.target.value})}/></div>
-                        <div className="sf"><label>Expiry Date</label><input type="date" value={newInv.expiry} onChange={e=>setNewInv({...newInv,expiry:e.target.value})}/></div>
-                        <div className="sf"><label>Batch Number</label><input value={newInv.batch} onChange={e=>setNewInv({...newInv,batch:e.target.value})}/></div>
-                        <div className="sf full"><label>Category</label><select value={newInv.category} onChange={e=>setNewInv({...newInv,category:e.target.value})}>{['General','Pharmaceutical Grade','Electronics','Food & Beverage','Services'].map(c=><option key={c}>{c}</option>)}</select></div>
+                        <div className="sf">
+                          <label>Product Name</label>
+                          <input
+                            value={newInv.name}
+                            onChange={(e) =>
+                              setNewInv({ ...newInv, name: e.target.value })
+                            }
+                          />
+                        </div>
+                        <div className="sf">
+                          <label>SKU / Code</label>
+                          <input
+                            value={newInv.sku}
+                            onChange={(e) =>
+                              setNewInv({ ...newInv, sku: e.target.value })
+                            }
+                          />
+                        </div>
+                        <div className="sf">
+                          <label>Retail Price (KES)</label>
+                          <input
+                            type="number"
+                            value={newInv.retailPrice}
+                            onChange={(e) =>
+                              setNewInv({
+                                ...newInv,
+                                retailPrice: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="sf">
+                          <label>Buying Price</label>
+                          <input
+                            type="number"
+                            value={newInv.buyingPrice}
+                            onChange={(e) =>
+                              setNewInv({
+                                ...newInv,
+                                buyingPrice: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="sf">
+                          <label>Stock Level</label>
+                          <input
+                            type="number"
+                            value={newInv.stockLevel}
+                            onChange={(e) =>
+                              setNewInv({
+                                ...newInv,
+                                stockLevel: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="sf">
+                          <label>Min Alert Level</label>
+                          <input
+                            type="number"
+                            value={newInv.minAlert}
+                            onChange={(e) =>
+                              setNewInv({ ...newInv, minAlert: e.target.value })
+                            }
+                          />
+                        </div>
+                        <div className="sf">
+                          <label>Expiry Date</label>
+                          <input
+                            type="date"
+                            value={newInv.expiry}
+                            onChange={(e) =>
+                              setNewInv({ ...newInv, expiry: e.target.value })
+                            }
+                          />
+                        </div>
+                        <div className="sf">
+                          <label>Batch Number</label>
+                          <input
+                            value={newInv.batch}
+                            onChange={(e) =>
+                              setNewInv({ ...newInv, batch: e.target.value })
+                            }
+                          />
+                        </div>
+                        <div className="sf full">
+                          <label>Category</label>
+                          <select
+                            value={newInv.category}
+                            onChange={(e) =>
+                              setNewInv({ ...newInv, category: e.target.value })
+                            }
+                          >
+                            {[
+                              "General",
+                              "Pharmaceutical Grade",
+                              "Electronics",
+                              "Food & Beverage",
+                              "Services",
+                            ].map((c) => (
+                              <option key={c}>{c}</option>
+                            ))}
+                          </select>
+                        </div>
                       </div>
-                      <div className="btn-row" style={{marginTop:10}}>
-                        <button className="btn-p" onClick={()=>{if(!newInv.name||!newInv.sku)return;setInventory(p=>[...p,{id:Date.now(),...newInv,retailPrice:parseInt(newInv.retailPrice)||0,buyingPrice:parseInt(newInv.buyingPrice)||0,stockLevel:parseInt(newInv.stockLevel)||0,minAlert:parseInt(newInv.minAlert)||5}]);setNewInv({name:'',sku:'',category:'General',retailPrice:'',buyingPrice:'',stockLevel:'',minAlert:'',expiry:'',batch:''});setShowAddInv(false);flash('Item added to inventory.')}}>Add Item</button>
-                        <button className="btn-g" onClick={()=>setShowAddInv(false)}>Cancel</button>
+                      <div className="btn-row" style={{ marginTop: 10 }}>
+                        <button
+                          className="btn-p"
+                          onClick={() => {
+                            if (!newInv.name || !newInv.sku) return;
+                            setInventory((p) => [
+                              ...p,
+                              {
+                                id: Date.now(),
+                                ...newInv,
+                                retailPrice: parseInt(newInv.retailPrice) || 0,
+                                buyingPrice: parseInt(newInv.buyingPrice) || 0,
+                                stockLevel: parseInt(newInv.stockLevel) || 0,
+                                minAlert: parseInt(newInv.minAlert) || 5,
+                              },
+                            ]);
+                            setNewInv({
+                              name: "",
+                              sku: "",
+                              category: "General",
+                              retailPrice: "",
+                              buyingPrice: "",
+                              stockLevel: "",
+                              minAlert: "",
+                              expiry: "",
+                              batch: "",
+                            });
+                            setShowAddInv(false);
+                            flash("Item added to inventory.");
+                          }}
+                        >
+                          Add Item
+                        </button>
+                        <button
+                          className="btn-g"
+                          onClick={() => setShowAddInv(false)}
+                        >
+                          Cancel
+                        </button>
                       </div>
                     </div>
                   )}
-                  {inventory.length===0
-                    ?<div className="empty-state"><div className="empty-icon"><SvgIcon icon="inventory" size={22}/></div><p>No inventory items</p><span>Add items to track stock, cost, and expiry dates.</span></div>
-                    :<><div className="table-wrap"><table className="data-table" aria-label="Inventory"><thead><tr><th>Name</th><th>Product Category</th><th>SKU</th><th>Batch No</th><th>Min Stock Level</th><th>Current Stock</th><th>Expiry</th>{canEdit()&&<th></th>}</tr></thead><tbody>{inventory.map(item=>{const low=item.stockLevel<=item.minAlert;return(<tr key={item.id}><td>{item.name}</td><td>{item.category||'—'}</td><td style={{color:'var(--text3)',fontFamily:'monospace'}}>{item.sku||'—'}</td><td style={{color:'var(--text2)',fontFamily:'monospace'}}>{item.batch||'—'}</td><td>{item.minAlert||0}</td><td>{item.stockLevel}{low&&<span className="alert-badge" role="alert">Low</span>}</td><td>{item.expiry||'—'}</td>{canEdit()&&<td><button className="btn-g btn-xs danger" onClick={()=>setInventory(p=>p.filter(i=>i.id!==item.id))} aria-label={`Remove ${item.name}`}>Remove</button></td>}</tr>)})}</tbody></table></div><div className="card-list">{inventory.map(item=>{const low=item.stockLevel<=item.minAlert;return(<div key={item.id} className="m-card"><div className="m-card-hd"><span className="m-card-id">{item.name}</span>{low&&<span className="pill failed" role="alert">Low Stock</span>}</div><div className="m-card-body"><span className="m-tag">{item.category||'—'}</span><span className="m-tag">SKU: <strong style={{color:'var(--text)'}}>{item.sku||'—'}</strong></span><span className="m-tag">Batch: <strong style={{color:'var(--text)'}}>{item.batch||'—'}</strong></span><span className="m-tag">Min: <strong style={{color:'var(--text)'}}>{item.minAlert||0}</strong></span><span className="m-tag">Current: <strong style={{color:'var(--text)'}}>{item.stockLevel}</strong></span><span className="m-tag">Expiry: <strong style={{color:'var(--text)'}}>{item.expiry||'—'}</strong></span></div></div>)})}</div></>
-                  }
+                  {inventory.length === 0 ? (
+                    <div className="empty-state">
+                      <div className="empty-icon">
+                        <SvgIcon icon="inventory" size={22} />
+                      </div>
+                      <p>No inventory items</p>
+                      <span>
+                        Add items to track stock, cost, and expiry dates.
+                      </span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="table-wrap">
+                        <table className="data-table" aria-label="Inventory">
+                          <thead>
+                            <tr>
+                              <th>Name</th>
+                              <th>Product Category</th>
+                              <th>SKU</th>
+                              <th>Batch No</th>
+                              <th>Min Stock Level</th>
+                              <th>Current Stock</th>
+                              <th>Expiry</th>
+                              {canEdit() && <th></th>}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {inventory.map((item) => {
+                              const low = item.stockLevel <= item.minAlert;
+                              return (
+                                <tr key={item.id}>
+                                  <td>{item.name}</td>
+                                  <td>{item.category || "—"}</td>
+                                  <td
+                                    style={{
+                                      color: "var(--text3)",
+                                      fontFamily: "monospace",
+                                    }}
+                                  >
+                                    {item.sku || "—"}
+                                  </td>
+                                  <td
+                                    style={{
+                                      color: "var(--text2)",
+                                      fontFamily: "monospace",
+                                    }}
+                                  >
+                                    {item.batch || "—"}
+                                  </td>
+                                  <td>{item.minAlert || 0}</td>
+                                  <td>
+                                    {item.stockLevel}
+                                    {low && (
+                                      <span
+                                        className="alert-badge"
+                                        role="alert"
+                                      >
+                                        Low
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td>{item.expiry || "—"}</td>
+                                  {canEdit() && (
+                                    <td>
+                                      <button
+                                        className="btn-g btn-xs danger"
+                                        onClick={() =>
+                                          setInventory((p) =>
+                                            p.filter((i) => i.id !== item.id),
+                                          )
+                                        }
+                                        aria-label={`Remove ${item.name}`}
+                                      >
+                                        Remove
+                                      </button>
+                                    </td>
+                                  )}
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                      <div className="card-list">
+                        {inventory.map((item) => {
+                          const low = item.stockLevel <= item.minAlert;
+                          return (
+                            <div key={item.id} className="m-card">
+                              <div className="m-card-hd">
+                                <span className="m-card-id">{item.name}</span>
+                                {low && (
+                                  <span className="pill failed" role="alert">
+                                    Low Stock
+                                  </span>
+                                )}
+                              </div>
+                              <div className="m-card-body">
+                                <span className="m-tag">
+                                  {item.category || "—"}
+                                </span>
+                                <span className="m-tag">
+                                  SKU:{" "}
+                                  <strong style={{ color: "var(--text)" }}>
+                                    {item.sku || "—"}
+                                  </strong>
+                                </span>
+                                <span className="m-tag">
+                                  Batch:{" "}
+                                  <strong style={{ color: "var(--text)" }}>
+                                    {item.batch || "—"}
+                                  </strong>
+                                </span>
+                                <span className="m-tag">
+                                  Min:{" "}
+                                  <strong style={{ color: "var(--text)" }}>
+                                    {item.minAlert || 0}
+                                  </strong>
+                                </span>
+                                <span className="m-tag">
+                                  Current:{" "}
+                                  <strong style={{ color: "var(--text)" }}>
+                                    {item.stockLevel}
+                                  </strong>
+                                </span>
+                                <span className="m-tag">
+                                  Expiry:{" "}
+                                  <strong style={{ color: "var(--text)" }}>
+                                    {item.expiry || "—"}
+                                  </strong>
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             )}
 
             {/* ADD ITEM */}
-            {view==='add' && canAccess('add') && (
+            {view === "add" && canAccess("add") && (
               <div className="dash-grid">
                 <div className="panel">
-                  <div className="panel-hd"><h2>Add Custom Item</h2></div>
+                  <div className="panel-hd">
+                    <h2>Add Custom Item</h2>
+                  </div>
                   <div className="form-grid">
-                    <div className="sf full"><label>Item Name</label><input value={newItem.name} onChange={e=>setNewItem({...newItem,name:e.target.value})} placeholder="e.g. Special Bundle"/></div>
-                    <div className="sf"><label>Price (KES)</label><input type="number" value={newItem.price} onChange={e=>setNewItem({...newItem,price:e.target.value})}/></div>
-                    <div className="sf"><label>Min Stock Level</label><input type="number" value={newItem.minAlert} onChange={e=>setNewItem({...newItem,minAlert:e.target.value})} placeholder="e.g. 5"/></div>
-                    <div className="sf"><label>Batch No</label><input value={newItem.batch} onChange={e=>setNewItem({...newItem,batch:e.target.value})} placeholder="e.g. BATCH-123"/></div>
-                    <div className="sf"><label>Expiry Date</label><input type="date" value={newItem.expiry} onChange={e=>setNewItem({...newItem,expiry:e.target.value})}/></div>
-                    <div className="sf"><label>Serial No</label><input value={newItem.serialNo} onChange={e=>setNewItem({...newItem,serialNo:e.target.value})} placeholder="e.g. SN-9988"/></div>
+                    <div className="sf full">
+                      <label>Item Name</label>
+                      <input
+                        value={newItem.name}
+                        onChange={(e) =>
+                          setNewItem({ ...newItem, name: e.target.value })
+                        }
+                        placeholder="e.g. Special Bundle"
+                      />
+                    </div>
+                    <div className="sf">
+                      <label>Price (KES)</label>
+                      <input
+                        type="number"
+                        value={newItem.price}
+                        onChange={(e) =>
+                          setNewItem({ ...newItem, price: e.target.value })
+                        }
+                      />
+                    </div>
+                    <div className="sf">
+                      <label>Min Stock Level</label>
+                      <input
+                        type="number"
+                        value={newItem.minAlert}
+                        onChange={(e) =>
+                          setNewItem({ ...newItem, minAlert: e.target.value })
+                        }
+                        placeholder="e.g. 5"
+                      />
+                    </div>
+                    <div className="sf">
+                      <label>Batch No</label>
+                      <input
+                        value={newItem.batch}
+                        onChange={(e) =>
+                          setNewItem({ ...newItem, batch: e.target.value })
+                        }
+                        placeholder="e.g. BATCH-123"
+                      />
+                    </div>
+                    <div className="sf">
+                      <label>Expiry Date</label>
+                      <input
+                        type="date"
+                        value={newItem.expiry}
+                        onChange={(e) =>
+                          setNewItem({ ...newItem, expiry: e.target.value })
+                        }
+                      />
+                    </div>
+                    <div className="sf">
+                      <label>Serial No</label>
+                      <input
+                        value={newItem.serialNo}
+                        onChange={(e) =>
+                          setNewItem({ ...newItem, serialNo: e.target.value })
+                        }
+                        placeholder="e.g. SN-9988"
+                      />
+                    </div>
                     <div className="sf full">
                       <label>Category</label>
-                      <div style={{ display: 'flex', gap: '8px' }}>
+                      <div style={{ display: "flex", gap: "8px" }}>
                         {!showAddCat ? (
                           <>
-                            <select style={{ flex: 1 }} value={newItem.category} onChange={e=>setNewItem({...newItem,category:e.target.value})}>
-                              {Object.entries({...categories, ...customCats}).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
+                            <select
+                              style={{ flex: 1 }}
+                              value={newItem.category}
+                              onChange={(e) =>
+                                setNewItem({
+                                  ...newItem,
+                                  category: e.target.value,
+                                })
+                              }
+                            >
+                              {Object.entries({
+                                ...categories,
+                                ...customCats,
+                              }).map(([k, v]) => (
+                                <option key={k} value={k}>
+                                  {v.label}
+                                </option>
+                              ))}
                             </select>
-                            <button className="btn-g" onClick={() => setShowAddCat(true)} aria-label="Add new category" style={{ padding: '0 12px' }}>
-                              <SvgIcon icon="add" size={16}/>
+                            <button
+                              className="btn-g"
+                              onClick={() => setShowAddCat(true)}
+                              aria-label="Add new category"
+                              style={{ padding: "0 12px" }}
+                            >
+                              <SvgIcon icon="add" size={16} />
                             </button>
                           </>
                         ) : (
                           <>
-                            <input style={{ flex: 1 }} value={newCatName} onChange={e=>setNewCatName(e.target.value)} placeholder="New Category Name"/>
-                            <button className="btn-p" onClick={() => {
-                              if(newCatName.trim()){
-                                const key = newCatName.toLowerCase().replace(/[^a-z0-9]/g, '');
-                                setCustomCats(p => ({...p, [key]: { label: newCatName, products: [] }}));
-                                setNewItem({...newItem, category: key});
-                                setNewCatName('');
-                                setShowAddCat(false);
-                              }
-                            }}>Add</button>
-                            <button className="btn-g danger" onClick={() => setShowAddCat(false)}>Cancel</button>
+                            <input
+                              style={{ flex: 1 }}
+                              value={newCatName}
+                              onChange={(e) => setNewCatName(e.target.value)}
+                              placeholder="New Category Name"
+                            />
+                            <button
+                              className="btn-p"
+                              onClick={() => {
+                                if (newCatName.trim()) {
+                                  const key = newCatName
+                                    .toLowerCase()
+                                    .replace(/[^a-z0-9]/g, "");
+                                  setCustomCats((p) => ({
+                                    ...p,
+                                    [key]: { label: newCatName, products: [] },
+                                  }));
+                                  setNewItem({ ...newItem, category: key });
+                                  setNewCatName("");
+                                  setShowAddCat(false);
+                                }
+                              }}
+                            >
+                              Add
+                            </button>
+                            <button
+                              className="btn-g danger"
+                              onClick={() => setShowAddCat(false)}
+                            >
+                              Cancel
+                            </button>
                           </>
                         )}
                       </div>
                     </div>
                   </div>
-                  <button className="btn-p" style={{marginTop:16,width:'100%'}} onClick={()=>{
-                    if(!newItem.name||!newItem.price){flash('Name and price are required.','error');return};
-                    setCustomItems(p=>[...p,{id:Date.now(),...newItem,price:parseInt(newItem.price)}]);
-                    flash('Item added to catalogue.');
-                    setNewItem({name:'',price:'',category:'shop',minAlert:'',batch:'',expiry:'',serialNo:''});
-                    setView('pos')
-                  }}>Add to Catalogue</button>
-                  <p className="help-text">The item will appear in the selected category immediately and can be sold from the POS.</p>
+                  <button
+                    className="btn-p"
+                    style={{ marginTop: 16, width: "100%" }}
+                    onClick={() => {
+                      if (!newItem.name || !newItem.price) {
+                        flash("Name and price are required.", "error");
+                        return;
+                      }
+                      setCustomItems((p) => [
+                        ...p,
+                        {
+                          id: Date.now(),
+                          ...newItem,
+                          price: parseInt(newItem.price),
+                        },
+                      ]);
+                      flash("Item added to catalogue.");
+                      setNewItem({
+                        name: "",
+                        price: "",
+                        category: "shop",
+                        minAlert: "",
+                        batch: "",
+                        expiry: "",
+                        serialNo: "",
+                      });
+                      setView("pos");
+                    }}
+                  >
+                    Add to Catalogue
+                  </button>
+                  <p className="help-text">
+                    The item will appear in the selected category immediately
+                    and can be sold from the POS.
+                  </p>
                 </div>
                 <div className="panel">
-                  <div className="panel-hd"><h2>System Summary</h2></div>
-                  <div className="stat-grid">{[{v:totalProds,l:'Products'},{v:customers.length,l:'Customers'},{v:ledger.length,l:'Transactions'},{v:fKES(totalRev),l:'Revenue'},{v:inventory.length,l:'Inventory Items'},{v:Object.keys(categories).length,l:'Niches'}].map((s,i)=><div key={i} className="stat-card"><strong>{s.v}</strong><span>{s.l}</span></div>)}</div>
+                  <div className="panel-hd">
+                    <h2>System Summary</h2>
+                  </div>
+                  <div className="stat-grid">
+                    {[
+                      { v: totalProds, l: "Products" },
+                      { v: customers.length, l: "Customers" },
+                      { v: ledger.length, l: "Transactions" },
+                      { v: fKES(totalRev), l: "Revenue" },
+                      { v: inventory.length, l: "Inventory Items" },
+                      { v: Object.keys(categories).length, l: "Niches" },
+                    ].map((s, i) => (
+                      <div key={i} className="stat-card">
+                        <strong>{s.v}</strong>
+                        <span>{s.l}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
 
             {/* PAYMENT SETTINGS */}
-            {view==='payments' && canAccess('payments') && (
+            {view === "payments" && canAccess("payments") && (
               <div className="pay-settings-grid">
                 <div className="panel">
-                  <div className="panel-hd"><h2>M-Pesa Configuration</h2></div>
-                  <div className="form-grid">
-                    <div className="sf full"><label>Business Shortcode</label><input value={mpesaShortcode} onChange={e=>setMpesaShortcode(e.target.value)} placeholder="174379"/></div>
-                    <div className="sf full"><label>Consumer Key</label><input type="password" placeholder="From Safaricom Daraja" defaultValue="••••••••"/></div>
-                    <div className="sf full"><label>Consumer Secret</label><input type="password" placeholder="From Safaricom Daraja" defaultValue="••••••••"/></div>
-                    <div className="sf full"><label>Passkey</label><input type="password" placeholder="Lipa Na M-Pesa Passkey" defaultValue="••••••••"/></div>
-                    <div className="sf full"><label>Callback URL</label><input defaultValue={`${API_URL}/api/mpesa/callback`}/></div>
-                    <div className="sf full"><label>Environment</label><select><option>Sandbox (Testing)</option><option>Live (Production)</option></select></div>
+                  <div className="panel-hd">
+                    <h2>M-Pesa Configuration</h2>
                   </div>
-                  <button className="btn-p" style={{marginTop:14}}>Save M-Pesa Config</button>
-                  <div className="settings-note">M-Pesa credentials are stored server-side only. Never expose consumer secret to the browser.</div>
+                  <div className="form-grid">
+                    <div className="sf full">
+                      <label>Business Shortcode</label>
+                      <input
+                        value={mpesaShortcode}
+                        onChange={(e) => setMpesaShortcode(e.target.value)}
+                        placeholder="174379"
+                      />
+                    </div>
+                    <div className="sf full">
+                      <label>Consumer Key</label>
+                      <input
+                        type="password"
+                        placeholder="From Safaricom Daraja"
+                        defaultValue="••••••••"
+                      />
+                    </div>
+                    <div className="sf full">
+                      <label>Consumer Secret</label>
+                      <input
+                        type="password"
+                        placeholder="From Safaricom Daraja"
+                        defaultValue="••••••••"
+                      />
+                    </div>
+                    <div className="sf full">
+                      <label>Passkey</label>
+                      <input
+                        type="password"
+                        placeholder="Lipa Na M-Pesa Passkey"
+                        defaultValue="••••••••"
+                      />
+                    </div>
+                    <div className="sf full">
+                      <label>Callback URL</label>
+                      <input defaultValue={`${API_URL}/api/mpesa/callback`} />
+                    </div>
+                    <div className="sf full">
+                      <label>Environment</label>
+                      <select>
+                        <option>Sandbox (Testing)</option>
+                        <option>Live (Production)</option>
+                      </select>
+                    </div>
+                  </div>
+                  <button className="btn-p" style={{ marginTop: 14 }}>
+                    Save M-Pesa Config
+                  </button>
+                  <div className="settings-note">
+                    M-Pesa credentials are stored server-side only. Never expose
+                    consumer secret to the browser.
+                  </div>
                 </div>
                 <div className="panel">
-                  <div className="panel-hd"><h2>Paystack Configuration</h2></div>
-                  <div className="form-grid">
-                    <div className="sf full"><label>Public Key</label><input value={paystackKeyState} onChange={e=>setPaystackKeyState(e.target.value)} placeholder="pk_live_…"/></div>
-                    <div className="sf full"><label>Secret Key</label><input type="password" defaultValue="••••••••"/></div>
-                    <div className="sf full"><label>Webhook URL</label><input defaultValue={`${API_URL}/api/paystack/webhook`}/></div>
+                  <div className="panel-hd">
+                    <h2>Paystack Configuration</h2>
                   </div>
-                  <button className="btn-p" style={{marginTop:14}}>Save Paystack Config</button>
+                  <div className="form-grid">
+                    <div className="sf full">
+                      <label>Public Key</label>
+                      <input
+                        value={paystackKeyState}
+                        onChange={(e) => setPaystackKeyState(e.target.value)}
+                        placeholder="pk_live_…"
+                      />
+                    </div>
+                    <div className="sf full">
+                      <label>Secret Key</label>
+                      <input type="password" defaultValue="••••••••" />
+                    </div>
+                    <div className="sf full">
+                      <label>Webhook URL</label>
+                      <input defaultValue={`${API_URL}/api/paystack/webhook`} />
+                    </div>
+                  </div>
+                  <button className="btn-p" style={{ marginTop: 14 }}>
+                    Save Paystack Config
+                  </button>
                 </div>
                 <div className="panel">
-                  <div className="panel-hd"><h2>PayPal Configuration</h2></div>
-                  <div className="form-grid">
-                    <div className="sf full"><label>Client ID</label><input defaultValue={PAYPAL_ID}/></div>
-                    <div className="sf full"><label>Secret</label><input type="password" defaultValue="••••••••"/></div>
-                    <div className="sf full"><label>Mode</label><select><option>Sandbox</option><option>Live</option></select></div>
+                  <div className="panel-hd">
+                    <h2>PayPal Configuration</h2>
                   </div>
-                  <button className="btn-p" style={{marginTop:14}}>Save PayPal Config</button>
+                  <div className="form-grid">
+                    <div className="sf full">
+                      <label>Client ID</label>
+                      <input defaultValue={PAYPAL_ID} />
+                    </div>
+                    <div className="sf full">
+                      <label>Secret</label>
+                      <input type="password" defaultValue="••••••••" />
+                    </div>
+                    <div className="sf full">
+                      <label>Mode</label>
+                      <select>
+                        <option>Sandbox</option>
+                        <option>Live</option>
+                      </select>
+                    </div>
+                  </div>
+                  <button className="btn-p" style={{ marginTop: 14 }}>
+                    Save PayPal Config
+                  </button>
                 </div>
                 <div className="panel">
-                  <div className="panel-hd"><h2>Webhook Status</h2></div>
-                  {[{l:'M-Pesa Callback',ok:true,url:'/api/mpesa/callback'},{l:'Paystack Webhook',ok:!!paystackKeyState,url:'/api/paystack/webhook'},{l:'PayPal Webhook',ok:PAYPAL_ID!=='sb',url:'/api/paypal/webhook'}].map(w=>(
+                  <div className="panel-hd">
+                    <h2>Webhook Status</h2>
+                  </div>
+                  {[
+                    {
+                      l: "M-Pesa Callback",
+                      ok: true,
+                      url: "/api/mpesa/callback",
+                    },
+                    {
+                      l: "Paystack Webhook",
+                      ok: !!paystackKeyState,
+                      url: "/api/paystack/webhook",
+                    },
+                    {
+                      l: "PayPal Webhook",
+                      ok: PAYPAL_ID !== "sb",
+                      url: "/api/paypal/webhook",
+                    },
+                  ].map((w) => (
                     <div key={w.l} className="key-row">
-                      <div><div style={{fontSize:12.5,fontWeight:500}}>{w.l}</div><div style={{fontSize:10,color:'var(--text3)',fontFamily:'monospace'}}>{w.url}</div></div>
-                      <span className={`pill ${w.ok?'paid':'pending'}`}>{w.ok?'Active':'Not configured'}</span>
+                      <div>
+                        <div style={{ fontSize: 12.5, fontWeight: 500 }}>
+                          {w.l}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 10,
+                            color: "var(--text3)",
+                            fontFamily: "monospace",
+                          }}
+                        >
+                          {w.url}
+                        </div>
+                      </div>
+                      <span className={`pill ${w.ok ? "paid" : "pending"}`}>
+                        {w.ok ? "Active" : "Not configured"}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -1699,241 +5144,839 @@ const [newCatName,setNewCatName]     = useState('')
             )}
 
             {/* MANAGER — BUG REPORTS */}
-            {view==='manager' && canAccess('manager') && (
-              <div className="dash-grid" style={{ display: 'grid', gridTemplateColumns: '1fr', height: '100%' }}>
-                <div className="panel full-col" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+            {view === "manager" && canAccess("manager") && (
+              <div
+                className="dash-grid"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr",
+                  height: "100%",
+                }}
+              >
+                <div
+                  className="panel full-col"
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    height: "100%",
+                  }}
+                >
                   <div className="panel-hd">
                     <h2>Bug Reports</h2>
-                    <span style={{fontSize:11,color:'var(--text3)'}}>{bugReports.filter(r=>r.status==='open').length} open</span>
+                    <span style={{ fontSize: 11, color: "var(--text3)" }}>
+                      {bugReports.filter((r) => r.status === "open").length}{" "}
+                      open
+                    </span>
                   </div>
                   <div className="manager-filters">
-                    <div className="filter-search" role="search"><SvgIcon icon="search" size={12} style={{color:'var(--text3)',flexShrink:0}}/><input placeholder="Search reports…" value={managerFilters.search} onChange={e=>setManagerFilters(p=>({...p,search:e.target.value}))} aria-label="Search bug reports"/></div>
-                    <select className="filter-select" value={managerFilters.status} onChange={e=>setManagerFilters(p=>({...p,status:e.target.value}))} aria-label="Filter by status"><option value="all">All Status</option><option value="open">Open</option><option value="resolved">Resolved</option></select>
-                    <select className="filter-select" value={managerFilters.role} onChange={e=>setManagerFilters(p=>({...p,role:e.target.value}))} aria-label="Filter by role"><option value="all">All Roles</option>{Object.entries(ROLES).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}</select>
-                    <select className="filter-select" value={managerFilters.cat} onChange={e=>setManagerFilters(p=>({...p,cat:e.target.value}))} aria-label="Filter by category"><option value="all">All Categories</option>{['payments','inventory','invoices','dashboard','pos','crm'].map(c=><option key={c} value={c}>{c}</option>)}</select>
+                    <div className="filter-search" role="search">
+                      <SvgIcon
+                        icon="search"
+                        size={12}
+                        style={{ color: "var(--text3)", flexShrink: 0 }}
+                      />
+                      <input
+                        placeholder="Search reports…"
+                        value={managerFilters.search}
+                        onChange={(e) =>
+                          setManagerFilters((p) => ({
+                            ...p,
+                            search: e.target.value,
+                          }))
+                        }
+                        aria-label="Search bug reports"
+                      />
+                    </div>
+                    <select
+                      className="filter-select"
+                      value={managerFilters.status}
+                      onChange={(e) =>
+                        setManagerFilters((p) => ({
+                          ...p,
+                          status: e.target.value,
+                        }))
+                      }
+                      aria-label="Filter by status"
+                    >
+                      <option value="all">All Status</option>
+                      <option value="open">Open</option>
+                      <option value="resolved">Resolved</option>
+                    </select>
+                    <select
+                      className="filter-select"
+                      value={managerFilters.role}
+                      onChange={(e) =>
+                        setManagerFilters((p) => ({
+                          ...p,
+                          role: e.target.value,
+                        }))
+                      }
+                      aria-label="Filter by role"
+                    >
+                      <option value="all">All Roles</option>
+                      {Object.entries(ROLES).map(([k, v]) => (
+                        <option key={k} value={k}>
+                          {v.label}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      className="filter-select"
+                      value={managerFilters.cat}
+                      onChange={(e) =>
+                        setManagerFilters((p) => ({
+                          ...p,
+                          cat: e.target.value,
+                        }))
+                      }
+                      aria-label="Filter by category"
+                    >
+                      <option value="all">All Categories</option>
+                      {[
+                        "payments",
+                        "inventory",
+                        "invoices",
+                        "dashboard",
+                        "pos",
+                        "crm",
+                      ].map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                  {bugReports.length===0
-                    ?<div className="empty-state"><div className="empty-icon"><SvgIcon icon="bug" size={22}/></div><p>No bug reports</p><span>Reports submitted by team members will appear here.</span></div>
-                    :bugReports
-                      .filter(r=>{
-                        const q=managerFilters.search.toLowerCase()
-                        return (managerFilters.status==='all'||r.status===managerFilters.status)&&(managerFilters.role==='all'||r.role===managerFilters.role)&&(managerFilters.cat==='all'||r.categories?.includes(managerFilters.cat))&&(!q||(r.text.toLowerCase().includes(q)||r.user.toLowerCase().includes(q)))
+                  {bugReports.length === 0 ? (
+                    <div className="empty-state">
+                      <div className="empty-icon">
+                        <SvgIcon icon="bug" size={22} />
+                      </div>
+                      <p>No bug reports</p>
+                      <span>
+                        Reports submitted by team members will appear here.
+                      </span>
+                    </div>
+                  ) : (
+                    bugReports
+                      .filter((r) => {
+                        const q = managerFilters.search.toLowerCase();
+                        return (
+                          (managerFilters.status === "all" ||
+                            r.status === managerFilters.status) &&
+                          (managerFilters.role === "all" ||
+                            r.role === managerFilters.role) &&
+                          (managerFilters.cat === "all" ||
+                            r.categories?.includes(managerFilters.cat)) &&
+                          (!q ||
+                            r.text.toLowerCase().includes(q) ||
+                            r.user.toLowerCase().includes(q))
+                        );
                       })
-                      .map(r=>(
-                        <div key={r.id} className="report-card" role="article" aria-label={`Bug report ${r.id}`}>
+                      .map((r) => (
+                        <div
+                          key={r.id}
+                          className="report-card"
+                          role="article"
+                          aria-label={`Bug report ${r.id}`}
+                        >
                           <div className="report-card-hd">
-                            <span className={`pill ${r.status==='open'?'pending':'paid'}`}>{r.status}</span>
-                            <span className="report-role-chip" style={{background:ROLES[r.role]?.bg,color:ROLES[r.role]?.color,padding:'2px 8px',borderRadius:20,fontWeight:600,fontSize:10}}>{ROLES[r.role]?.label}</span>
-                            {r.categories?.map(c=><span key={c} className="report-category-chip">{c}</span>)}
-                            {r.dupOf && <span className="dup-badge">Linked to {r.dupOf}</span>}
-                            {r.dupCount>1 && <span className="dup-badge">{r.dupCount} reports</span>}
-                            <span style={{marginLeft:'auto',fontSize:10,color:'var(--text3)'}}>{r.id}</span>
+                            <span
+                              className={`pill ${r.status === "open" ? "pending" : "paid"}`}
+                            >
+                              {r.status}
+                            </span>
+                            <span
+                              className="report-role-chip"
+                              style={{
+                                background: ROLES[r.role]?.bg,
+                                color: ROLES[r.role]?.color,
+                                padding: "2px 8px",
+                                borderRadius: 20,
+                                fontWeight: 600,
+                                fontSize: 10,
+                              }}
+                            >
+                              {ROLES[r.role]?.label}
+                            </span>
+                            {r.categories?.map((c) => (
+                              <span key={c} className="report-category-chip">
+                                {c}
+                              </span>
+                            ))}
+                            {r.dupOf && (
+                              <span className="dup-badge">
+                                Linked to {r.dupOf}
+                              </span>
+                            )}
+                            {r.dupCount > 1 && (
+                              <span className="dup-badge">
+                                {r.dupCount} reports
+                              </span>
+                            )}
+                            <span
+                              style={{
+                                marginLeft: "auto",
+                                fontSize: 10,
+                                color: "var(--text3)",
+                              }}
+                            >
+                              {r.id}
+                            </span>
                           </div>
                           <div className="report-card-body">{r.text}</div>
-                          {r.screenshot && <img src={r.screenshot} alt="Screenshot" className="screenshot-preview" style={{maxHeight:120,objectFit:'cover'}}/>}
+                          {r.screenshot && (
+                            <img
+                              src={r.screenshot}
+                              alt="Screenshot"
+                              className="screenshot-preview"
+                              style={{ maxHeight: 120, objectFit: "cover" }}
+                            />
+                          )}
                           <div className="report-card-ft">
-                            <span>{r.user}</span><span>·</span><span>Page: {r.page}</span><span>·</span><span>{new Date(r.time).toLocaleString('en-KE')}</span>
-                            <button className="btn-g btn-xs" style={{marginLeft:'auto'}} onClick={()=>setBugReports(p=>p.map(x=>x.id===r.id?{...x,status:r.status==='open'?'resolved':'open'}:x))}>{r.status==='open'?'Mark Resolved':'Reopen'}</button>
-                            <button className="btn-g btn-xs danger" onClick={()=>setBugReports(p=>p.filter(x=>x.id!==r.id))}>Delete</button>
+                            <span>{r.user}</span>
+                            <span>·</span>
+                            <span>Page: {r.page}</span>
+                            <span>·</span>
+                            <span>
+                              {new Date(r.time).toLocaleString("en-KE")}
+                            </span>
+                            <button
+                              className="btn-g btn-xs"
+                              style={{ marginLeft: "auto" }}
+                              onClick={() =>
+                                setBugReports((p) =>
+                                  p.map((x) =>
+                                    x.id === r.id
+                                      ? {
+                                          ...x,
+                                          status:
+                                            r.status === "open"
+                                              ? "resolved"
+                                              : "open",
+                                        }
+                                      : x,
+                                  ),
+                                )
+                              }
+                            >
+                              {r.status === "open" ? "Mark Resolved" : "Reopen"}
+                            </button>
+                            <button
+                              className="btn-g btn-xs danger"
+                              onClick={() =>
+                                setBugReports((p) =>
+                                  p.filter((x) => x.id !== r.id),
+                                )
+                              }
+                            >
+                              Delete
+                            </button>
                           </div>
                         </div>
                       ))
-                  }
+                  )}
                 </div>
               </div>
             )}
 
             {/* SECURITY DASHBOARD */}
-            {view==='security' && canAccess('security') && (
+            {view === "security" && canAccess("security") && (
               <SecurityDashboard darkMode={darkMode} />
             )}
 
             {/* SETTINGS */}
-            {view==='settings' && canAccess('settings') && (
+            {view === "settings" && canAccess("settings") && (
               <div className="settings-grid">
                 <div className="panel">
-                  <div className="panel-hd"><h2>Profile</h2></div>
+                  <div className="panel-hd">
+                    <h2>Profile</h2>
+                  </div>
                   <div className="profile-card">
-                    <div className="profile-av" style={{background:ROLES[currentUser.role].color}}>{currentUser.initial}</div>
+                    <div
+                      className="profile-av"
+                      style={{ background: ROLES[currentUser.role].color }}
+                    >
+                      {currentUser.initial}
+                    </div>
                     <div>
                       <div className="profile-name">{currentUser.name}</div>
                       <div className="profile-email">{currentUser.email}</div>
-                      <div className="profile-meta">{ROLES[currentUser.role].label} · beryl_bytes_global</div>
+                      <div className="profile-meta">
+                        {ROLES[currentUser.role].label} · beryl_bytes_global
+                      </div>
                     </div>
                   </div>
-                  <div className="sf" style={{marginBottom:14}}>
+                  <div className="sf" style={{ marginBottom: 14 }}>
                     <label>Theme</label>
                     <div className="theme-sw">
-                      <button className={`theme-pill ${!darkMode?'act':''}`} onClick={()=>setDarkMode(false)} aria-pressed={!darkMode}>Light</button>
-                      <button className={`theme-pill ${darkMode?'act':''}`} onClick={()=>setDarkMode(true)} aria-pressed={darkMode}>Dark</button>
+                      <button
+                        className={`theme-pill ${!darkMode ? "act" : ""}`}
+                        onClick={() => setDarkMode(false)}
+                        aria-pressed={!darkMode}
+                      >
+                        Light
+                      </button>
+                      <button
+                        className={`theme-pill ${darkMode ? "act" : ""}`}
+                        onClick={() => setDarkMode(true)}
+                        aria-pressed={darkMode}
+                      >
+                        Dark
+                      </button>
                     </div>
                   </div>
-                  <div className="sf" style={{marginBottom:14}}><label>Language</label><select value={lang} onChange={e=>setLang(e.target.value)}><option>English (Kenya)</option><option>English (United States)</option><option>Swahili (Kenya)</option></select></div>
-                  <button className="btn-g btn-sm" onClick={handleLogout} style={{marginTop:8}}><SvgIcon icon="logout"/>Sign Out</button>
+                  <div className="sf" style={{ marginBottom: 14 }}>
+                    <label>Language</label>
+                    <select
+                      value={lang}
+                      onChange={(e) => setLang(e.target.value)}
+                    >
+                      <option>English (Kenya)</option>
+                      <option>English (United States)</option>
+                      <option>Swahili (Kenya)</option>
+                    </select>
+                  </div>
+                  <button
+                    className="btn-g btn-sm"
+                    onClick={handleLogout}
+                    style={{ marginTop: 8 }}
+                  >
+                    <SvgIcon icon="logout" />
+                    Sign Out
+                  </button>
                 </div>
                 <div className="panel">
-                  <div className="panel-hd"><h2>System Controls</h2></div>
-                  {[{l:'Cloud Realtime Sync',s:syncOn,t:setSyncOn},{l:'Biometric Enforcement',s:bioOn,t:setBioOn},{l:'Inventory Low-Stock Alerts',s:alertsOn,t:setAlertsOn},{l:'Schema Cache Banner',s:schemaBanner,t:setSchemaBanner}]
-                    .map(({l,s,t})=><div key={l} className="toggle-row"><span>{l}</span><button className={`toggle-pill ${s?'on':''}`} onClick={()=>t(!s)} aria-pressed={s}>{s?'Enabled':'Disabled'}</button></div>)}
-                  <div className="settings-note">BerylBytes OS v4.4.0 Enterprise LTS — All operations logged and encrypted end-to-end.</div>
+                  <div className="panel-hd">
+                    <h2>System Controls</h2>
+                  </div>
+                  {[
+                    { l: "Cloud Realtime Sync", s: syncOn, t: setSyncOn },
+                    { l: "Biometric Enforcement", s: bioOn, t: setBioOn },
+                    {
+                      l: "Inventory Low-Stock Alerts",
+                      s: alertsOn,
+                      t: setAlertsOn,
+                    },
+                    {
+                      l: "Schema Cache Banner",
+                      s: schemaBanner,
+                      t: setSchemaBanner,
+                    },
+                  ].map(({ l, s, t }) => (
+                    <div key={l} className="toggle-row">
+                      <span>{l}</span>
+                      <button
+                        className={`toggle-pill ${s ? "on" : ""}`}
+                        onClick={() => t(!s)}
+                        aria-pressed={s}
+                      >
+                        {s ? "Enabled" : "Disabled"}
+                      </button>
+                    </div>
+                  ))}
+                  <div className="settings-note">
+                    BerylBytes OS v4.4.0 Enterprise LTS — All operations logged
+                    and encrypted end-to-end.
+                  </div>
                 </div>
                 <div className="panel">
-                  <div className="panel-hd"><h2>Role Access Matrix</h2></div>
-                  <div style={{fontSize:11,color:'var(--text2)',marginBottom:10}}>Current: <strong style={{color:ROLES[currentUser.role].color}}>{ROLES[currentUser.role].label}</strong></div>
-                  {Object.entries(ROLES).map(([k,v])=>(
+                  <div className="panel-hd">
+                    <h2>Role Access Matrix</h2>
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: "var(--text2)",
+                      marginBottom: 10,
+                    }}
+                  >
+                    Current:{" "}
+                    <strong style={{ color: ROLES[currentUser.role].color }}>
+                      {ROLES[currentUser.role].label}
+                    </strong>
+                  </div>
+                  {Object.entries(ROLES).map(([k, v]) => (
                     <div key={k} className="toggle-row">
-                      <div><div style={{fontSize:12,color:v.color,fontWeight:600}}>{v.label}</div><div style={{fontSize:10,color:'var(--text3)'}}>{v.access.join(', ')}</div></div>
+                      <div>
+                        <div
+                          style={{
+                            fontSize: 12,
+                            color: v.color,
+                            fontWeight: 600,
+                          }}
+                        >
+                          {v.label}
+                        </div>
+                        <div style={{ fontSize: 10, color: "var(--text3)" }}>
+                          {v.access.join(", ")}
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
                 <div className="panel">
-                  <div className="panel-hd"><h2>Tax & Currency</h2></div>
-                  {[{l:'VAT Rate',v:'16% (Kenya KRA)'},{l:'Currency',v:'KES — Kenyan Shilling'},{l:'Receipt Format',v:'A4 PDF'}].map(r=><div key={r.l} className="toggle-row"><span>{r.l}</span><strong style={{color:'var(--accent)',fontSize:12}}>{r.v}</strong></div>)}
+                  <div className="panel-hd">
+                    <h2>Tax & Currency</h2>
+                  </div>
+                  {[
+                    { l: "VAT Rate", v: "16% (Kenya KRA)" },
+                    { l: "Currency", v: "KES — Kenyan Shilling" },
+                    { l: "Receipt Format", v: "A4 PDF" },
+                  ].map((r) => (
+                    <div key={r.l} className="toggle-row">
+                      <span>{r.l}</span>
+                      <strong style={{ color: "var(--accent)", fontSize: 12 }}>
+                        {r.v}
+                      </strong>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
-
           </main>
 
           {/* CART PANEL */}
-          {view==='pos' && (
-            <aside className={`cart-panel ${cartOpen?'open':''}`} aria-label="Shopping cart" style={{ display: 'flex', flexDirection: 'column', width: '290px', minWidth: '290px', flexShrink: 0, position: 'relative', height: '100%', minHeight: 0, borderLeft: '1px solid var(--border)', background: 'var(--topbar-bg)' }}>
-              <div className="cp-hd" onClick={()=>setCartOpen(!cartOpen)} style={{cursor:'pointer'}} role="button" aria-expanded={cartOpen} aria-label={`Cart — ${cart.reduce((s,i)=>s+i.qty,0)} items`}>
-                <h2>Order {cart.length>0&&`(${cart.reduce((s,i)=>s+i.qty,0)})`}</h2>
-                {cart.length>0&&<button className="clr-btn" onClick={e=>{e.stopPropagation();setCart([]); localStorage.removeItem('bb_cart')}} aria-label="Clear cart">Clear all</button>}
+          {view === "pos" && (
+            <aside
+              className={`cart-panel ${cartOpen ? "open" : ""}`}
+              aria-label="Shopping cart"
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                width: "290px",
+                minWidth: "290px",
+                flexShrink: 0,
+                position: "relative",
+                height: "100%",
+                minHeight: 0,
+                borderLeft: "1px solid var(--border)",
+                background: "var(--topbar-bg)",
+              }}
+            >
+              <div
+                className="cp-hd"
+                onClick={() => setCartOpen(!cartOpen)}
+                style={{ cursor: "pointer" }}
+                role="button"
+                aria-expanded={cartOpen}
+                aria-label={`Cart — ${cart.reduce((s, i) => s + i.qty, 0)} items`}
+              >
+                <h2>
+                  Order{" "}
+                  {cart.length > 0 &&
+                    `(${cart.reduce((s, i) => s + i.qty, 0)})`}
+                </h2>
+                {cart.length > 0 && (
+                  <button
+                    className="clr-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCart([]);
+                      localStorage.removeItem("bb_cart");
+                    }}
+                    aria-label="Clear cart"
+                  >
+                    Clear all
+                  </button>
+                )}
               </div>
               <div className="cust-sel">
                 <label>Customer (optional)</label>
-                <select value={selCust?.id||''} onChange={e=>setSelCust(customers.find(c=>c.id===Number(e.target.value))||null)} aria-label="Select customer">
+                <select
+                  value={selCust?.id || ""}
+                  onChange={(e) =>
+                    setSelCust(
+                      customers.find((c) => c.id === Number(e.target.value)) ||
+                        null,
+                    )
+                  }
+                  aria-label="Select customer"
+                >
                   <option value="">Walk-in Customer</option>
-                  {customers.map(c=><option key={c.id} value={c.id}>{c.name} — {getTier(c.points).name}</option>)}
+                  {customers.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} — {getTier(c.points).name}
+                    </option>
+                  ))}
                 </select>
-                {selCust&&<div className="loyalty-badge" style={{borderColor:getTier(selCust.points).color,color:getTier(selCust.points).color}}>{getTier(selCust.points).name} — {getTier(selCust.points).disc}% loyalty discount</div>}
+                {selCust && (
+                  <div
+                    className="loyalty-badge"
+                    style={{
+                      borderColor: getTier(selCust.points).color,
+                      color: getTier(selCust.points).color,
+                    }}
+                  >
+                    {getTier(selCust.points).name} —{" "}
+                    {getTier(selCust.points).disc}% loyalty discount
+                  </div>
+                )}
               </div>
               <div className="ci-list" role="list" aria-label="Cart items">
-                {cart.length===0
-                  ?<div className="ci-empty"><div className="ci-empty-icon"><SvgIcon icon="cart" size={18}/></div><p>Cart is empty</p><span>Tap products to add them</span></div>
-                  :cart.map(item=>(
+                {cart.length === 0 ? (
+                  <div className="ci-empty">
+                    <div className="ci-empty-icon">
+                      <SvgIcon icon="cart" size={18} />
+                    </div>
+                    <p>Cart is empty</p>
+                    <span>Tap products to add them</span>
+                  </div>
+                ) : (
+                  cart.map((item) => (
                     <div key={item.id} className="ci" role="listitem">
-                      <span className="ci-ico" aria-hidden="true">{(item.name||'?').trim().slice(0,1).toUpperCase()}</span>
-                      <div className="ci-inf"><div className="ci-nm">{item.name}</div><div className="ci-pr">{fKES(item.price*item.qty)}</div></div>
-                      <div className="ci-ctl" role="group" aria-label={`Quantity controls for ${item.name}`}>
-                        <button className="qb" onClick={()=>updQty(item.id,-1)} aria-label="Decrease quantity">−</button>
-                        <span aria-label={`Quantity ${item.qty}`}>{item.qty}</span>
-                        <button className="qb" onClick={()=>updQty(item.id,1)} aria-label="Increase quantity">+</button>
-                        <button className="rb" onClick={()=>remFromCart(item.id)} aria-label={`Remove ${item.name}`}>×</button>
+                      <span className="ci-ico" aria-hidden="true">
+                        {(item.name || "?").trim().slice(0, 1).toUpperCase()}
+                      </span>
+                      <div className="ci-inf">
+                        <div className="ci-nm">{item.name}</div>
+                        <div className="ci-pr">
+                          {fKES(item.price * item.qty)}
+                        </div>
+                      </div>
+                      <div
+                        className="ci-ctl"
+                        role="group"
+                        aria-label={`Quantity controls for ${item.name}`}
+                      >
+                        <button
+                          className="qb"
+                          onClick={() => updQty(item.id, -1)}
+                          aria-label="Decrease quantity"
+                        >
+                          −
+                        </button>
+                        <span aria-label={`Quantity ${item.qty}`}>
+                          {item.qty}
+                        </span>
+                        <button
+                          className="qb"
+                          onClick={() => updQty(item.id, 1)}
+                          aria-label="Increase quantity"
+                        >
+                          +
+                        </button>
+                        <button
+                          className="rb"
+                          onClick={() => remFromCart(item.id)}
+                          aria-label={`Remove ${item.name}`}
+                        >
+                          ×
+                        </button>
                       </div>
                     </div>
                   ))
-                }
+                )}
               </div>
-              {cart.length>0&&(<>
-                <div className="tots">
-                  <div className="tr"><span>Subtotal</span><span>{fKES(subtotal)}</span></div>
-                  {discount>0&&<div className="tr disc"><span>Loyalty Discount</span><span>−{fKES(discount)}</span></div>}
-                  <div className="tr"><span>VAT 16%</span><span>{fKES(tax)}</span></div>
-                  <div className="tr gd"><span>Total</span><span>{fKES(grand)}</span></div>
-                </div>
-                <button className="chg-btn" onClick={()=>setShowPay(true)} aria-label={`Charge ${fKES(grand)}`}>
-                  Charge {fKES(grand)}<SvgIcon icon="arrow_r" size={14}/>
-                </button>
-              </>)}
+              {cart.length > 0 && (
+                <>
+                  <div className="tots">
+                    <div className="tr">
+                      <span>Subtotal</span>
+                      <span>{fKES(subtotal)}</span>
+                    </div>
+                    {discount > 0 && (
+                      <div className="tr disc">
+                        <span>Loyalty Discount</span>
+                        <span>−{fKES(discount)}</span>
+                      </div>
+                    )}
+                    <div className="tr">
+                      <span>VAT 16%</span>
+                      <span>{fKES(tax)}</span>
+                    </div>
+                    <div className="tr gd">
+                      <span>Total</span>
+                      <span>{fKES(grand)}</span>
+                    </div>
+                  </div>
+                  <button
+                    className="chg-btn"
+                    onClick={() => setShowPay(true)}
+                    aria-label={`Charge ${fKES(grand)}`}
+                  >
+                    Charge {fKES(grand)}
+                    <SvgIcon icon="arrow_r" size={14} />
+                  </button>
+                </>
+              )}
             </aside>
           )}
         </div>
 
         {/* MOBILE NAV */}
         <nav className="mobile-nav" aria-label="Mobile navigation">
-          {NAV_ITEMS.slice(0,4).map(item=>(
-            <button key={item.id} className={`mob-nav-btn ${view===item.id?'act':''}`} onClick={()=>setView(item.id)} aria-current={view===item.id?'page':undefined} aria-label={item.label}>
-              <SvgIcon icon={item.icon} size={18}/>
-              <span className="label">{item.label.split(' ')[0]}</span>
+          {NAV_ITEMS.slice(0, 4).map((item) => (
+            <button
+              key={item.id}
+              className={`mob-nav-btn ${view === item.id ? "act" : ""}`}
+              onClick={() => setView(item.id)}
+              aria-current={view === item.id ? "page" : undefined}
+              aria-label={item.label}
+            >
+              <SvgIcon icon={item.icon} size={18} />
+              <span className="label">{item.label.split(" ")[0]}</span>
             </button>
           ))}
-          {view==='pos'&&(
-            <button className="mob-nav-btn" onClick={()=>setCartOpen(!cartOpen)} aria-label={`Cart — ${cart.reduce((s,i)=>s+i.qty,0)} items`} aria-expanded={cartOpen}>
-              <SvgIcon icon="cart" size={18}/>
-              <span className="label">Cart{cart.length>0?` (${cart.reduce((s,i)=>s+i.qty,0)})`:''}</span>
+          {view === "pos" && (
+            <button
+              className="mob-nav-btn"
+              onClick={() => setCartOpen(!cartOpen)}
+              aria-label={`Cart — ${cart.reduce((s, i) => s + i.qty, 0)} items`}
+              aria-expanded={cartOpen}
+            >
+              <SvgIcon icon="cart" size={18} />
+              <span className="label">
+                Cart
+                {cart.length > 0
+                  ? ` (${cart.reduce((s, i) => s + i.qty, 0)})`
+                  : ""}
+              </span>
             </button>
           )}
         </nav>
 
         {/* PAYMENT MODAL */}
         {showPay && (
-          <div className="overlay" role="dialog" aria-modal="true" aria-label="Payment" onClick={e=>e.target===e.currentTarget&&!mpesaStatus&&setShowPay(false)}>
+          <div
+            className="overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Payment"
+            onClick={(e) =>
+              e.target === e.currentTarget && !mpesaStatus && setShowPay(false)
+            }
+          >
             <div className="modal" id="payment-modal">
               <div className="modal-hd">
-                <div><h3>Payment</h3><div className="pay-amount">{fKES(grand)}</div></div>
-                <button className="modal-close" onClick={()=>{if(mpesaStatus==='pending')return;setShowPay(false);setMpesaStatus(null);setLastCheckoutId(null);setAttempts([])}} aria-label="Close payment modal"><SvgIcon icon="x" size={18}/></button>
+                <div>
+                  <h3>Payment</h3>
+                  <div className="pay-amount">{fKES(grand)}</div>
+                </div>
+                <button
+                  className="modal-close"
+                  onClick={() => {
+                    if (mpesaStatus === "pending") return;
+                    setShowPay(false);
+                    setMpesaStatus(null);
+                    setLastCheckoutId(null);
+                    setAttempts([]);
+                  }}
+                  aria-label="Close payment modal"
+                >
+                  <SvgIcon icon="x" size={18} />
+                </button>
               </div>
 
-              <div className="pay-methods" role="group" aria-label="Payment method">
-                {[{id:'mpesa',icon:'mpesa',label:'M-Pesa'},{id:'cash',icon:'cash',label:'Cash'},{id:'paystack',icon:'card',label:'Card'},{id:'paypal',icon:'paypal',label:'PayPal'}]
-                  .map(m=>(
-                    <button key={m.id} className={`pay-m-btn ${payMethod===m.id?'act':''}`} onClick={()=>{setPayMethod(m.id);setMpesaStatus(null)}} aria-pressed={payMethod===m.id} disabled={mpesaStatus==='pending'}>
-                      <SvgIcon icon={m.icon} size={14}/><span>{m.label}</span>
-                    </button>
-                  ))}
+              <div
+                className="pay-methods"
+                role="group"
+                aria-label="Payment method"
+              >
+                {[
+                  { id: "mpesa", icon: "mpesa", label: "M-Pesa" },
+                  { id: "cash", icon: "cash", label: "Cash" },
+                  { id: "paystack", icon: "card", label: "Card" },
+                  { id: "paypal", icon: "paypal", label: "PayPal" },
+                ].map((m) => (
+                  <button
+                    key={m.id}
+                    className={`pay-m-btn ${payMethod === m.id ? "act" : ""}`}
+                    onClick={() => {
+                      setPayMethod(m.id);
+                      setMpesaStatus(null);
+                    }}
+                    aria-pressed={payMethod === m.id}
+                    disabled={mpesaStatus === "pending"}
+                  >
+                    <SvgIcon icon={m.icon} size={14} />
+                    <span>{m.label}</span>
+                  </button>
+                ))}
               </div>
 
-              {payMethod==='mpesa' && (
+              {payMethod === "mpesa" && (
                 <div className="pay-form">
-                  {(!phoneConfirmed || mpesaStatus==='timeout' || mpesaStatus==='failed') ? (<>
-                    <label htmlFor="mpesa-phone">Customer Phone Number</label>
-                    <div className="phone-row">
-                      <div className="sf">
-                        <input id="mpesa-phone" type="tel" placeholder="254712345678" value={phone} onChange={e=>setPhone(e.target.value)} onKeyDown={e=>e.key==='Enter'&&handleMpesa()} disabled={mpesaStatus==='pending'} aria-label="Customer phone number"/>
+                  {!phoneConfirmed ||
+                  mpesaStatus === "timeout" ||
+                  mpesaStatus === "failed" ? (
+                    <>
+                      <label htmlFor="mpesa-phone">Customer Phone Number</label>
+                      <div className="phone-row">
+                        <div className="sf">
+                          <input
+                            id="mpesa-phone"
+                            type="tel"
+                            placeholder="254712345678"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            onKeyDown={(e) =>
+                              e.key === "Enter" && handleMpesa()
+                            }
+                            disabled={mpesaStatus === "pending"}
+                            aria-label="Customer phone number"
+                          />
+                        </div>
                       </div>
-                    </div>
-                    <button className="pay-go" onClick={handleMpesa} disabled={mpesaStatus==='pending'||!phone} aria-label="Send M-Pesa STK Push">
-                      <SvgIcon icon="mpesa" size={14}/>Send M-Pesa Prompt
-                    </button>
-                  </>) : (<>
-                    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',background:'var(--surface)',borderRadius:'var(--rs)',padding:'9px 12px',marginBottom:4}}>
-                      <div><div style={{fontSize:10,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'.5px'}}>Phone</div><div style={{fontSize:13,fontWeight:600,color:'var(--text)'}}>{phone}</div></div>
-                      {(mpesaStatus==='timeout'||mpesaStatus==='failed')&&<button className="change-num-btn" onClick={()=>{setPhoneConfirmed(false);setMpesaStatus(null)}} aria-label="Change phone number">Change Number</button>}
-                    </div>
-                  </>)}
+                      <button
+                        className="pay-go"
+                        onClick={handleMpesa}
+                        disabled={mpesaStatus === "pending" || !phone}
+                        aria-label="Send M-Pesa STK Push"
+                      >
+                        <SvgIcon icon="mpesa" size={14} />
+                        Send M-Pesa Prompt
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          background: "var(--surface)",
+                          borderRadius: "var(--rs)",
+                          padding: "9px 12px",
+                          marginBottom: 4,
+                        }}
+                      >
+                        <div>
+                          <div
+                            style={{
+                              fontSize: 10,
+                              color: "var(--text3)",
+                              textTransform: "uppercase",
+                              letterSpacing: ".5px",
+                            }}
+                          >
+                            Phone
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 13,
+                              fontWeight: 600,
+                              color: "var(--text)",
+                            }}
+                          >
+                            {phone}
+                          </div>
+                        </div>
+                        {(mpesaStatus === "timeout" ||
+                          mpesaStatus === "failed") && (
+                          <button
+                            className="change-num-btn"
+                            onClick={() => {
+                              setPhoneConfirmed(false);
+                              setMpesaStatus(null);
+                            }}
+                            aria-label="Change phone number"
+                          >
+                            Change Number
+                          </button>
+                        )}
+                      </div>
+                    </>
+                  )}
 
-                  {mpesaStatus==='pending' && (
-                    <div className="mpesa-status" role="status" aria-live="polite" aria-label="Waiting for M-Pesa payment">
-                      <div className="mpesa-status-label">Waiting for Customer PIN</div>
-                      <div className="mpesa-status-sub">Customer should check their phone and enter M-Pesa PIN</div>
-                      <div className="mpesa-timeout" aria-live="polite">Times out in {mpesaTimer}s</div>
-                      <div className="mpesa-progress" role="progressbar" aria-valuemin={0} aria-valuemax={MPESA_TIMEOUT} aria-valuenow={mpesaTimer}>
-                        <div className="mpesa-progress-bar" style={{width:`${(mpesaTimer/MPESA_TIMEOUT)*100}%`}}/>
+                  {mpesaStatus === "pending" && (
+                    <div
+                      className="mpesa-status"
+                      role="status"
+                      aria-live="polite"
+                      aria-label="Waiting for M-Pesa payment"
+                    >
+                      <div className="mpesa-status-label">
+                        Waiting for Customer PIN
+                      </div>
+                      <div className="mpesa-status-sub">
+                        Customer should check their phone and enter M-Pesa PIN
+                      </div>
+                      <div className="mpesa-timeout" aria-live="polite">
+                        Times out in {mpesaTimer}s
+                      </div>
+                      <div
+                        className="mpesa-progress"
+                        role="progressbar"
+                        aria-valuemin={0}
+                        aria-valuemax={MPESA_TIMEOUT}
+                        aria-valuenow={mpesaTimer}
+                      >
+                        <div
+                          className="mpesa-progress-bar"
+                          style={{
+                            width: `${(mpesaTimer / MPESA_TIMEOUT) * 100}%`,
+                          }}
+                        />
                       </div>
                     </div>
                   )}
-                  {mpesaStatus==='timeout' && (
+                  {mpesaStatus === "timeout" && (
                     <div className="mpesa-status" role="alert">
-                      <div className="mpesa-status-label" style={{color:'var(--orange)'}}>Request Timed Out</div>
-                      <div className="mpesa-status-sub">The customer did not respond in time.</div>
-                      <button className="pay-go retry" style={{marginTop:10}} onClick={retryMpesa} aria-label="Retry M-Pesa payment">
-                        <SvgIcon icon="refresh" size={14}/>Retry STK Push
+                      <div
+                        className="mpesa-status-label"
+                        style={{ color: "var(--orange)" }}
+                      >
+                        Request Timed Out
+                      </div>
+                      <div className="mpesa-status-sub">
+                        The customer did not respond in time.
+                      </div>
+                      <button
+                        className="pay-go retry"
+                        style={{ marginTop: 10 }}
+                        onClick={retryMpesa}
+                        aria-label="Retry M-Pesa payment"
+                      >
+                        <SvgIcon icon="refresh" size={14} />
+                        Retry STK Push
                       </button>
                     </div>
                   )}
-                  {mpesaStatus==='failed' && (
+                  {mpesaStatus === "failed" && (
                     <div className="mpesa-status" role="alert">
-                      <div className="mpesa-status-label" style={{color:'var(--red)'}}>Payment Failed</div>
-                      <button className="pay-go retry" style={{marginTop:10}} onClick={retryMpesa} aria-label="Retry M-Pesa payment">
-                        <SvgIcon icon="refresh" size={14}/>Retry Payment
+                      <div
+                        className="mpesa-status-label"
+                        style={{ color: "var(--red)" }}
+                      >
+                        Payment Failed
+                      </div>
+                      <button
+                        className="pay-go retry"
+                        style={{ marginTop: 10 }}
+                        onClick={retryMpesa}
+                        aria-label="Retry M-Pesa payment"
+                      >
+                        <SvgIcon icon="refresh" size={14} />
+                        Retry Payment
                       </button>
                     </div>
                   )}
-                  {mpesaStatus==='success' && (
+                  {mpesaStatus === "success" && (
                     <div className="mpesa-status" role="status">
-                      <div className="mpesa-status-label" style={{color:'var(--green)'}}>Payment Confirmed</div>
+                      <div
+                        className="mpesa-status-label"
+                        style={{ color: "var(--green)" }}
+                      >
+                        Payment Confirmed
+                      </div>
                     </div>
                   )}
 
-                  {attempts.length>0 && (
+                  {attempts.length > 0 && (
                     <div className="attempts-list">
-                      <div className="attempts-hd">Payment Attempts ({attempts.length})</div>
-                      {attempts.map((a,i)=>(
-                        <div key={a.id} className="attempt-item" aria-label={`Attempt ${i+1}: ${a.status}`}>
-                          <div className={`attempt-dot ${a.status}`} aria-hidden="true"/>
+                      <div className="attempts-hd">
+                        Payment Attempts ({attempts.length})
+                      </div>
+                      {attempts.map((a, i) => (
+                        <div
+                          key={a.id}
+                          className="attempt-item"
+                          aria-label={`Attempt ${i + 1}: ${a.status}`}
+                        >
+                          <div
+                            className={`attempt-dot ${a.status}`}
+                            aria-hidden="true"
+                          />
                           <span className="attempt-time">{a.time}</span>
                           <span className="attempt-status">{a.desc}</span>
                           <span className="attempt-id">{a.id.slice(-8)}</span>
@@ -1944,73 +5987,220 @@ const [newCatName,setNewCatName]     = useState('')
                 </div>
               )}
 
-              {payMethod==='cash' && (
+              {payMethod === "cash" && (
                 <div className="pay-form">
                   <label htmlFor="cash-amount">Cash Received (KES)</label>
-                  <input id="cash-amount" type="number" placeholder="Enter amount given" value={cashIn} onChange={e=>setCashIn(e.target.value)} aria-label="Cash amount received"/>
-                  {cashIn&&<div className={`pay-change ${change>=0?'pos':'neg'}`} role="status">{change>=0?`Change: ${fKES(change)}`:`Short by: ${fKES(Math.abs(change))}`}</div>}
-                  <button className="pay-go" onClick={handleCash} disabled={!cashIn||change<0} aria-label="Confirm cash payment">
-                    <SvgIcon icon="cash" size={14}/>Confirm Cash Payment
+                  <input
+                    id="cash-amount"
+                    type="number"
+                    placeholder="Enter amount given"
+                    value={cashIn}
+                    onChange={(e) => setCashIn(e.target.value)}
+                    aria-label="Cash amount received"
+                  />
+                  {cashIn && (
+                    <div
+                      className={`pay-change ${change >= 0 ? "pos" : "neg"}`}
+                      role="status"
+                    >
+                      {change >= 0
+                        ? `Change: ${fKES(change)}`
+                        : `Short by: ${fKES(Math.abs(change))}`}
+                    </div>
+                  )}
+                  <button
+                    className="pay-go"
+                    onClick={handleCash}
+                    disabled={!cashIn || change < 0}
+                    aria-label="Confirm cash payment"
+                  >
+                    <SvgIcon icon="cash" size={14} />
+                    Confirm Cash Payment
                   </button>
                 </div>
               )}
 
-              {payMethod==='paystack' && (
+              {payMethod === "paystack" && (
                 <div className="pay-form">
-                  <label htmlFor="customer-email">Customer Email (optional)</label>
-                  <input id="customer-email" type="email" placeholder="customer@email.com" value={custEmail} onChange={e=>setCustEmail(e.target.value)} aria-label="Customer email address"/>
-                  <div className="pay-info">Secured by Paystack. Accepts Visa, Mastercard, and M-Pesa mobile money.</div>
-                  <button className="pay-go" onClick={handlePaystack} aria-label="Pay with card via Paystack">
-                    <SvgIcon icon="card" size={14}/>Pay with Card
+                  <label htmlFor="customer-email">
+                    Customer Email (optional)
+                  </label>
+                  <input
+                    id="customer-email"
+                    type="email"
+                    placeholder="customer@email.com"
+                    value={custEmail}
+                    onChange={(e) => setCustEmail(e.target.value)}
+                    aria-label="Customer email address"
+                  />
+                  <div className="pay-info">
+                    Secured by Paystack. Accepts Visa, Mastercard, and M-Pesa
+                    mobile money.
+                  </div>
+                  <button
+                    className="pay-go"
+                    onClick={handlePaystack}
+                    aria-label="Pay with card via Paystack"
+                  >
+                    <SvgIcon icon="card" size={14} />
+                    Pay with Card
                   </button>
                 </div>
               )}
 
-              {payMethod==='paypal' && (
+              {payMethod === "paypal" && (
                 <div className="pay-form">
-                  <div className="pay-info">Complete your payment securely through PayPal. Amount: USD {(grand/130).toFixed(2)}</div>
+                  <div className="pay-info">
+                    Complete your payment securely through PayPal. Amount: USD{" "}
+                    {(grand / 130).toFixed(2)}
+                  </div>
                   <PayPalButtons
-                    style={{layout:'vertical',color:'blue',shape:'rect',height:40}}
-                    createOrder={(_,actions)=>actions.order.create({purchase_units:[{amount:{value:(grand/130).toFixed(2),currency_code:'USD'},description:`BerylBytes — ${cart.length} item(s)`}]})}
-                    onApprove={(_,actions)=>actions.order.capture().then(d=>completeSale('PayPal',{transactionId:d.id}))}
-                    onError={()=>flash('PayPal payment failed. Please try again.','error')}
+                    style={{
+                      layout: "vertical",
+                      color: "blue",
+                      shape: "rect",
+                      height: 40,
+                    }}
+                    createOrder={(_, actions) =>
+                      actions.order.create({
+                        purchase_units: [
+                          {
+                            amount: {
+                              value: (grand / 130).toFixed(2),
+                              currency_code: "USD",
+                            },
+                            description: `BerylBytes — ${cart.length} item(s)`,
+                          },
+                        ],
+                      })
+                    }
+                    onApprove={(_, actions) =>
+                      actions.order
+                        .capture()
+                        .then((d) =>
+                          completeSale("PayPal", { transactionId: d.id }),
+                        )
+                    }
+                    onError={() =>
+                      flash("PayPal payment failed. Please try again.", "error")
+                    }
                   />
                 </div>
               )}
 
-              {msg&&<div className={`pay-msg ${msgType}`} role="alert" aria-live="polite"><SvgIcon icon={msgType==='success'?'check':msgType==='error'?'alert':'refresh'} size={13}/>{msg}</div>}
+              {msg && (
+                <div
+                  className={`pay-msg ${msgType}`}
+                  role="alert"
+                  aria-live="polite"
+                >
+                  <SvgIcon
+                    icon={
+                      msgType === "success"
+                        ? "check"
+                        : msgType === "error"
+                          ? "alert"
+                          : "refresh"
+                    }
+                    size={13}
+                  />
+                  {msg}
+                </div>
+              )}
             </div>
           </div>
         )}
 
         {/* RECEIPT MODAL */}
         {showReceipt && receiptData && (
-          <div className="overlay" role="dialog" aria-modal="true" aria-label="Receipt" onClick={e=>e.target===e.currentTarget&&setShowReceipt(false)}>
+          <div
+            className="overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Receipt"
+            onClick={(e) =>
+              e.target === e.currentTarget && setShowReceipt(false)
+            }
+          >
             <div className="receipt-modal">
               <div className="receipt-top">
                 <h3>BerylBytes — Receipt</h3>
-                <div className="r-id" aria-label={`Invoice ${receiptData.invoiceId}`}>{receiptData.invoiceId}</div>
+                <div
+                  className="r-id"
+                  aria-label={`Invoice ${receiptData.invoiceId}`}
+                >
+                  {receiptData.invoiceId}
+                </div>
               </div>
               <div className="receipt-meta">
-                <span>{new Date().toLocaleString('en-KE')}</span>
+                <span>{new Date().toLocaleString("en-KE")}</span>
                 <span>Payment: {receiptData.method}</span>
-                {receiptData.customer&&<span>Customer: {receiptData.customer}</span>}
+                {receiptData.customer && (
+                  <span>Customer: {receiptData.customer}</span>
+                )}
               </div>
               <div role="list" aria-label="Purchased items">
-                {receiptData.items.map(item=><div key={item.id} className="r-line" role="listitem"><span>{item.name} × {item.qty}</span><span>{fKES(item.price*item.qty)}</span></div>)}
+                {receiptData.items.map((item) => (
+                  <div key={item.id} className="r-line" role="listitem">
+                    <span>
+                      {item.name} × {item.qty}
+                    </span>
+                    <span>{fKES(item.price * item.qty)}</span>
+                  </div>
+                ))}
               </div>
               <div className="r-totals">
-                {(()=>{const s=receiptData.items.reduce((x,i)=>x+i.price*i.qty,0);return(<>
-                  <div className="r-total-line"><span>Subtotal</span><span>{fKES(s)}</span></div>
-                  <div className="r-total-line"><span>VAT 16%</span><span>{fKES(Math.round(s*0.16))}</span></div>
-                  <div className="r-total-line big"><span>Total Paid</span><span>{fKES(receiptData.amount)}</span></div>
-                  {receiptData.change>0&&<div className="r-total-line"><span>Change Given</span><span style={{color:'var(--green)'}}>{fKES(receiptData.change)}</span></div>}
-                </>)})()}
+                {(() => {
+                  const s = receiptData.items.reduce(
+                    (x, i) => x + i.price * i.qty,
+                    0,
+                  );
+                  return (
+                    <>
+                      <div className="r-total-line">
+                        <span>Subtotal</span>
+                        <span>{fKES(s)}</span>
+                      </div>
+                      <div className="r-total-line">
+                        <span>VAT 16%</span>
+                        <span>{fKES(Math.round(s * 0.16))}</span>
+                      </div>
+                      <div className="r-total-line big">
+                        <span>Total Paid</span>
+                        <span>{fKES(receiptData.amount)}</span>
+                      </div>
+                      {receiptData.change > 0 && (
+                        <div className="r-total-line">
+                          <span>Change Given</span>
+                          <span style={{ color: "var(--green)" }}>
+                            {fKES(receiptData.change)}
+                          </span>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
-              <div className="receipt-thanks">Thank you for shopping at BerylBytes.</div>
-              <div className="btn-row" style={{marginTop:16}}>
-                <button className="btn-p" style={{flex:1}} onClick={generatePDF} aria-label="Download PDF receipt"><SvgIcon icon="download"/>Download PDF</button>
-                <button className="btn-g" onClick={()=>setShowReceipt(false)} aria-label="Close receipt">Close</button>
+              <div className="receipt-thanks">
+                Thank you for shopping at BerylBytes.
+              </div>
+              <div className="btn-row" style={{ marginTop: 16 }}>
+                <button
+                  className="btn-p"
+                  style={{ flex: 1 }}
+                  onClick={generatePDF}
+                  aria-label="Download PDF receipt"
+                >
+                  <SvgIcon icon="download" />
+                  Download PDF
+                </button>
+                <button
+                  className="btn-g"
+                  onClick={() => setShowReceipt(false)}
+                  aria-label="Close receipt"
+                >
+                  Close
+                </button>
               </div>
             </div>
           </div>
@@ -2018,108 +6208,299 @@ const [newCatName,setNewCatName]     = useState('')
 
         {/* EDIT PRICE MODAL */}
         {editProd && (
-          <div className="overlay" role="dialog" aria-modal="true" aria-label={`Edit price for ${editProd.name}`} onClick={e=>e.target===e.currentTarget&&setEditProd(null)}>
-            <div className="modal" style={{width:340}}>
+          <div
+            className="overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Edit price for ${editProd.name}`}
+            onClick={(e) => e.target === e.currentTarget && setEditProd(null)}
+          >
+            <div className="modal" style={{ width: 340 }}>
               <div className="modal-hd">
                 <h3>Edit Price</h3>
-                <button className="modal-close" onClick={()=>setEditProd(null)} aria-label="Close"><SvgIcon icon="x" size={18}/></button>
+                <button
+                  className="modal-close"
+                  onClick={() => setEditProd(null)}
+                  aria-label="Close"
+                >
+                  <SvgIcon icon="x" size={18} />
+                </button>
               </div>
-              <div style={{fontSize:12,color:'var(--text2)',marginBottom:12}}>{editProd.name}</div>
-              <div className="sf" style={{marginBottom:16}}>
+              <div
+                style={{
+                  fontSize: 12,
+                  color: "var(--text2)",
+                  marginBottom: 12,
+                }}
+              >
+                {editProd.name}
+              </div>
+              <div className="sf" style={{ marginBottom: 16 }}>
                 <label htmlFor="edit-price">New Price (KES)</label>
-                <input id="edit-price" type="number" value={editPrice} onChange={e=>setEditPrice(e.target.value)} autoFocus onKeyDown={e=>e.key==='Enter'&&(setCustomPrices(p=>({...p,[editProd.id]:parseInt(editPrice)})),flash('Price updated.'),setEditProd(null))} aria-label="New price in KES"/>
+                <input
+                  id="edit-price"
+                  type="number"
+                  value={editPrice}
+                  onChange={(e) => setEditPrice(e.target.value)}
+                  autoFocus
+                  onKeyDown={(e) =>
+                    e.key === "Enter" &&
+                    (setCustomPrices((p) => ({
+                      ...p,
+                      [editProd.id]: parseInt(editPrice),
+                    })),
+                    flash("Price updated."),
+                    setEditProd(null))
+                  }
+                  aria-label="New price in KES"
+                />
               </div>
               <div className="btn-row">
-                <button className="btn-p" style={{flex:1}} onClick={()=>{setCustomPrices(p=>({...p,[editProd.id]:parseInt(editPrice)}));flash(`Price updated to ${fKES(parseInt(editPrice))}`);setEditProd(null)}} aria-label="Save new price">Save Price</button>
-                <button className="btn-g" onClick={()=>setEditProd(null)} aria-label="Cancel">Cancel</button>
+                <button
+                  className="btn-p"
+                  style={{ flex: 1 }}
+                  onClick={() => {
+                    setCustomPrices((p) => ({
+                      ...p,
+                      [editProd.id]: parseInt(editPrice),
+                    }));
+                    flash(`Price updated to ${fKES(parseInt(editPrice))}`);
+                    setEditProd(null);
+                  }}
+                  aria-label="Save new price"
+                >
+                  Save Price
+                </button>
+                <button
+                  className="btn-g"
+                  onClick={() => setEditProd(null)}
+                  aria-label="Cancel"
+                >
+                  Cancel
+                </button>
               </div>
             </div>
           </div>
         )}
 
         {/* TRANSACTION DETAIL DRAWER */}
-        {detailTxn && (<>
-          <div className="drawer-overlay" onClick={()=>setDetailTxn(null)} aria-hidden="true"/>
-          <div className="drawer" role="dialog" aria-modal="true" aria-label={`Transaction ${detailTxn.id} details`}>
-            <div className="drawer-hd">
-              <h3>{detailTxn.id}</h3>
-              <button className="modal-close" onClick={()=>setDetailTxn(null)} aria-label="Close drawer"><SvgIcon icon="x" size={18}/></button>
-            </div>
-            <div className="drawer-body">
-              <div className="drawer-sec">
-                <h4>Transaction Info</h4>
-                {[{l:'Date',v:detailTxn.date},{l:'Customer',v:detailTxn.customer},{l:'Method',v:detailTxn.method},{l:'Status',v:detailTxn.status},{l:'Total',v:fKES(detailTxn.total)}]
-                  .map(r=><div key={r.l} className="m-detail-item"><span className="table-card-label">{r.l}</span><strong className="table-card-val">{r.v}</strong></div>)}
+        {detailTxn && (
+          <>
+            <div
+              className="drawer-overlay"
+              onClick={() => setDetailTxn(null)}
+              aria-hidden="true"
+            />
+            <div
+              className="drawer"
+              role="dialog"
+              aria-modal="true"
+              aria-label={`Transaction ${detailTxn.id} details`}
+            >
+              <div className="drawer-hd">
+                <h3>{detailTxn.id}</h3>
+                <button
+                  className="modal-close"
+                  onClick={() => setDetailTxn(null)}
+                  aria-label="Close drawer"
+                >
+                  <SvgIcon icon="x" size={18} />
+                </button>
               </div>
-              <div className="drawer-sec">
-                <h4>Items Purchased</h4>
-                {detailTxn.items?.map(item=>(
-                  <div key={item.id} className="m-detail-item">
-                    <span>{item.icon} {item.name} × {item.qty}</span>
-                    <strong>{fKES(item.price*item.qty)}</strong>
-                  </div>
-                ))}
-              </div>
-              <div className="drawer-sec">
-                <h4>Payment Audit Trail</h4>
-                <div className="audit-trail">
-                  {(detailTxn.auditTrail||[{status:'success',time:detailTxn.timestamp||new Date().toISOString(),desc:'Payment recorded'}]).map((a,i)=>(
-                    <div key={i} className="audit-item">
-                      <div className={`audit-dot ${a.status}`} aria-hidden="true"/>
-                      <span className="audit-time">{new Date(a.time).toLocaleTimeString('en-KE')}</span>
-                      <span style={{color:'var(--text2)',fontSize:12}}>{a.desc}</span>
+              <div className="drawer-body">
+                <div className="drawer-sec">
+                  <h4>Transaction Info</h4>
+                  {[
+                    { l: "Date", v: detailTxn.date },
+                    { l: "Customer", v: detailTxn.customer },
+                    { l: "Method", v: detailTxn.method },
+                    { l: "Status", v: detailTxn.status },
+                    { l: "Total", v: fKES(detailTxn.total) },
+                  ].map((r) => (
+                    <div key={r.l} className="m-detail-item">
+                      <span className="table-card-label">{r.l}</span>
+                      <strong className="table-card-val">{r.v}</strong>
                     </div>
                   ))}
                 </div>
-              </div>
-              <div className="drawer-sec">
-                <h4>Actions</h4>
-                <div className="btn-row">
-                  <button className="btn-p btn-sm green" onClick={()=>{markReviewed([detailTxn.id]);setDetailTxn(null)}} aria-label="Mark as reviewed"><SvgIcon icon="check"/>Mark Reviewed</button>
-                  <button className="btn-g btn-sm" onClick={()=>exportTxns([detailTxn])} aria-label="Export this transaction"><SvgIcon icon="export"/>Export</button>
+                <div className="drawer-sec">
+                  <h4>Items Purchased</h4>
+                  {detailTxn.items?.map((item) => (
+                    <div key={item.id} className="m-detail-item">
+                      <span>
+                        {item.icon} {item.name} × {item.qty}
+                      </span>
+                      <strong>{fKES(item.price * item.qty)}</strong>
+                    </div>
+                  ))}
+                </div>
+                <div className="drawer-sec">
+                  <h4>Payment Audit Trail</h4>
+                  <div className="audit-trail">
+                    {(
+                      detailTxn.auditTrail || [
+                        {
+                          status: "success",
+                          time: detailTxn.timestamp || new Date().toISOString(),
+                          desc: "Payment recorded",
+                        },
+                      ]
+                    ).map((a, i) => (
+                      <div key={i} className="audit-item">
+                        <div
+                          className={`audit-dot ${a.status}`}
+                          aria-hidden="true"
+                        />
+                        <span className="audit-time">
+                          {new Date(a.time).toLocaleTimeString("en-KE")}
+                        </span>
+                        <span style={{ color: "var(--text2)", fontSize: 12 }}>
+                          {a.desc}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="drawer-sec">
+                  <h4>Actions</h4>
+                  <div className="btn-row">
+                    <button
+                      className="btn-p btn-sm green"
+                      onClick={() => {
+                        markReviewed([detailTxn.id]);
+                        setDetailTxn(null);
+                      }}
+                      aria-label="Mark as reviewed"
+                    >
+                      <SvgIcon icon="check" />
+                      Mark Reviewed
+                    </button>
+                    <button
+                      className="btn-g btn-sm"
+                      onClick={() => exportTxns([detailTxn])}
+                      aria-label="Export this transaction"
+                    >
+                      <SvgIcon icon="export" />
+                      Export
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </>)}
+          </>
+        )}
 
         {/* BUG REPORT MODAL */}
-        <button className="report-fab" onClick={()=>setShowReport(true)} aria-label="Report a bug or issue">
-          <SvgIcon icon="bug"/>Report Issue
+        <button
+          className="report-fab"
+          onClick={() => setShowReport(true)}
+          aria-label="Report a bug or issue"
+        >
+          <SvgIcon icon="bug" />
+          Report Issue
         </button>
         {showReport && (
-          <div className="overlay" role="dialog" aria-modal="true" aria-label="Report an issue" onClick={e=>e.target===e.currentTarget&&setShowReport(false)}>
-            <form action="https://formspree.io/f/mkodebob" method="POST" className="report-modal" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div
+            className="overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Report an issue"
+            onClick={(e) =>
+              e.target === e.currentTarget && setShowReport(false)
+            }
+          >
+            <form
+              action="https://formspree.io/f/mkodebob"
+              method="POST"
+              className="report-modal"
+              style={{
+                padding: "24px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "16px",
+              }}
+            >
               <div className="modal-hd" style={{ marginBottom: 0 }}>
                 <h3>Report an Issue</h3>
-                <button type="button" className="modal-close" onClick={()=>setShowReport(false)} aria-label="Close"><SvgIcon icon="x" size={18}/></button>
+                <button
+                  type="button"
+                  className="modal-close"
+                  onClick={() => setShowReport(false)}
+                  aria-label="Close"
+                >
+                  <SvgIcon icon="x" size={18} />
+                </button>
               </div>
-              
+
               <div className="report-context" aria-label="Report context">
-                User: {currentUser.name} ({ROLES[currentUser.role].label}) | Page: {view}
+                User: {currentUser.name} ({ROLES[currentUser.role].label}) |
+                Page: {view}
               </div>
-              <input type="hidden" name="user" value={`${currentUser.name} (${ROLES[currentUser.role].label})`} />
+              <input
+                type="hidden"
+                name="user"
+                value={`${currentUser.name} (${ROLES[currentUser.role].label})`}
+              />
               <input type="hidden" name="page" value={view} />
 
               <div className="sf">
-                <label style={{ marginBottom: '8px', display: 'block' }}>Your Email</label>
-                <input type="email" name="email" required style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', boxSizing: 'border-box' }} />
+                <label style={{ marginBottom: "8px", display: "block" }}>
+                  Your Email
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  required
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    borderRadius: "8px",
+                    border: "1px solid var(--border)",
+                    background: "var(--surface)",
+                    color: "var(--text)",
+                    boxSizing: "border-box",
+                  }}
+                />
               </div>
 
               <div className="sf">
-                <label style={{ marginBottom: '8px', display: 'block' }}>Describe the issue</label>
-                <textarea name="message" required rows="4" style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', resize: 'vertical', boxSizing: 'border-box' }} placeholder="What happened? Steps to reproduce..."></textarea>
+                <label style={{ marginBottom: "8px", display: "block" }}>
+                  Describe the issue
+                </label>
+                <textarea
+                  name="message"
+                  required
+                  rows="4"
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    borderRadius: "8px",
+                    border: "1px solid var(--border)",
+                    background: "var(--surface)",
+                    color: "var(--text)",
+                    resize: "vertical",
+                    boxSizing: "border-box",
+                  }}
+                  placeholder="What happened? Steps to reproduce..."
+                ></textarea>
               </div>
 
-              <div className="btn-row" style={{ marginTop: '10px' }}>
-                <button type="submit" className="btn-p" style={{flex:1}}>Send to Support</button>
-                <button type="button" className="btn-g" onClick={()=>setShowReport(false)}>Cancel</button>
+              <div className="btn-row" style={{ marginTop: "10px" }}>
+                <button type="submit" className="btn-p" style={{ flex: 1 }}>
+                  Send to Support
+                </button>
+                <button
+                  type="button"
+                  className="btn-g"
+                  onClick={() => setShowReport(false)}
+                >
+                  Cancel
+                </button>
               </div>
             </form>
           </div>
         )}
-
       </div>
     </PayPalScriptProvider>
-  )
+  );
 }
