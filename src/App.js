@@ -1,4 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef
+} from "react";
 import "./App.css";
 import jsPDF from "jspdf";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
@@ -905,17 +910,18 @@ function LoginPortal({ onLogin, darkMode, toggleDark }) {
       setResendCooldown(OTP_RESEND_COOLDOWN);
       if (!isResend) setSmsStatus(`Code sent to ${normalized}`);
     } catch (e) {
-  console.error("Failed to send OTP:", e);
+      console.error("Failed to send OTP:", e);
 
-  setOtpDemoFallback(false);
+      setOtpDemoFallback(false);
 
-  setError("Unable to send verification code. Please check your internet connection or try again later.");
+      setError(
+        "Unable to send verification code. Please check your internet connection or try again later.",
+      );
 
-  setSmsStatus("Failed to contact the authentication server.");
-
-} finally {
-  setLoading(false);
-}
+      setSmsStatus("Failed to contact the authentication server.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const verifyPhoneOtp = async () => {
