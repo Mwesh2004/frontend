@@ -303,7 +303,7 @@ const SYSTEM_USERS = [
     id: 1,
     name: "Beryl Munyao",
     email: "beryl@berylbytes.co.ke",
-    phone: "254712345601",
+    phone: "254727441974",
     pin: "1234",
     role: "superadmin",
     initial: "B",
@@ -905,19 +905,17 @@ function LoginPortal({ onLogin, darkMode, toggleDark }) {
       setResendCooldown(OTP_RESEND_COOLDOWN);
       if (!isResend) setSmsStatus(`Code sent to ${normalized}`);
     } catch (e) {
-      // Backend not configured/reachable — fall back to a local demo code so
-      // the UI flow remains testable. In production this branch should be
-      // removed once /api/auth/phone/send-otp is live.
-      setOtpDemoFallback(true);
-      setPhoneNumber(normalized);
-      setPhoneOtp("");
-      setStep("phone_otp");
-      setResendCooldown(OTP_RESEND_COOLDOWN);
-      setError("");
-      setSmsStatus("Demo mode: backend unreachable, use 123456 to continue.");
-    } finally {
-      setLoading(false);
-    }
+  console.error("Failed to send OTP:", e);
+
+  setOtpDemoFallback(false);
+
+  setError("Unable to send verification code. Please check your internet connection or try again later.");
+
+  setSmsStatus("Failed to contact the authentication server.");
+
+} finally {
+  setLoading(false);
+}
   };
 
   const verifyPhoneOtp = async () => {
