@@ -1680,7 +1680,7 @@ function LoginPortal({ onLogin, darkMode, toggleDark }) {
               }}
             >
               We've sent a 6-digit code to the phone number ending in{" "}
-              <strong>{selUser.phone.slice(-4)}</strong>.
+              <strong>{selUser?.phone?.slice(-4) || "----"}</strong>
             </p>
 
             {error && (
@@ -3803,8 +3803,8 @@ export default function App() {
                             aria-label={`${d.date}: ${fKES(d.revenue)}`}
                           >
                             <span className="bar-tip">{fKES(d.revenue)}</span>
-                          </div>
-                          <span className="bar-lbl">{d.date.slice(-5)}</span>
+                            </div>
+                          <span className="bar-lbl">{(d.date || "").slice(-5)}</span>
                         </div>
                       ))}
                     </div>
@@ -5992,7 +5992,7 @@ export default function App() {
                           />
                           <span className="attempt-time">{a.time}</span>
                           <span className="attempt-status">{a.desc}</span>
-                          <span className="attempt-id">{a.id.slice(-8)}</span>
+                          <span className="attempt-id">{String(a.id || "").slice(-8)}</span>
                         </div>
                       ))}
                     </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import './LoginPortal.css'
-
+import { login } from "./services/authService";
 export default function LoginPortal({ onLogin, darkMode, toggleDark }) {
   // Login portal is driven by App.js via onLogin(user)
   const [username, setUsername] = useState('')
@@ -31,41 +31,25 @@ export default function LoginPortal({ onLogin, darkMode, toggleDark }) {
       clearTimeout(timer)
       clearInterval(kickerInterval)
     }
-  }, [])
+  }, [kickers.length])
 
-  const handleLogin = async (e) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
+ const handleLogin = async (e) => {
+  e.preventDefault();
 
-    // This portal is purely UI now. App.js owns auth/state.
-    // For compatibility with the old UI, try to login using the first selected hint match.
-    // If no match is found, show a message.
-    setTimeout(() => {
-      const hints = [
-        { u: 'beryl', p: 'bbytes2026', role: 'superadmin' },
-        { u: 'manager', p: 'manager123', role: 'manager' },
-        { u: 'cashier1', p: 'cashier123', role: 'cashier' },
-        { u: 'cashier2', p: 'cashier456', role: 'cashier' },
-      ]
-      const match = hints.find(h => h.u === username && h.p === password)
-      if (!match) {
-        setError('Invalid username or password')
-        setLoading(false)
-        return
-      }
+  setLoading(true);
+  setError("");
 
-      // App.js expects role keys like: superadmin/manager/cashier/inventory...
-      // Normalize role to match App.js ROLES keys.
-      const normalizedRole = String(match.role || '')
-        .toLowerCase()
-        .replace(/\s+/g,'')
+  try {
+    const user = await login(username, password);
 
-      const user = { id: 0, username: match.u, name: match.role, role: normalizedRole }
-      onLogin(user)
-      setLoading(false)
-    }, 600)
+    onLogin(user);
+
+  } catch (err) {
+    setError(err.message);
   }
+
+  setLoading(false);
+};
 
   const handleBiometric = async () => {
     setBioLoading(true)

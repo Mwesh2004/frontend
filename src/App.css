@@ -187,8 +187,8 @@ select option {
   grid-column:1/-1;grid-row:1;
   display:flex;align-items:center;
   background:var(--topbar-bg);
-  backdrop-filter:blur(20px) saturate(180%);
   -webkit-backdrop-filter:blur(20px) saturate(180%);
+  backdrop-filter:blur(20px) saturate(180%);
   border-bottom:1px solid var(--border);
   z-index:100;position:relative;
   transition:background .3s,border-color .3s;
@@ -383,8 +383,8 @@ select option {
 .sidebar{
   grid-column:1;grid-row:2;
   background:var(--sidebar-bg);
-  backdrop-filter:blur(24px) saturate(200%);
   -webkit-backdrop-filter:blur(24px) saturate(200%);
+  backdrop-filter:blur(24px) saturate(200%);
   border-right:1px solid rgba(255,255,255,0.05);
   box-shadow: inset -1px 0 0 rgba(0,0,0,0.1);
   display:flex;flex-direction:column;
@@ -1538,7 +1538,7 @@ select option {
   }
   .login-showcase{
     padding:40px 24px 32px;
-    min-height:auto;
+    min-height:0;
     border-right:none;
     border-bottom:1px solid rgba(0,212,184,0.08);
   }
@@ -1547,7 +1547,7 @@ select option {
   .login-metrics{margin-top:20px}
   .login-box{
     padding:32px 24px;
-    min-height:auto;
+    min-height:0;
     max-height:none;
   }
   .login-card-title{font-size:22px}
