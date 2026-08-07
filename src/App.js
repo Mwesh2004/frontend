@@ -835,22 +835,33 @@ function LoginPortal({ onLogin, darkMode, toggleDark }) {
   setLoading(true);
   setError("");
 
-  setTimeout(() => {
-    if (entered2FA === "123456") {
-      // Get the user that was saved after login
-      const user = JSON.parse(localStorage.getItem("user"));
-
-      if (user) {
-        onLogin(user);
-      } else {
-        setError("Login session expired. Please log in again.");
-      }
-    } else {
-      setError("Invalid OTP code.");
+  try {
+    // Demo OTP for now
+    if (entered2FA !== "123456") {
+      setError("Invalid OTP code. Use 123456 for now.");
+      setLoading(false);
+      return;
     }
 
+    // Get the PostgreSQL user saved during login
+    const savedUser = localStorage.getItem("bb_user");
+
+    if (!savedUser) {
+      setError("Login session expired. Please log in again.");
+      setLoading(false);
+      return;
+    }
+
+    const user = JSON.parse(savedUser);
+
+    // Send the real PostgreSQL user to App.js
+    onLogin(user);
+  } catch (err) {
+    console.error("2FA ERROR:", err);
+    setError("Unable to complete login.");
+  } finally {
     setLoading(false);
-  }, 500);
+  }
 };
   const handlePin = (d) => {
     setPin((prevPin) => {
