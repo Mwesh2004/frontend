@@ -746,7 +746,7 @@ function LoginPortal({ onLogin, darkMode, toggleDark }) {
     setStep("pin");
   };
 
-  const handleEmailLogin = () => {
+  const handleEmailLogin = async () => {
     if (!email || !email.includes("@")) {
       setError("Please enter a valid email address");
       return;
@@ -758,19 +758,33 @@ function LoginPortal({ onLogin, darkMode, toggleDark }) {
     setLoading(true);
     setError("");
 
-    // Simulate API call for login
-    setTimeout(() => {
-      const user = SYSTEM_USERS.find(
-        (u) => u.email.toLowerCase() === email.toLowerCase(),
-      );
-      if (user) {
-        setSelUser(user);
-        setStep("2fa");
-      } else {
-        setError("Invalid email or password");
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Login failed");
       }
+
+      localStorage.setItem("bb_token", data.token);
+      localStorage.setItem("bb_user", JSON.stringify(data.user));
+      setSelUser(data.user);
+      setStep("2fa");
+    } catch (err) {
+      setError(err.message);
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
 
   const verifyOTP = async () => {
