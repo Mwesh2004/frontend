@@ -227,7 +227,27 @@ const SvgIcon = ({ icon, size = 14, ...props }) => (
 );
 
 // ─── ROLES ────────────────────────────────────────────────────────────────────
+
 const ROLES = {
+  owner: {
+  label: "Owner",
+  color: "#22c55e",
+  bg: "rgba(34,197,94,.1)",
+  access: [
+    "pos",
+    "dashboard",
+    "crm",
+    "orders",
+    "add",
+    "settings",
+    "payments",
+    "manager",
+    "security",
+    "support",
+  ],
+  canEdit: true,
+  canDelete: true,
+},
   superadmin: {
     label: "Super Admin",
     color: "#1bdab0ff",
@@ -787,23 +807,7 @@ function LoginPortal({ onLogin, darkMode, toggleDark }) {
     }
   };
 
-  const verifyOTP = async () => {
-    if (entered2FA.length !== 6) {
-      setError("Please enter a 6-digit code");
-      return;
-    }
-    setLoading(true);
-    setError("");
-    // Simulate 2FA verification
-    setTimeout(() => {
-      if (entered2FA === "123456") {
-        doBiometric(selUser);
-      } else {
-        setError("Invalid OTP code. Try 123456 for demo.");
-      }
-      setLoading(false);
-    }, 800);
-  };
+
 
   const handleOAuth = (provider) => {
     setOauthProvider(provider);
@@ -822,29 +826,32 @@ function LoginPortal({ onLogin, darkMode, toggleDark }) {
     }, 1500);
   };
 
-  const doBiometric = async (user) => {
-    setLoading(true);
-    setError("");
-    try {
-      if (window.PublicKeyCredential) {
-        await navigator.credentials.get({
-          publicKey: {
-            challenge: crypto.getRandomValues(new Uint8Array(32)),
-            timeout: 60000,
-            allowCredentials: [],
-            userVerification: "required",
-          },
-        });
-      }
-      onLogin(user);
-    } catch (e) {
-      if (e.name === "NotAllowedError")
-        setError("Biometric cancelled or not enrolled.");
-      else onLogin(user); // fallback if not supported on desktop
-    }
-    setLoading(false);
-  };
+  const verifyOTP = async () => {
+  if (entered2FA.length !== 6) {
+    setError("Please enter a 6-digit code");
+    return;
+  }
 
+  setLoading(true);
+  setError("");
+
+  setTimeout(() => {
+    if (entered2FA === "123456") {
+      // Get the user that was saved after login
+      const user = JSON.parse(localStorage.getItem("user"));
+
+      if (user) {
+        onLogin(user);
+      } else {
+        setError("Login session expired. Please log in again.");
+      }
+    } else {
+      setError("Invalid OTP code.");
+    }
+
+    setLoading(false);
+  }, 500);
+};
   const handlePin = (d) => {
     setPin((prevPin) => {
       if (prevPin.length >= 4) return prevPin;
@@ -873,6 +880,28 @@ function LoginPortal({ onLogin, darkMode, toggleDark }) {
       }
       return np;
     });
+  };
+
+  // Simulated biometric / passkey flow for demo purposes.
+  const doBiometric = async (userOverride) => {
+    const user = userOverride || selUser;
+    if (!user) {
+      setError("No user selected for biometric authentication.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      // Simulate a short biometric authentication delay
+      await new Promise((r) => setTimeout(r, 700));
+      // In a real app, perform WebAuthn / passkey flow here.
+      localStorage.setItem("bb_user", JSON.stringify(user));
+      onLogin(user);
+    } catch (e) {
+      setError("Biometric authentication failed.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   // ── Phone / OTP handlers ─────────────────────────────────────────────────
@@ -2699,7 +2728,8 @@ function SecurityDashboard({ darkMode }) {
 export default function App() {
   const PAYSTACK_KEY = process.env.REACT_APP_PAYSTACK_PUBLIC_KEY || "";
   const PAYPAL_ID = process.env.REACT_APP_PAYPAL_CLIENT_ID || "sb";
-  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
+  const API_URL =
+  process.env.REACT_APP_API_URL || "http://localhost:5000";
 
   // Auth
   const [loggedIn, setLoggedIn] = useState(false);
@@ -3009,18 +3039,41 @@ export default function App() {
     setTimeout(() => setMsg(""), 5000);
   };
 
-  const handleLogin = (u) => {
-    setCurrentUser(u);
-    setLoggedIn(true);
-    setView(ROLES[u.role].access[0]);
+  const handleLogin = (user) => {
+  const loggedUser = {
+    ...user,
+    id: user.id || user.user_id,
+    name: user.name || user.full_name || "User",
+    full_name: user.full_name || user.name || "User",
+    email: user.email || "",
+    phone: user.phone || "",
+    initial:
+      user.initial ||
+      (user.full_name
+        ? user.full_name.charAt(0).toUpperCase()
+        : "U"),
+    role: user.role || "owner",
   };
-  const handleLogout = () => {
-    setLoggedIn(false);
-    setCurrentUser(null);
-    setCart([]);
-    setShowUserMenu(false);
-    localStorage.removeItem("bb_cart");
-  };
+
+  setCurrentUser(loggedUser);
+  setLoggedIn(true);
+
+  const role = ROLES[loggedUser.role];
+
+  if (role) {
+    setView(role.access[0]);
+  } else {
+    setView("dashboard");
+  }
+};
+
+const handleLogout = () => {
+  setLoggedIn(false);
+  setCurrentUser(null);
+  setCart([]);
+  setShowUserMenu(false);
+  localStorage.removeItem("bb_cart");
+};
 
   // Cart
   const getPrice = (p) => customPrices[p.id] || p.price;
@@ -3345,7 +3398,7 @@ export default function App() {
   ].filter((item) => canAccess(item.id));
 
   if (!loggedIn)
-    return (
+   return (
       <LoginPortal
         onLogin={handleLogin}
         darkMode={darkMode}
@@ -6516,4 +6569,4 @@ export default function App() {
       </div>
     </PayPalScriptProvider>
   );
-}
+  }
