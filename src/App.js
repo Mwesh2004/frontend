@@ -729,7 +729,7 @@ const normalizeKePhone = (raw) => {
 
 // ─── LOGIN PORTAL ─────────────────────────────────────────────────────────────
 function LoginPortal({ onLogin, darkMode, toggleDark }) {
-  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
+  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
   const [step, setStep] = useState("select");
   const [selUser, setSelUser] = useState(null);
