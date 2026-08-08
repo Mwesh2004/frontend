@@ -3131,7 +3131,7 @@ const handleLogout = () => {
     setMpesaStatus("pending");
 
     try {
-      const response = await fetch(`${API_URL}/api/mpesa/stkpush`, {
+      const response = await fetch("http://localhost:5000/api/mpesa/stkpush", {
         method: "POST",
 
         headers: {
